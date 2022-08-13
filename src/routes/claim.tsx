@@ -10,8 +10,9 @@ import { SVGProps, useEffect, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
-import { ReactComponent as Logo } from "../../public/logo.svg";
-import { ReactComponent as Background } from "../../public/background.svg";
+import { ReactComponent as Logo } from "../assets/logo.svg";
+import { ReactComponent as Background } from "../assets/background.svg";
+import { Link } from "react-router-dom";
 
 const RPC_PROVIDER = "wss://tinker.invarch.network/";
 
@@ -240,7 +241,9 @@ const Home = () => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 justify-between">
             <div className="flex items-center">
-              <Logo />
+              <Link to="/">
+                <Logo />
+              </Link>
             </div>
             <div className="flex items-center">
               {account ? (
@@ -365,7 +368,8 @@ const Home = () => {
           </div>
           <div className="mt-8 md:order-1 md:mt-0">
             <p className="text-center text-base text-neutral-400">
-              &copy; 2022 InvArch Tinkernet. All rights reserved.
+              &copy; {new Date().getFullYear()} InvArch Tinkernet. All rights
+              reserved.
             </p>
           </div>
         </div>
