@@ -7,13 +7,9 @@ import { BN } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
 
-// const RPC_PROVIDER = "wss://tinker.invarch.network/";
+const RPC_PROVIDER = "wss://tinker.invarch.network/";
 
-const RPC_PROVIDER = "wss://acala-rpc-0.aca-api.network";
-
-const TEST_WALLET = "265UKuZnACXcoYN7eXEEvxMSJBSPjiW8V8TdAnjezksDvpX5";
-
-// const TEST_WALLET = "i4zTcKHr38MbSUrhFLVKHG5iULhYttBVrqVon2rv6iWcxQwQQ";
+const TEST_WALLET = "i4zTcKHr38MbSUrhFLVKHG5iULhYttBVrqVon2rv6iWcxQwQQ";
 
 type SystemAccount = Struct & {
   data: {
@@ -32,7 +28,7 @@ type NavigationProps = {
 const navigation = [
   {
     name: "Twitter",
-    href: "#",
+    href: "https://twitter.com/TinkerParachain",
     icon: (props: NavigationProps) => (
       <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
         <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
@@ -41,7 +37,7 @@ const navigation = [
   },
   {
     name: "GitHub",
-    href: "#",
+    href: "https://github.com/InvArch",
     icon: (props: NavigationProps) => (
       <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
         <path
@@ -52,11 +48,25 @@ const navigation = [
       </svg>
     ),
   },
+  {
+    name: "Medium",
+    href: "https://github.com/InvArch",
+    icon: (props: NavigationProps) => (
+      <svg viewBox="0 0 20.24 11.38" fill="currentColor" {...props}>
+        <path d="M11.42 5.69c0 3.14-2.56 5.69-5.71 5.69A5.691 5.691 0 0 1 0 5.69C0 2.55 2.56 0 5.71 0s5.7 2.54 5.71 5.69Zm6.26 0c0 2.96-1.28 5.36-2.85 5.36s-2.85-2.4-2.85-5.36S13.25.33 14.82.33s2.85 2.4 2.85 5.36Zm2.56 0c0 2.65-.45 4.8-1 4.8s-1-2.15-1-4.8.45-4.8 1-4.8 1 2.15 1 4.8Z" />
+      </svg>
+    ),
+  },
 ];
 
 const Home = () => {
   const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null);
-  const [claimData, setClaimData] = useState<any>(null);
+  const [vestingData, setVestingData] = useState<{
+    vestedLocked: string;
+    vestedClaimable: string;
+    total: string;
+    transferable: string;
+  } | null>(null);
 
   const handleConnect = async () => {
     const extensions = await web3Enable("InvArch Tinker Network");
@@ -81,13 +91,13 @@ const Home = () => {
 
     const results = await Promise.all([
       // vested locked
-      api.query.balances.locks(/* address */ TEST_WALLET),
+      api.query.balances.locks(address),
       // vesting schedules
-      api.query.vesting.vestingSchedules(/* address */ TEST_WALLET),
+      api.query.vesting.vestingSchedules(address),
       // current block
       api.query.system.number(),
       // total
-      api.query.system.account<SystemAccount>(/* address */ TEST_WALLET),
+      api.query.system.account<SystemAccount>(address),
     ]);
 
     const vestedLocked = new BigNumber(
@@ -98,7 +108,7 @@ const Home = () => {
 
     const vestingSchedules = results[1] as any;
 
-    const currentBlock = results[2].toHuman();
+    const currentBlock = results[2].toString();
 
     const sumFutureLock = vestingSchedules.reduce(
       (acc: any, vestingSchedule: any) => {
@@ -134,21 +144,13 @@ const Home = () => {
       new BigNumber("0")
     );
 
-    console.log({
-      sumFutureLock: sumFutureLock.toString(),
-      vestedLocked: vestedLocked.toString(),
-      vestedLockedMinusSumFutureLock: vestedLocked
-        .minus(sumFutureLock)
-        .toString(),
-    });
-
     const vestedClaimable = vestedLocked.minus(sumFutureLock);
 
     const total = new BigNumber(results[3].data.free.toString());
 
     const transferable = total.minus(vestedLocked);
 
-    console.log({
+    setVestingData({
       vestedLocked: vestedLocked.toString(),
       vestedClaimable: vestedClaimable.toString(),
       total: total.toString(),
@@ -181,36 +183,40 @@ const Home = () => {
       </nav>
       <main className="flex h-[calc(100vh_-_12rem)] items-center justify-center bg-neutral-100">
         <div className="w-full py-6 px-8 sm:max-w-2xl">
-          <div className="overflow-hidden rounded-lg bg-white shadow">
-            <div className="bg-neutral-900 px-4 py-5 sm:px-6">
-              <h3 className="text-center text-2xl font-bold text-white">
-                Total: 1234 TNKR
-              </h3>
-            </div>
-            <div className="px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-              <div className="flex flex-col p-6 text-center">
-                <span className="text-lg font-bold">Available</span>
-                <span className="text-2xl font-bold">1234 TNKR</span>
-                <button
-                  type="button"
-                  className="mt-2 inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-base font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
-                >
-                  Claim Now
-                </button>
+          {vestingData ? (
+            <div className="overflow-hidden rounded-lg bg-white shadow">
+              <div className="bg-neutral-900 px-4 py-5 sm:px-6">
+                <h3 className="text-center text-2xl font-bold text-white">
+                  Total: {vestingData.total} TNKR
+                </h3>
               </div>
-              <div className="flex flex-col p-6 text-center">
-                <span className="text-lg font-bold">Vesting</span>
-                <span className="text-2xl font-bold">1234 TNKR</span>
-                <span className="mt-2 text-sm">Vesting period remaining:</span>
-                <span className="text-sm">1,213,120 blocks</span>
+              <div className="px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
+                <div className="flex flex-col p-6 text-center">
+                  <span className="text-lg font-bold">Available</span>
+                  <span className="text-2xl font-bold">
+                    {vestingData.vestedClaimable} TNKR
+                  </span>
+                  <button
+                    type="button"
+                    className="mt-2 inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-base font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                  >
+                    Claim Now
+                  </button>
+                </div>
+                <div className="flex flex-col p-6 text-center">
+                  <span className="text-lg font-bold">Vesting</span>
+                  <span className="text-2xl font-bold">
+                    {vestingData.vestedLocked} TNKR
+                  </span>
+                </div>
+              </div>
+              <div className="bg-neutral-900 px-4 py-5 sm:px-6">
+                <h4 className="text-center text-lg font-bold leading-6 text-white">
+                  Transferable: {vestingData.transferable} TNKR
+                </h4>
               </div>
             </div>
-            <div className="bg-neutral-900 px-4 py-5 sm:px-6">
-              <h4 className="text-center text-lg font-bold leading-6 text-white">
-                Transferable: 4 TNKR
-              </h4>
-            </div>
-          </div>
+          ) : null}
         </div>
       </main>
       <footer className="bg-white">
