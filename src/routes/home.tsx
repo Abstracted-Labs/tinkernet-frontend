@@ -3,7 +3,7 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3Accounts, web3Enable } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { useEffect, useState } from "react";
-import { BN } from "@polkadot/util";
+import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
 
@@ -151,11 +151,39 @@ const Home = () => {
     const transferable = total.minus(vestedLocked);
 
     setVestingData({
-      vestedLocked: vestedLocked.toString(),
-      vestedClaimable: vestedClaimable.toString(),
-      total: total.toString(),
-      transferable: transferable.toString(),
+      vestedLocked: formatBalance(vestedLocked.toString(), {
+        decimals: 12,
+        withUnit: "TNKR",
+        forceUnit: "-",
+      }),
+      vestedClaimable: formatBalance(vestedClaimable.toString(), {
+        decimals: 12,
+        withUnit: "TNKR",
+        forceUnit: "-",
+      }),
+      total: formatBalance(total.toString(), {
+        decimals: 12,
+        withUnit: "TNKR",
+        forceUnit: "-",
+      }),
+      transferable: formatBalance(transferable.toString(), {
+        decimals: 12,
+        withUnit: "TNKR",
+        forceUnit: "-",
+      }),
     });
+  };
+
+  const handleClaim = async () => {
+    if (!account) return;
+
+    const wsProvider = new WsProvider(RPC_PROVIDER);
+
+    const api = await ApiPromise.create({ provider: wsProvider });
+
+    await api.tx.vesting.claim();
+
+    loadBalances(account);
   };
 
   useEffect(() => {
@@ -187,18 +215,19 @@ const Home = () => {
             <div className="overflow-hidden rounded-lg bg-white shadow">
               <div className="bg-neutral-900 px-4 py-5 sm:px-6">
                 <h3 className="text-center text-2xl font-bold text-white">
-                  Total: {vestingData.total} TNKR
+                  Total: {vestingData.total}
                 </h3>
               </div>
               <div className="px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
                 <div className="flex flex-col p-6 text-center">
                   <span className="text-lg font-bold">Available</span>
                   <span className="text-2xl font-bold">
-                    {vestingData.vestedClaimable} TNKR
+                    {vestingData.vestedClaimable}
                   </span>
                   <button
                     type="button"
                     className="mt-2 inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-base font-medium text-neutral-700 shadow-sm hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                    onClick={() => handleClaim()}
                   >
                     Claim Now
                   </button>
@@ -206,13 +235,13 @@ const Home = () => {
                 <div className="flex flex-col p-6 text-center">
                   <span className="text-lg font-bold">Vesting</span>
                   <span className="text-2xl font-bold">
-                    {vestingData.vestedLocked} TNKR
+                    {vestingData.vestedLocked}
                   </span>
                 </div>
               </div>
               <div className="bg-neutral-900 px-4 py-5 sm:px-6">
                 <h4 className="text-center text-lg font-bold leading-6 text-white">
-                  Transferable: {vestingData.transferable} TNKR
+                  Transferable: {vestingData.transferable}
                 </h4>
               </div>
             </div>
