@@ -13,6 +13,7 @@ import BigNumber from "bignumber.js";
 import { ReactComponent as Logo } from "../assets/logo.svg";
 import { ReactComponent as Background } from "../assets/background.svg";
 import { Link } from "react-router-dom";
+import SelectWallet from "../components/SelectWallet";
 
 const RPC_PROVIDER = "wss://tinker.invarch.network/";
 
@@ -78,7 +79,7 @@ const Spinner = (props: SVGProps<SVGSVGElement>) => (
       cy="12"
       r="10"
       stroke="currentColor"
-      stroke-width="4"
+      strokeWidth="4"
     ></circle>
     <path
       className="opacity-75"
@@ -89,7 +90,9 @@ const Spinner = (props: SVGProps<SVGSVGElement>) => (
 );
 
 const Home = () => {
+  const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null);
+  const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [vestingData, setVestingData] = useState<{
     vestedLocked: string;
     vestedClaimable: string;
@@ -98,6 +101,14 @@ const Home = () => {
     remainingVestingPeriod: string;
   } | null>(null);
 
+  const handleWalletSelection = (account: InjectedAccountWithMeta | null) => {
+    setAccount(account);
+
+    setSelectWalletModalOpen(false);
+
+    setVestingData(null);
+  };
+
   const handleConnect = async () => {
     const extensions = await web3Enable("InvArch Tinker Network");
 
@@ -105,128 +116,152 @@ const Home = () => {
       return;
     }
 
-    const allAccounts = await web3Accounts();
+    const accounts = await web3Accounts();
 
-    if (allAccounts.length === 0) {
+    setAccounts(accounts);
+
+    if (accounts.length === 0) {
       return;
     }
 
-    setAccount(allAccounts[0]);
+    if (accounts.length === 1) {
+      setAccount(accounts[0]);
+
+      return;
+    }
+
+    setSelectWalletModalOpen(true);
+  };
+
+  const handleDisconnect = () => {
+    setAccount(null);
+
+    setVestingData(null);
+
+    setSelectWalletModalOpen(false);
   };
 
   const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
-    const wsProvider = new WsProvider(RPC_PROVIDER);
+    try {
+      const wsProvider = new WsProvider(RPC_PROVIDER);
 
-    const api = await ApiPromise.create({ provider: wsProvider });
+      const api = await ApiPromise.create({ provider: wsProvider });
 
-    const results = await Promise.all([
-      // vested locked
-      api.query.balances.locks(address),
-      // vesting schedules
-      api.query.vesting.vestingSchedules(address),
-      // current block
-      api.query.system.number(),
-      // total
-      api.query.system.account<SystemAccount>(address),
-    ]);
+      const results = await Promise.all([
+        // vested locked
+        api.query.balances.locks(address),
+        // vesting schedules
+        api.query.vesting.vestingSchedules(address),
+        // current block
+        api.query.system.number(),
+        // total
+        api.query.system.account<SystemAccount>(address),
+      ]);
 
-    const vestedLocked = new BigNumber(
-      results[0]
-        .find((lock) => lock.id.toHuman() === "ormlvest")
-        ?.amount.toString() || "0"
-    );
+      const vestedLocked = new BigNumber(
+        results[0]
+          .find((lock) => lock.id.toHuman() === "ormlvest")
+          ?.amount.toString() || "0"
+      );
 
-    const vestingSchedules = results[1] as unknown as {
-      start: number;
-      period: number;
-      periodCount: number;
-      perPeriod: number;
-    }[];
+      const vestingSchedules = results[1] as unknown as {
+        start: number;
+        period: number;
+        periodCount: number;
+        perPeriod: number;
+      }[];
 
-    const currentBlock = results[2].toString();
+      const currentBlock = results[2].toString();
 
-    const remainingVestingPeriod = vestingSchedules.length
-      ? vestingSchedules[0].periodCount
-      : 0;
+      const remainingVestingPeriod = vestingSchedules.length
+        ? vestingSchedules[0].periodCount
+        : 0;
 
-    const sumFutureLock = vestingSchedules.reduce((acc, vestingSchedule) => {
-      const startPeriod = new BigNumber(vestingSchedule.start);
+      const sumFutureLock = vestingSchedules.reduce((acc, vestingSchedule) => {
+        const startPeriod = new BigNumber(vestingSchedule.start);
 
-      const period = new BigNumber(vestingSchedule.period);
+        const period = new BigNumber(vestingSchedule.period);
 
-      // if the vesting has not started, number of periods is 0
-      let numberOfPeriods = new BigNumber(currentBlock)
-        .minus(startPeriod)
-        .dividedBy(period);
+        // if the vesting has not started, number of periods is 0
+        let numberOfPeriods = new BigNumber(currentBlock)
+          .minus(startPeriod)
+          .dividedBy(period);
 
-      numberOfPeriods = numberOfPeriods.isNegative()
-        ? new BigNumber("0")
-        : numberOfPeriods;
+        numberOfPeriods = numberOfPeriods.isNegative()
+          ? new BigNumber("0")
+          : numberOfPeriods;
 
-      const perPeriod = new BigNumber(vestingSchedule.perPeriod);
+        const perPeriod = new BigNumber(vestingSchedule.perPeriod);
 
-      const vestedOverPeriods = numberOfPeriods.multipliedBy(perPeriod);
+        const vestedOverPeriods = numberOfPeriods.multipliedBy(perPeriod);
 
-      const periodCount = new BigNumber(vestingSchedule.periodCount);
+        const periodCount = new BigNumber(vestingSchedule.periodCount);
 
-      const originalLock = periodCount.multipliedBy(perPeriod);
+        const originalLock = periodCount.multipliedBy(perPeriod);
 
-      const unlocked = vestedOverPeriods.gte(originalLock)
-        ? originalLock
-        : vestedOverPeriods;
+        const unlocked = vestedOverPeriods.gte(originalLock)
+          ? originalLock
+          : vestedOverPeriods;
 
-      const futureLock = originalLock.minus(unlocked);
+        const futureLock = originalLock.minus(unlocked);
 
-      return acc.plus(futureLock);
-    }, new BigNumber("0"));
+        return acc.plus(futureLock);
+      }, new BigNumber("0"));
 
-    const vestedClaimable = vestedLocked.minus(sumFutureLock);
+      const vestedClaimable = vestedLocked.minus(sumFutureLock);
 
-    const total = new BigNumber(results[3].data.free.toString());
+      const total = new BigNumber(results[3].data.free.toString());
 
-    const transferable = total.minus(vestedLocked);
+      const transferable = total.minus(vestedLocked);
 
-    setVestingData({
-      vestedLocked: formatBalance(vestedLocked.toString(), {
-        decimals: 12,
-        withUnit: "TNKR",
-        forceUnit: "-",
-      }),
-      vestedClaimable: formatBalance(vestedClaimable.toString(), {
-        decimals: 12,
-        withUnit: "TNKR",
-        forceUnit: "-",
-      }),
-      total: formatBalance(total.toString(), {
-        decimals: 12,
-        withUnit: "TNKR",
-        forceUnit: "-",
-      }),
-      transferable: formatBalance(transferable.toString(), {
-        decimals: 12,
-        withUnit: "TNKR",
-        forceUnit: "-",
-      }),
-      remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(
-        remainingVestingPeriod
-      ),
-    });
+      setVestingData({
+        vestedLocked: formatBalance(vestedLocked.toString(), {
+          decimals: 12,
+          withUnit: "TNKR",
+          forceUnit: "-",
+        }),
+        vestedClaimable: formatBalance(vestedClaimable.toString(), {
+          decimals: 12,
+          withUnit: "TNKR",
+          forceUnit: "-",
+        }),
+        total: formatBalance(total.toString(), {
+          decimals: 12,
+          withUnit: "TNKR",
+          forceUnit: "-",
+        }),
+        transferable: formatBalance(transferable.toString(), {
+          decimals: 12,
+          withUnit: "TNKR",
+          forceUnit: "-",
+        }),
+        remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(
+          remainingVestingPeriod
+        ),
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleClaim = async () => {
     if (!account) return;
 
-    const wsProvider = new WsProvider(RPC_PROVIDER);
+    try {
+      const wsProvider = new WsProvider(RPC_PROVIDER);
 
-    const api = await ApiPromise.create({ provider: wsProvider });
+      const api = await ApiPromise.create({ provider: wsProvider });
 
-    const injector = await web3FromAddress(account.address);
+      const injector = await web3FromAddress(account.address);
 
-    await api.tx.vesting
-      .claim()
-      .signAndSend(account.address, { signer: injector.signer }, () => {
-        loadBalances(account);
-      });
+      await api.tx.vesting
+        .claim()
+        .signAndSend(account.address, { signer: injector.signer }, () => {
+          loadBalances(account);
+        });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -236,145 +271,150 @@ const Home = () => {
   }, [account]);
 
   return (
-    <div className="h-screen bg-black">
-      <nav className="z-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between">
+    <>
+      <div className="bg-black">
+        <nav className="z-10">
+          <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <Link to="/">
                 <Logo />
               </Link>
             </div>
             <div className="flex items-center">
-              {account ? (
-                <span className="font-medium text-white">
-                  {account.meta?.name || account.address}
-                </span>
-              ) : (
-                <button
-                  className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
-                  onClick={handleConnect}
-                >
-                  Connect Wallet
-                </button>
-              )}
+              <button
+                className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                onClick={handleConnect}
+              >
+                {account
+                  ? account.meta?.name || account.address
+                  : "Connect Wallet"}
+              </button>
             </div>
           </div>
-        </div>
-      </nav>
-      <main className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
-        <div
-          className="hidden md:absolute md:inset-y-0 md:block md:h-full md:w-full"
-          aria-hidden="true"
-        >
-          <div className="mx-auto h-full max-w-7xl">
-            <Background className="absolute right-full translate-y-0 translate-x-1/3 transform " />
-            <Background className="absolute left-full translate-y-0 -translate-x-1/3 transform" />
+        </nav>
+        <main className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
+          <div
+            className="hidden md:absolute md:inset-y-0 md:block md:h-full md:w-full"
+            aria-hidden="true"
+          >
+            <div className="mx-auto h-full max-w-7xl">
+              <Background className="absolute right-full translate-y-0 translate-x-1/3 transform " />
+              <Background className="absolute left-full translate-y-0 -translate-x-1/3 transform" />
+            </div>
           </div>
-        </div>
 
-        <div className="z-10 w-full py-6 px-8 sm:max-w-2xl">
-          {!account && !vestingData ? (
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-white">
-                Wallet not connected
-              </h1>
-              <p className="mt-8 text-lg text-white">
-                You can connect your wallet to claim your vested tokens.
+          <div className="z-10 w-full py-6 px-8 sm:max-w-2xl">
+            {!account && !vestingData ? (
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-white">
+                  Wallet not connected
+                </h1>
+                <p className="mt-8 text-lg text-white">
+                  You can connect your wallet to claim your vested tokens.
+                </p>
+              </div>
+            ) : null}
+
+            {account && !vestingData ? (
+              <div className="flex items-center justify-center">
+                <Spinner className="h-8 w-8 animate-spin text-white" />
+              </div>
+            ) : null}
+
+            {account && vestingData ? (
+              <div className="overflow-hidden rounded-lg border border-gray-50 bg-black shadow">
+                <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
+                  <div className="flex flex-col p-6">
+                    <span className="text-lg font-normal text-white">
+                      Claimable
+                    </span>
+                    <span className="text-2xl font-bold text-white">
+                      {vestingData.vestedClaimable}
+                    </span>
+                    <button
+                      type="button"
+                      className="mt-8 inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
+                      onClick={() => handleClaim()}
+                      disabled={vestingData.vestedClaimable === "0"}
+                    >
+                      Claim Now
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col p-6">
+                    <span className="text-lg font-normal text-white">
+                      Vesting
+                    </span>
+                    <span className="text-2xl font-bold text-white">
+                      {vestingData.vestedLocked}
+                    </span>
+                    <span className="mt-8 text-sm text-white">
+                      Vesting period remaining:
+                    </span>
+                    <span className="text-sm text-white">
+                      {vestingData.remainingVestingPeriod} blocks
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
+                  <div className="px-6">
+                    <span className="text-sm font-bold leading-6 text-white">
+                      Transferable:
+                    </span>{" "}
+                    <span className="text-lg font-bold leading-6 text-white">
+                      {vestingData.transferable}
+                    </span>
+                  </div>
+
+                  <div className="px-6">
+                    <span className="text-sm font-bold leading-6 text-white">
+                      Total:
+                    </span>{" "}
+                    <span className="text-lg font-bold leading-6 text-white">
+                      {vestingData.total}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </main>
+        <footer>
+          <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
+            <div className="flex justify-center space-x-6 md:order-2">
+              {navigation.map((item) => (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-neutral-400 hover:text-neutral-500"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="sr-only">{item.name}</span>
+                  <item.icon className="h-6 w-6" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+            <div className="mt-8 md:order-1 md:mt-0">
+              <p className="text-center text-base text-neutral-400">
+                &copy; {new Date().getFullYear()} InvArch Tinkernet. All rights
+                reserved.
               </p>
             </div>
-          ) : null}
-
-          {account && !vestingData ? (
-            <div className="flex items-center justify-center">
-              <Spinner className="h-8 w-8 animate-spin text-white" />
-            </div>
-          ) : null}
-
-          {account && vestingData ? (
-            <div className="overflow-hidden rounded-lg border border-gray-50 bg-black shadow">
-              <div className="px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-                <div className="flex flex-col p-6">
-                  <span className="text-lg font-normal text-white">
-                    Available
-                  </span>
-                  <span className="text-2xl font-bold text-white">
-                    {vestingData.vestedClaimable}
-                  </span>
-                  <button
-                    type="button"
-                    className="mt-8 inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
-                    onClick={() => handleClaim()}
-                    disabled={vestingData.vestedClaimable === "0"}
-                  >
-                    Claim Now
-                  </button>
-                </div>
-
-                <div className="flex flex-col p-6">
-                  <span className="text-lg font-normal text-white">
-                    Vesting
-                  </span>
-                  <span className="text-2xl font-bold text-white">
-                    {vestingData.vestedLocked}
-                  </span>
-                  <span className="mt-8 text-sm text-white">
-                    Vesting period remaining:
-                  </span>
-                  <span className="text-sm text-white">
-                    {vestingData.remainingVestingPeriod} blocks
-                  </span>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-                <div className="px-6">
-                  <span className="text-sm font-bold leading-6 text-white">
-                    Transferable:
-                  </span>{" "}
-                  <span className="text-lg font-bold leading-6 text-white">
-                    {vestingData.transferable}
-                  </span>
-                </div>
-
-                <div className="px-6">
-                  <span className="text-sm font-bold leading-6 text-white">
-                    Total:
-                  </span>{" "}
-                  <span className="text-lg font-bold leading-6 text-white">
-                    {vestingData.total}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </main>
-      <footer>
-        <div className="mx-auto max-w-7xl py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
-          <div className="flex justify-center space-x-6 md:order-2">
-            {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="text-neutral-400 hover:text-neutral-500"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="sr-only">{item.name}</span>
-                <item.icon className="h-6 w-6" aria-hidden="true" />
-              </a>
-            ))}
           </div>
-          <div className="mt-8 md:order-1 md:mt-0">
-            <p className="text-center text-base text-neutral-400">
-              &copy; {new Date().getFullYear()} InvArch Tinkernet. All rights
-              reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
-    </div>
+        </footer>
+      </div>
+
+      <SelectWallet
+        isOpen={isSelectWalletModalOpen}
+        onOpenChange={(isOpen: boolean) => setSelectWalletModalOpen(isOpen)}
+        handleWalletSelection={handleWalletSelection}
+        accounts={accounts}
+        account={account}
+        handleDisconnect={handleDisconnect}
+      />
+    </>
   );
 };
 
