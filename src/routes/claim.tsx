@@ -303,7 +303,7 @@ const Home = () => {
             </div>
           </div>
 
-          <div className="z-10 w-full py-6 px-8 sm:max-w-2xl">
+          <div className="z-10 w-full py-6 px-8 sm:max-w-3xl">
             {!account && !vestingData ? (
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-white">
