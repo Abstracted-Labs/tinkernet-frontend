@@ -10,10 +10,11 @@ import { SVGProps, useEffect, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
-import { ReactComponent as Logo } from "../assets/logo.svg";
-import { ReactComponent as Background } from "../assets/background.svg";
 import { Link } from "react-router-dom";
 import SelectWallet from "../components/SelectWallet";
+
+import logo from "../assets/logo.svg";
+import background from "../assets/background.svg";
 
 const RPC_PROVIDER = "wss://tinker.invarch.network/";
 
@@ -171,10 +172,11 @@ const Home = () => {
         perPeriod: number;
       }[];
 
-      const currentBlock = results[2].toString();
+      const currentBlock = results[2];
 
       const remainingVestingPeriod = vestingSchedules.length
-        ? vestingSchedules[0].periodCount - (currentBlock - vestingSchedules[0].start)
+        ? vestingSchedules[0].periodCount -
+          (currentBlock.toNumber() - vestingSchedules[0].start)
         : 0;
 
       const sumFutureLock = vestingSchedules.reduce((acc, vestingSchedule) => {
@@ -183,7 +185,7 @@ const Home = () => {
         const period = new BigNumber(vestingSchedule.period);
 
         // if the vesting has not started, number of periods is 0
-        let numberOfPeriods = new BigNumber(currentBlock)
+        let numberOfPeriods = new BigNumber(currentBlock.toString())
           .minus(startPeriod)
           .dividedBy(period);
 
@@ -277,7 +279,7 @@ const Home = () => {
           <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <Link to="/">
-                <Logo />
+                <img src={logo} alt="Tinker Network Logo" />
               </Link>
             </div>
             <div className="flex items-center">
@@ -298,8 +300,16 @@ const Home = () => {
             aria-hidden="true"
           >
             <div className="mx-auto h-full max-w-7xl">
-              <Background className="absolute right-full translate-y-0 translate-x-1/3 transform " />
-              <Background className="absolute left-full translate-y-0 -translate-x-1/3 transform" />
+              <img
+                src={background}
+                alt="background"
+                className="absolute right-full translate-y-0 translate-x-1/3 transform "
+              />
+              <img
+                src={background}
+                alt="background"
+                className="absolute left-full translate-y-0 -translate-x-1/3 transform"
+              />
             </div>
           </div>
 
