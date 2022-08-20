@@ -174,7 +174,7 @@ const Home = () => {
       const currentBlock = results[2].toString();
 
       const remainingVestingPeriod = vestingSchedules.length
-        ? vestingSchedules[0].periodCount
+        ? vestingSchedules[0].periodCount - (currentBlock - vestingSchedules[0].start)
         : 0;
 
       const sumFutureLock = vestingSchedules.reduce((acc, vestingSchedule) => {
