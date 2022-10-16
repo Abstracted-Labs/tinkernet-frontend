@@ -194,8 +194,8 @@ const XTransfer = () => {
     loadBalances(account);
   }, [account]);
 
-  const [amountLeft, setAmountLeft] = useState<BN>(new BN(0));
-  const [amountRight, setAmountRight] = useState<BN>(new BN(0));
+  const [amountLeft, setAmountLeft] = useState<string>("");
+  const [amountRight, setAmountRight] = useState<string>("");
   const [destinationLeft, setDestinationLeft] = useState<string>("");
   const [destinationRight, setDestinationRight] = useState<string>("");
   const [balanceInTinkernet, setBalanceInTinkernet] = useState<BigNumber>(
@@ -206,7 +206,7 @@ const XTransfer = () => {
   );
 
   const changedAmountLeft = (e: string) => {
-    setAmountLeft(new BN(e));
+    setAmountLeft(parseFloat(e).toFixed(12).replace(".", ""));
   };
 
   const changedDestinationLeft = (e: string) => {
@@ -214,7 +214,7 @@ const XTransfer = () => {
   };
 
   const changedAmountRight = (e: string) => {
-    setAmountRight(new BN(e));
+    setAmountRight(parseFloat(e).toFixed(12).replace(".", ""));
   };
 
   const changedDestinationRight = (e: string) => {
