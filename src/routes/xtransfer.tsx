@@ -214,11 +214,11 @@ const XTransfer = () => {
   };
 
   const changedAmountRight = (e: string) => {
-    setAmountLeft(new BN(e));
+    setAmountRight(new BN(e));
   };
 
   const changedDestinationRight = (e: string) => {
-    setDestinationLeft(e);
+    setDestinationRight(e);
   };
 
   const handleXTransferToBasilisk = async () => {
