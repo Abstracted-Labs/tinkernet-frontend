@@ -264,14 +264,14 @@ const XTransfer = () => {
 
     api.tx.xTokens
       .transfer(
-        0,
+        6,
         amountRight,
         {
           V1: {
             parents: 1,
             interior: {
               X2: [
-                { Parachain: 2090 },
+                { Parachain: 2125 },
                 {
                   AccountId32: {
                     network: "Any",
