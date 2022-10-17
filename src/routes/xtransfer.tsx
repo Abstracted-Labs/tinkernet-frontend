@@ -520,8 +520,11 @@ const XTransfer = () => {
                 <div className="border-t border-neutral-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
                   <div className="px-6">
                     <span className="text-sm font-normal leading-6 text-white">
-                      Balance in Tinkernet:
-                    </span>{" "}
+                      Balance on Tinkernet:
+                    </span>
+
+                    <br />
+
                     <span className="text-lg font-normal leading-6 text-white">
                       {formatBalance(balanceInTinkernet.toString(), {
                         decimals: 12,
@@ -533,8 +536,11 @@ const XTransfer = () => {
 
                   <div className="px-6">
                     <span className="text-sm font-normal leading-6 text-white">
-                      Balance in Basilisk:
-                    </span>{" "}
+                      Balance on Basilisk:
+                    </span>
+
+                    <br />
+
                     <span className="text-lg font-normal leading-6 text-white">
                       {formatBalance(balanceInBasilisk.toString(), {
                         decimals: 12,
