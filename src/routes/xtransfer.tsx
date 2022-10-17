@@ -15,7 +15,7 @@ import SelectWallet from "../components/SelectWallet";
 
 import logo from "../assets/logo.svg";
 import background from "../assets/background.svg";
-import { decodeAddress } from "@polkadot/util-crypto";
+import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
 import { ArrowRightIcon, ClipboardCopyIcon } from "@heroicons/react/outline";
 
 const RPC_PROVIDER = "wss://invarch-tinkernet.api.onfinality.io/public-ws";
@@ -406,7 +406,7 @@ const XTransfer = () => {
                           name="destination"
                           id="destination"
                           className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                          value={destinationField}
+                          value={encodeAddress(destinationField, 117)}
                           onChange={(e) =>
                             handleChangedDestination(e.target.value)
                           }
@@ -476,7 +476,7 @@ const XTransfer = () => {
                           name="destination"
                           id="destination"
                           className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                          value={destinationField}
+                          value={encodeAddress(destinationField, 10041)}
                           onChange={(e) =>
                             handleChangedDestination(e.target.value)
                           }
