@@ -1,4 +1,5 @@
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+// TODO refactor this to use @headlessui/react
 import * as Dialog from "@radix-ui/react-dialog";
 import { LogoutIcon, XIcon } from "@heroicons/react/outline";
 
