@@ -16,7 +16,7 @@ import SelectWallet from "../components/SelectWallet";
 import logo from "../assets/logo.svg";
 import background from "../assets/background.svg";
 import { decodeAddress } from "@polkadot/util-crypto";
-import { ArrowRightIcon } from "@heroicons/react/outline";
+import { ArrowRightIcon, ClipboardCopyIcon } from "@heroicons/react/outline";
 
 const RPC_PROVIDER = "wss://invarch-tinkernet.api.onfinality.io/public-ws";
 const RPC_PROVIDER_BSX = "wss://rpc.basilisk.cloud";
@@ -404,22 +404,31 @@ const XTransfer = () => {
                         </div>
                       </div>
 
-                      <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                         <label
                           htmlFor="destination"
                           className="block text-xs font-medium text-white"
                         >
                           Destination
                         </label>
+
                         <input
                           type="text"
                           name="destination"
                           id="destination"
-                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
+                          value={destinationLeft}
                           onChange={(e) =>
                             handleChangedDestinationLeft(e.target.value)
                           }
                         />
+
+                        <div
+                          className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
+                          onClick={() => setDestinationLeft(account.address)}
+                        >
+                          <ClipboardCopyIcon className="h-5 w-5 text-white" />
+                        </div>
                       </div>
 
                       <button
@@ -461,22 +470,31 @@ const XTransfer = () => {
                         </div>
                       </div>
 
-                      <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                         <label
                           htmlFor="destination"
                           className="block text-xs font-medium text-white"
                         >
                           Destination
                         </label>
+
                         <input
                           type="text"
                           name="destination"
                           id="destination"
-                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
+                          value={destinationRight}
                           onChange={(e) =>
                             handleChangedDestinationRight(e.target.value)
                           }
                         />
+
+                        <div
+                          className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
+                          onClick={() => setDestinationLeft(account.address)}
+                        >
+                          <ClipboardCopyIcon className="h-5 w-5 text-white" />
+                        </div>
                       </div>
 
                       <button
