@@ -15,7 +15,6 @@ import SelectWallet from "../components/SelectWallet";
 
 import logo from "../assets/logo.svg";
 import background from "../assets/background.svg";
-import { AccountId32 } from "@polkadot/types/interfaces";
 import { decodeAddress } from "@polkadot/util-crypto";
 
 const RPC_PROVIDER = "wss://invarch-tinkernet.api.onfinality.io/public-ws";
@@ -347,48 +346,102 @@ const XTransfer = () => {
             ) : null} */}
 
             {account ? (
-              <div className="overflow-hidden rounded-lg border border-gray-50 bg-black shadow">
+              <div className="overflow-hidden rounded-lg border border-neutral-50 bg-black shadow">
                 <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-                  <div className="flex flex-col p-6">
-                    <span className="text-lg font-normal text-white">
+                  <div className="flex flex-col gap-4 p-6">
+                    <span className="text-lg font-bold text-white">
                       Transfer to Basilisk
                     </span>
-                    <input
-                      className="text-2xl font-bold text-black"
-                      placeholder="amount"
-                      onChange={(e) => changedAmountLeft(e.target.value)}
-                    />
-                    <input
-                      className="text-2xl font-bold text-black"
-                      placeholder="destination"
-                      onChange={(e) => changedDestinationLeft(e.target.value)}
-                    />
+
+                    <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <label
+                        htmlFor="amount"
+                        className="block text-xs font-medium text-white"
+                      >
+                        Amount
+                      </label>
+                      <input
+                        type="text"
+                        name="amount"
+                        id="amount"
+                        disabled={balanceInBasilisk.toNumber() === 0}
+                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                        onChange={(e) => changedAmountLeft(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <label
+                        htmlFor="destination"
+                        className="block text-xs font-medium text-white"
+                      >
+                        Destination
+                      </label>
+                      <input
+                        type="text"
+                        name="destination"
+                        id="destination"
+                        disabled={balanceInBasilisk.toNumber() === 0}
+                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                        onChange={(e) => changedDestinationLeft(e.target.value)}
+                      />
+                    </div>
+
                     <button
                       type="button"
-                      className="mt-8 inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
+                      className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
+                      disabled={balanceInBasilisk.toNumber() === 0}
                       onClick={() => handleXTransferToBasilisk()}
                     >
                       Transfer
                     </button>
                   </div>
 
-                  <div className="flex flex-col p-6">
-                    <span className="text-lg font-normal text-white">
+                  <div className="flex flex-col gap-4 p-6">
+                    <span className="text-lg font-bold text-white">
                       Transfer to Tinkernet
                     </span>
-                    <input
-                      className="text-2xl font-bold text-black"
-                      placeholder="amount"
-                      onChange={(e) => changedAmountRight(e.target.value)}
-                    />
-                    <input
-                      className="text-2xl font-bold text-black"
-                      placeholder="destination"
-                      onChange={(e) => changedDestinationRight(e.target.value)}
-                    />
+
+                    <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <label
+                        htmlFor="amount"
+                        className="block text-xs font-medium text-white"
+                      >
+                        Amount
+                      </label>
+                      <input
+                        type="text"
+                        name="amount"
+                        id="amount"
+                        disabled={balanceInTinkernet.toNumber() === 0}
+                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                        onChange={(e) => changedAmountRight(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <label
+                        htmlFor="destination"
+                        className="block text-xs font-medium text-white"
+                      >
+                        Destination
+                      </label>
+                      <input
+                        type="text"
+                        name="destination"
+                        id="destination"
+                        disabled={balanceInTinkernet.toNumber() === 0}
+                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                        onChange={(e) =>
+                          changedDestinationRight(e.target.value)
+                        }
+                      />
+                    </div>
+
                     <button
                       type="button"
-                      className="mt-8 inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
+                      className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
+                      disabled={balanceInTinkernet.toNumber() === 0}
                       onClick={() => handleXTransferToTinkernet()}
                     >
                       Transfer
@@ -396,12 +449,12 @@ const XTransfer = () => {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
+                <div className="border-t border-neutral-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
                   <div className="px-6">
-                    <span className="text-sm font-bold leading-6 text-white">
+                    <span className="text-sm font-normal leading-6 text-white">
                       Balance in Tinkernet:
                     </span>{" "}
-                    <span className="text-lg font-bold leading-6 text-white">
+                    <span className="text-lg font-normal leading-6 text-white">
                       {formatBalance(balanceInTinkernet.toString(), {
                         decimals: 12,
                         withUnit: "TNKR",
@@ -411,10 +464,10 @@ const XTransfer = () => {
                   </div>
 
                   <div className="px-6">
-                    <span className="text-sm font-bold leading-6 text-white">
+                    <span className="text-sm font-normal leading-6 text-white">
                       Balance in Basilisk:
                     </span>{" "}
-                    <span className="text-lg font-bold leading-6 text-white">
+                    <span className="text-lg font-normal leading-6 text-white">
                       {formatBalance(balanceInBasilisk.toString(), {
                         decimals: 12,
                         withUnit: "TNKR",
