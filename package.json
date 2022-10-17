@@ -10,6 +10,7 @@
     "lint": "eslint --ext .ts,.js src"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.3",
     "@heroicons/react": "^1.0.6",
     "@polkadot/api": "^9.1.1",
     "@polkadot/api-augment": "^9.1.1",

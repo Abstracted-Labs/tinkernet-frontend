@@ -6,7 +6,7 @@ import {
   web3FromAddress,
 } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { SVGProps, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BN, formatBalance, u8aToHex } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
@@ -16,6 +16,7 @@ import SelectWallet from "../components/SelectWallet";
 import logo from "../assets/logo.svg";
 import background from "../assets/background.svg";
 import { decodeAddress } from "@polkadot/util-crypto";
+import { ArrowRightIcon } from "@heroicons/react/outline";
 
 const RPC_PROVIDER = "wss://invarch-tinkernet.api.onfinality.io/public-ws";
 const RPC_PROVIDER_BSX = "wss://rpc.basilisk.cloud";
@@ -68,48 +69,37 @@ const navigation = [
   },
 ];
 
-const Spinner = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    className="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    {...props}
-  >
-    <circle
-      className="opacity-25"
-      cx="12"
-      cy="12"
-      r="10"
-      stroke="currentColor"
-      strokeWidth="4"
-    ></circle>
-    <path
-      className="opacity-75"
-      fill="currentColor"
-      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-    ></path>
-  </svg>
-);
+enum Currency {
+  BASILISK = "Basilisk",
+  TINKERNET = "Tinkernet",
+}
 
 const XTransfer = () => {
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
-  const [vestingData, setVestingData] = useState<{
-    vestedLocked: string;
-    vestedClaimable: string;
-    total: string;
-    transferable: string;
-    remainingVestingPeriod: string;
-  } | null>(null);
+  const [amountLeft, setAmountLeft] = useState<string>("");
+  const [destinationLeft, setDestinationLeft] = useState<string>("");
+  const [amountRight, setAmountRight] = useState<string>("");
+  const [destinationRight, setDestinationRight] = useState<string>("");
+  const [pair, setPair] = useState<{
+    from: Currency;
+    to: Currency;
+  }>({
+    from: Currency.BASILISK,
+    to: Currency.TINKERNET,
+  });
+  const [balanceInTinkernet, setBalanceInTinkernet] = useState<BigNumber>(
+    new BigNumber(0)
+  );
+  const [balanceInBasilisk, setBalanceInBasilisk] = useState<BigNumber>(
+    new BigNumber(0)
+  );
 
   const handleWalletSelection = (account: InjectedAccountWithMeta | null) => {
     setAccount(account);
 
     setSelectWalletModalOpen(false);
-
-    setVestingData(null);
   };
 
   const handleConnect = async () => {
@@ -138,8 +128,6 @@ const XTransfer = () => {
 
   const handleDisconnect = () => {
     setAccount(null);
-
-    setVestingData(null);
 
     setSelectWalletModalOpen(false);
   };
@@ -193,31 +181,27 @@ const XTransfer = () => {
     loadBalances(account);
   }, [account]);
 
-  const [amountLeft, setAmountLeft] = useState<string>("");
-  const [amountRight, setAmountRight] = useState<string>("");
-  const [destinationLeft, setDestinationLeft] = useState<string>("");
-  const [destinationRight, setDestinationRight] = useState<string>("");
-  const [balanceInTinkernet, setBalanceInTinkernet] = useState<BigNumber>(
-    new BigNumber(0)
-  );
-  const [balanceInBasilisk, setBalanceInBasilisk] = useState<BigNumber>(
-    new BigNumber(0)
-  );
-
-  const changedAmountLeft = (e: string) => {
+  const handleChangedAmountLeft = (e: string) => {
     setAmountLeft(parseFloat(e).toFixed(12).replace(".", ""));
   };
 
-  const changedDestinationLeft = (e: string) => {
+  const handleChangedDestinationLeft = (e: string) => {
     setDestinationLeft(e);
   };
 
-  const changedAmountRight = (e: string) => {
+  const handleChangedAmountRight = (e: string) => {
     setAmountRight(parseFloat(e).toFixed(12).replace(".", ""));
   };
 
-  const changedDestinationRight = (e: string) => {
+  const handleChangedDestinationRight = (e: string) => {
     setDestinationRight(e);
+  };
+
+  const handlePairSwap = () => {
+    setPair((pair) => ({
+      from: pair.to,
+      to: pair.from,
+    }));
   };
 
   const handleXTransferToBasilisk = async () => {
@@ -327,7 +311,7 @@ const XTransfer = () => {
             </div>
           </div>
 
-          <div className="z-10 w-full py-6 px-8 sm:max-w-3xl">
+          <div className="z-10 w-full py-6 px-8 sm:max-w-xl">
             {!account ? (
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-white">
@@ -347,106 +331,166 @@ const XTransfer = () => {
 
             {account ? (
               <div className="overflow-hidden rounded-lg border border-neutral-50 bg-black shadow">
-                <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-                  <div className="flex flex-col gap-4 p-6">
-                    <span className="text-lg font-bold text-white">
-                      Transfer to Basilisk
-                    </span>
+                <div className="p-4">
+                  <div className="grid grid-cols-3 items-center justify-between p-6 pb-2">
+                    <select
+                      id="destination"
+                      name="destination"
+                      className="block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
+                      value={pair.from}
+                      onChange={(e) => {
+                        const from = e.target.value as Currency;
 
-                    <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                      <label
-                        htmlFor="amount"
-                        className="block text-xs font-medium text-white"
-                      >
-                        Amount
-                      </label>
-                      <input
-                        type="text"
-                        name="amount"
-                        id="amount"
-                        disabled={balanceInBasilisk.toNumber() === 0}
-                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                        onChange={(e) => changedAmountLeft(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                      <label
-                        htmlFor="destination"
-                        className="block text-xs font-medium text-white"
-                      >
-                        Destination
-                      </label>
-                      <input
-                        type="text"
-                        name="destination"
-                        id="destination"
-                        disabled={balanceInBasilisk.toNumber() === 0}
-                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                        onChange={(e) => changedDestinationLeft(e.target.value)}
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
-                      disabled={balanceInBasilisk.toNumber() === 0}
-                      onClick={() => handleXTransferToBasilisk()}
+                        setPair((pair) => ({
+                          from: from,
+                          to: from === pair.to ? pair.from : pair.to,
+                        }));
+                      }}
                     >
-                      Transfer
-                    </button>
+                      <option value={Currency.BASILISK}>Basilisk</option>
+                      <option value={Currency.TINKERNET}>Tinkernet</option>
+                    </select>
+
+                    <div className="flex justify-center">
+                      <ArrowRightIcon
+                        className="h-5 w-5 cursor-pointer text-white"
+                        onClick={handlePairSwap}
+                      />
+                    </div>
+
+                    <select
+                      id="destination"
+                      name="destination"
+                      className="block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
+                      value={pair.to}
+                      onChange={(e) => {
+                        console.log("TODO");
+                      }}
+                    >
+                      {pair.from === Currency.BASILISK ? (
+                        <option value={Currency.TINKERNET}>Tinkernet</option>
+                      ) : null}
+                      {pair.from === Currency.TINKERNET ? (
+                        <option value={Currency.BASILISK}>Basilisk</option>
+                      ) : null}
+                    </select>
                   </div>
 
-                  <div className="flex flex-col gap-4 p-6">
-                    <span className="text-lg font-bold text-white">
-                      Transfer to Tinkernet
-                    </span>
+                  {pair.from === Currency.BASILISK &&
+                  pair.to === Currency.TINKERNET ? (
+                    <div className="flex flex-col gap-4 p-6">
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="amount"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Amount
+                        </label>
+                        <input
+                          type="text"
+                          name="amount"
+                          id="amount"
+                          disabled={balanceInBasilisk.toNumber() === 0}
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          onChange={(e) =>
+                            handleChangedAmountLeft(e.target.value)
+                          }
+                        />
 
-                    <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                      <label
-                        htmlFor="amount"
-                        className="block text-xs font-medium text-white"
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                          <span className="text-white sm:text-sm" id="currency">
+                            TNKR
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="destination"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Destination
+                        </label>
+                        <input
+                          type="text"
+                          name="destination"
+                          id="destination"
+                          disabled={balanceInBasilisk.toNumber() === 0}
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          onChange={(e) =>
+                            handleChangedDestinationLeft(e.target.value)
+                          }
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
+                        disabled={balanceInBasilisk.toNumber() === 0}
+                        onClick={() => handleXTransferToBasilisk()}
                       >
-                        Amount
-                      </label>
-                      <input
-                        type="text"
-                        name="amount"
-                        id="amount"
-                        disabled={balanceInTinkernet.toNumber() === 0}
-                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                        onChange={(e) => changedAmountRight(e.target.value)}
-                      />
+                        Transfer
+                      </button>
                     </div>
+                  ) : null}
 
-                    <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                      <label
-                        htmlFor="destination"
-                        className="block text-xs font-medium text-white"
+                  {pair.from === Currency.TINKERNET &&
+                  pair.to === Currency.BASILISK ? (
+                    <div className="flex flex-col gap-4 p-6">
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="amount"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Amount
+                        </label>
+                        <input
+                          type="text"
+                          name="amount"
+                          id="amount"
+                          disabled={balanceInTinkernet.toNumber() === 0}
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          onChange={(e) =>
+                            handleChangedAmountRight(e.target.value)
+                          }
+                        />
+
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                          <span className="text-white sm:text-sm" id="currency">
+                            TNKR
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="destination"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Destination
+                        </label>
+                        <input
+                          type="text"
+                          name="destination"
+                          id="destination"
+                          disabled={balanceInTinkernet.toNumber() === 0}
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          onChange={(e) =>
+                            handleChangedDestinationRight(e.target.value)
+                          }
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
+                        disabled={balanceInTinkernet.toNumber() === 0}
+                        onClick={() => handleXTransferToTinkernet()}
                       >
-                        Destination
-                      </label>
-                      <input
-                        type="text"
-                        name="destination"
-                        id="destination"
-                        disabled={balanceInTinkernet.toNumber() === 0}
-                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                        onChange={(e) =>
-                          changedDestinationRight(e.target.value)
-                        }
-                      />
+                        Transfer
+                      </button>
                     </div>
-
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
-                      disabled={balanceInTinkernet.toNumber() === 0}
-                      onClick={() => handleXTransferToTinkernet()}
-                    >
-                      Transfer
-                    </button>
-                  </div>
+                  ) : null}
                 </div>
 
                 <div className="border-t border-neutral-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
