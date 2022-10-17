@@ -78,10 +78,9 @@ const XTransfer = () => {
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
   const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
-  const [amountLeft, setAmountLeft] = useState<string>("");
-  const [destinationLeft, setDestinationLeft] = useState<string>("");
-  const [amountRight, setAmountRight] = useState<string>("");
-  const [destinationRight, setDestinationRight] = useState<string>("");
+  const [amount, setAmount] = useState<string>("");
+  const [destinationField, setDestinationField] = useState<string>("");
+  const [destination, setDestination] = useState<string | null>(null);
   const [pair, setPair] = useState<{
     from: Currency;
     to: Currency;
@@ -181,20 +180,18 @@ const XTransfer = () => {
     loadBalances(account);
   }, [account]);
 
-  const handleChangedAmountLeft = (e: string) => {
-    setAmountLeft(parseFloat(e).toFixed(12).replace(".", ""));
+  const handleChangedAmount = (e: string) => {
+    setAmount(parseFloat(e).toFixed(12).replace(".", ""));
   };
 
-  const handleChangedDestinationLeft = (e: string) => {
-    setDestinationLeft(e);
-  };
-
-  const handleChangedAmountRight = (e: string) => {
-    setAmountRight(parseFloat(e).toFixed(12).replace(".", ""));
-  };
-
-  const handleChangedDestinationRight = (e: string) => {
-    setDestinationRight(e);
+  const handleChangedDestination = (e: string) => {
+    setDestinationField(e);
+    try {
+      const des = u8aToHex(decodeAddress(e));
+      setDestination(des);
+    } catch {
+      setDestination(null);
+    }
   };
 
   const handlePairSwap = () => {
@@ -215,7 +212,7 @@ const XTransfer = () => {
     api.tx.xTokens
       .transfer(
         0,
-        amountLeft,
+        amount,
         {
           V1: {
             parents: 1,
@@ -225,7 +222,7 @@ const XTransfer = () => {
                 {
                   AccountId32: {
                     network: "Any",
-                    id: u8aToHex(decodeAddress(destinationLeft)),
+                    id: destination,
                   },
                 },
               ],
@@ -248,7 +245,7 @@ const XTransfer = () => {
     api.tx.xTokens
       .transfer(
         6,
-        amountRight,
+        amount,
         {
           V1: {
             parents: 1,
@@ -258,7 +255,7 @@ const XTransfer = () => {
                 {
                   AccountId32: {
                     network: "Any",
-                    id: u8aToHex(decodeAddress(destinationRight)),
+                    id: destination,
                   },
                 },
               ],
@@ -323,12 +320,6 @@ const XTransfer = () => {
               </div>
             ) : null}
 
-            {/* {account && !vestingData ? (
-              <div className="flex items-center justify-center">
-                <Spinner className="h-8 w-8 animate-spin text-white" />
-              </div>
-            ) : null} */}
-
             {account ? (
               <div className="overflow-hidden rounded-lg border border-neutral-50 bg-black shadow">
                 <div className="p-4">
@@ -392,9 +383,7 @@ const XTransfer = () => {
                           id="amount"
                           disabled={balanceInBasilisk.toNumber() === 0}
                           className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                          onChange={(e) =>
-                            handleChangedAmountLeft(e.target.value)
-                          }
+                          onChange={(e) => handleChangedAmount(e.target.value)}
                         />
 
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -417,15 +406,17 @@ const XTransfer = () => {
                           name="destination"
                           id="destination"
                           className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                          value={destinationLeft}
+                          value={destinationField}
                           onChange={(e) =>
-                            handleChangedDestinationLeft(e.target.value)
+                            handleChangedDestination(e.target.value)
                           }
                         />
 
                         <div
                           className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
-                          onClick={() => setDestinationLeft(account.address)}
+                          onClick={() =>
+                            handleChangedDestination(account.address)
+                          }
                         >
                           <ClipboardCopyIcon className="h-5 w-5 text-white" />
                         </div>
@@ -434,7 +425,11 @@ const XTransfer = () => {
                       <button
                         type="button"
                         className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
-                        disabled={balanceInBasilisk.toNumber() === 0}
+                        disabled={
+                          new BigNumber(amount) >=
+                            balanceInBasilisk.minus(100000000000) ||
+                          !destination
+                        }
                         onClick={() => handleXTransferToBasilisk()}
                       >
                         Transfer
@@ -458,9 +453,7 @@ const XTransfer = () => {
                           id="amount"
                           disabled={balanceInTinkernet.toNumber() === 0}
                           className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                          onChange={(e) =>
-                            handleChangedAmountRight(e.target.value)
-                          }
+                          onChange={(e) => handleChangedAmount(e.target.value)}
                         />
 
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
@@ -483,15 +476,17 @@ const XTransfer = () => {
                           name="destination"
                           id="destination"
                           className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                          value={destinationRight}
+                          value={destinationField}
                           onChange={(e) =>
-                            handleChangedDestinationRight(e.target.value)
+                            handleChangedDestination(e.target.value)
                           }
                         />
 
                         <div
                           className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
-                          onClick={() => setDestinationLeft(account.address)}
+                          onClick={() =>
+                            handleChangedDestination(account.address)
+                          }
                         >
                           <ClipboardCopyIcon className="h-5 w-5 text-white" />
                         </div>
@@ -500,7 +495,11 @@ const XTransfer = () => {
                       <button
                         type="button"
                         className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
-                        disabled={balanceInTinkernet.toNumber() === 0}
+                        disabled={
+                          new BigNumber(amount) >=
+                            balanceInTinkernet.minus(100000000000) ||
+                          !destination
+                        }
                         onClick={() => handleXTransferToTinkernet()}
                       >
                         Transfer
