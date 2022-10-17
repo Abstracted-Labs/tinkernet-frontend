@@ -415,7 +415,6 @@ const XTransfer = () => {
                           type="text"
                           name="destination"
                           id="destination"
-                          disabled={balanceInBasilisk.toNumber() === 0}
                           className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
                           onChange={(e) =>
                             handleChangedDestinationLeft(e.target.value)
@@ -473,7 +472,6 @@ const XTransfer = () => {
                           type="text"
                           name="destination"
                           id="destination"
-                          disabled={balanceInTinkernet.toNumber() === 0}
                           className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
                           onChange={(e) =>
                             handleChangedDestinationRight(e.target.value)
