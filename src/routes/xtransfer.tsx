@@ -317,7 +317,7 @@ const XTransfer = () => {
             </div>
           </div>
 
-          <div className="z-10 w-full py-6 px-8 sm:max-w-xl">
+          <div className="z-10 w-full py-6 px-8 sm:max-w-2xl">
             {!account ? (
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-white">
@@ -332,11 +332,11 @@ const XTransfer = () => {
             {account ? (
               <div className="overflow-hidden rounded-lg border border-neutral-50 bg-black shadow">
                 <div className="p-4">
-                  <div className="grid grid-cols-3 items-center justify-between p-6 pb-2">
+                  <div className="grid grid-cols-5 items-center justify-between p-6 pb-2">
                     <select
                       id="destination"
                       name="destination"
-                      className="block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
+                      className="col-span-2 block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
                       value={pair.from}
                       onChange={(e) => {
                         const from = e.target.value as Currency;
@@ -361,7 +361,7 @@ const XTransfer = () => {
                     <select
                       id="destination"
                       name="destination"
-                      className="block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
+                      className="col-span-2 block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
                       value={pair.to}
                       onChange={(e) => {
                         console.log("TODO");
