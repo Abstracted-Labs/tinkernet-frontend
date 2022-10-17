@@ -376,76 +376,6 @@ const XTransfer = () => {
                     </select>
                   </div>
 
-                  {pair.from === Currency.BASILISK &&
-                  pair.to === Currency.TINKERNET ? (
-                    <div className="flex flex-col gap-4 p-6">
-                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                        <label
-                          htmlFor="amount"
-                          className="block text-xs font-medium text-white"
-                        >
-                          Amount
-                        </label>
-                        <input
-                          type="text"
-                          name="amount"
-                          id="amount"
-                          disabled={balanceInBasilisk.toNumber() === 0}
-                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                          onChange={(e) => handleChangedAmount(e.target.value)}
-                        />
-
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                          <span className="text-white sm:text-sm" id="currency">
-                            TNKR
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                        <label
-                          htmlFor="destination"
-                          className="block text-xs font-medium text-white"
-                        >
-                          Destination
-                        </label>
-
-                        <input
-                          type="text"
-                          name="destination"
-                          id="destination"
-                          className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                          value={encode(destinationField, 117)}
-                          onChange={(e) =>
-                            handleChangedDestination(e.target.value)
-                          }
-                        />
-
-                        <div
-                          className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
-                          onClick={() =>
-                            handleChangedDestination(account.address)
-                          }
-                        >
-                          <ClipboardCopyIcon className="h-5 w-5 text-white" />
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
-                        disabled={
-                          new BigNumber(amount) >=
-                            balanceInBasilisk.minus(100000000000) ||
-                          !destination
-                        }
-                        onClick={() => handleXTransferToBasilisk()}
-                      >
-                        Transfer
-                      </button>
-                    </div>
-                  ) : null}
-
                   {pair.from === Currency.TINKERNET &&
                   pair.to === Currency.BASILISK ? (
                     <div className="flex flex-col gap-4 p-6">
@@ -507,6 +437,76 @@ const XTransfer = () => {
                         disabled={
                           new BigNumber(amount) >=
                             balanceInTinkernet.minus(100000000000) ||
+                          !destination
+                        }
+                        onClick={() => handleXTransferToBasilisk()}
+                      >
+                        Transfer
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {pair.from === Currency.BASILISK &&
+                  pair.to === Currency.TINKERNET ? (
+                    <div className="flex flex-col gap-4 p-6">
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="amount"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Amount
+                        </label>
+                        <input
+                          type="text"
+                          name="amount"
+                          id="amount"
+                          disabled={balanceInBasilisk.toNumber() === 0}
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          onChange={(e) => handleChangedAmount(e.target.value)}
+                        />
+
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                          <span className="text-white sm:text-sm" id="currency">
+                            TNKR
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="destination"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Destination
+                        </label>
+
+                        <input
+                          type="text"
+                          name="destination"
+                          id="destination"
+                          className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
+                          value={encode(destinationField, 117)}
+                          onChange={(e) =>
+                            handleChangedDestination(e.target.value)
+                          }
+                        />
+
+                        <div
+                          className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
+                          onClick={() =>
+                            handleChangedDestination(account.address)
+                          }
+                        >
+                          <ClipboardCopyIcon className="h-5 w-5 text-white" />
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
+                        disabled={
+                          new BigNumber(amount) >=
+                            balanceInBasilisk.minus(100000000000) ||
                           !destination
                         }
                         onClick={() => handleXTransferToTinkernet()}
