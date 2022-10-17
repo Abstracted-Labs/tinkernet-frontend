@@ -267,6 +267,15 @@ const XTransfer = () => {
       .signAndSend(account.address, { signer: injector.signer });
   };
 
+  const encode = (destination: string | null, prefix: number): string => {
+    if (!destination) return "";
+    try {
+      return encodeAddress(destination, prefix);
+    } catch {
+      return destination;
+    }
+  };
+
   return (
     <>
       <div className="bg-black">
@@ -406,7 +415,7 @@ const XTransfer = () => {
                           name="destination"
                           id="destination"
                           className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                          value={encodeAddress(destinationField, 117)}
+                          value={encode(destinationField, 117)}
                           onChange={(e) =>
                             handleChangedDestination(e.target.value)
                           }
@@ -476,7 +485,7 @@ const XTransfer = () => {
                           name="destination"
                           id="destination"
                           className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                          value={encodeAddress(destinationField, 10041)}
+                          value={encode(destinationField, 10041)}
                           onChange={(e) =>
                             handleChangedDestination(e.target.value)
                           }
