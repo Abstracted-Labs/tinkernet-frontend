@@ -16,7 +16,7 @@ import SelectWallet from "../components/SelectWallet";
 import logo from "../assets/logo.svg";
 import background from "../assets/background.svg";
 
-const RPC_PROVIDER = "wss://tinker.invarch.network/";
+const RPC_PROVIDER = "wss://invarch-tinkernet.api.onfinality.io/public-ws";
 
 type SystemAccount = Struct & {
   data: {
