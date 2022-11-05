@@ -60,7 +60,7 @@ const navigation = [
   },
   {
     name: "Medium",
-    href: "https://github.com/InvArch",
+    href: "https://invarch.medium.com/",
     icon: (props: NavigationProps) => (
       <svg viewBox="0 0 20.24 11.38" fill="currentColor" {...props}>
         <path d="M11.42 5.69c0 3.14-2.56 5.69-5.71 5.69A5.691 5.691 0 0 1 0 5.69C0 2.55 2.56 0 5.71 0s5.7 2.54 5.71 5.69Zm6.26 0c0 2.96-1.28 5.36-2.85 5.36s-2.85-2.4-2.85-5.36S13.25.33 14.82.33s2.85 2.4 2.85 5.36Zm2.56 0c0 2.65-.45 4.8-1 4.8s-1-2.15-1-4.8.45-4.8 1-4.8 1 2.15 1 4.8Z" />
