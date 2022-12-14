@@ -6,9 +6,11 @@ import Claim from "./routes/claim";
 import XTransfer from "./routes/xtransfer";
 
 import "./index.css";
+import { Toaster } from "react-hot-toast";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
+    <Toaster position="bottom-right" />
     <BrowserRouter>
       <Routes>
         {/* Just for now, as we only have the claim */}

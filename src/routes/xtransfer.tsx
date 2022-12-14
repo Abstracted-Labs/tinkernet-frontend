@@ -17,6 +17,7 @@ import logo from "../assets/logo.svg";
 import background from "../assets/background.svg";
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
 import { ArrowRightIcon, ClipboardCopyIcon } from "@heroicons/react/outline";
+import { toast } from "react-hot-toast";
 
 const RPC_PROVIDER = "wss://invarch-tinkernet.api.onfinality.io/public-ws";
 const RPC_PROVIDER_BSX = "wss://rpc.basilisk.cloud";
@@ -76,7 +77,15 @@ enum Currency {
 
 const XTransfer = () => {
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
-  const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null);
+  const [account, setAccount] = useState<InjectedAccountWithMeta | null>(() => {
+    const storedAccount = localStorage.getItem("account");
+
+    if (storedAccount) {
+      return JSON.parse(storedAccount);
+    }
+
+    return null;
+  });
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [amount, setAmount] = useState<string>("");
   const [destinationField, setDestinationField] = useState<string>("");
@@ -97,6 +106,8 @@ const XTransfer = () => {
 
   const handleWalletSelection = (account: InjectedAccountWithMeta | null) => {
     setAccount(account);
+
+    localStorage.setItem("account", JSON.stringify(account));
 
     setSelectWalletModalOpen(false);
   };
@@ -133,6 +144,7 @@ const XTransfer = () => {
 
   const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
     try {
+      toast.loading("Loading balances...");
       const wsProvider = new WsProvider(RPC_PROVIDER);
 
       const api = await ApiPromise.create({ provider: wsProvider });
@@ -169,7 +181,15 @@ const XTransfer = () => {
       );
 
       setBalanceInBasilisk(balanceInBas);
+
+      toast.dismiss();
+
+      toast.success("Balances loaded");
     } catch (error) {
+      toast.dismiss();
+
+      toast.error("Failed to load balances");
+
       console.error(error);
     }
   };
@@ -203,6 +223,7 @@ const XTransfer = () => {
 
   const handleXTransferToBasilisk = async () => {
     if (!account) return;
+
     const injector = await web3FromAddress(account.address);
 
     const wsProvider = new WsProvider(RPC_PROVIDER);
@@ -281,10 +302,19 @@ const XTransfer = () => {
       <div className="bg-black">
         <nav className="z-10">
           <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
-            <div className="flex items-center">
+            <div className="flex items-center gap-8">
               <Link to="/">
                 <img src={logo} alt="Tinker Network Logo" />
               </Link>
+
+              <div className="flex items-center gap-4">
+                <Link to="/claim">
+                  <span className="text-white">Claim</span>
+                </Link>
+                <Link to="/xtransfer">
+                  <span className="text-white">X-Transfer</span>
+                </Link>
+              </div>
             </div>
             <div className="flex items-center">
               <button
@@ -324,7 +354,7 @@ const XTransfer = () => {
                   Wallet not connected
                 </h1>
                 <p className="mt-8 text-lg text-white">
-                  You can connect your wallet to claim your vested tokens.
+                  You can connect your wallet to use x-transfer.
                 </p>
               </div>
             ) : null}
