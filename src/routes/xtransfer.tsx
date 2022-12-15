@@ -77,15 +77,7 @@ enum Currency {
 
 const XTransfer = () => {
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
-  const [account, setAccount] = useState<InjectedAccountWithMeta | null>(() => {
-    const storedAccount = localStorage.getItem("account");
-
-    if (storedAccount) {
-      return JSON.parse(storedAccount);
-    }
-
-    return null;
-  });
+  const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [amount, setAmount] = useState<string>("");
   const [destinationField, setDestinationField] = useState<string>("");
@@ -106,8 +98,6 @@ const XTransfer = () => {
 
   const handleWalletSelection = (account: InjectedAccountWithMeta | null) => {
     setAccount(account);
-
-    localStorage.setItem("account", JSON.stringify(account));
 
     setSelectWalletModalOpen(false);
   };

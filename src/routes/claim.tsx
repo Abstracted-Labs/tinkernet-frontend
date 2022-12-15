@@ -93,15 +93,7 @@ const Spinner = (props: SVGProps<SVGSVGElement>) => (
 
 const Home = () => {
   const [isSelectWalletModalOpen, setSelectWalletModalOpen] = useState(false);
-  const [account, setAccount] = useState<InjectedAccountWithMeta | null>(() => {
-    const storedAccount = localStorage.getItem("account");
-
-    if (storedAccount) {
-      return JSON.parse(storedAccount);
-    }
-
-    return null;
-  });
+  const [account, setAccount] = useState<InjectedAccountWithMeta | null>(null);
   const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([]);
   const [vestingData, setVestingData] = useState<{
     vestedLocked: string;
@@ -113,8 +105,6 @@ const Home = () => {
 
   const handleWalletSelection = (account: InjectedAccountWithMeta | null) => {
     setAccount(account);
-
-    localStorage.setItem("account", JSON.stringify(account));
 
     setSelectWalletModalOpen(false);
 
