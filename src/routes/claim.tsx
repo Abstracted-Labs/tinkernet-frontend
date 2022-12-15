@@ -17,7 +17,7 @@ import logo from "../assets/logo.svg";
 import background from "../assets/background.svg";
 import { toast } from "react-hot-toast";
 
-const RPC_PROVIDER = "wss://invarch-tinkernet.api.onfinality.io/public-ws";
+const RPC_PROVIDER = "wss://tinker.invarch.network";
 
 type SystemAccount = Struct & {
   data: {
