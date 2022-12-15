@@ -19,7 +19,7 @@ import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
 import { ArrowRightIcon, ClipboardCopyIcon } from "@heroicons/react/outline";
 import { toast } from "react-hot-toast";
 
-const RPC_PROVIDER = "wss://invarch-tinkernet.api.onfinality.io/public-ws";
+const RPC_PROVIDER = "wss://tinker.invarch.network";
 const RPC_PROVIDER_BSX = "wss://rpc.basilisk.cloud";
 
 type SystemAccount = Struct & {
