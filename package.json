@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@headlessui/react": "^1.7.3",
-    "@heroicons/react": "^1.0.6",
+    "@heroicons/react": "^2.0.13",
     "@polkadot/api": "^9.1.1",
     "@polkadot/api-augment": "^9.1.1",
     "@polkadot/extension-dapp": "^0.44.4",
@@ -24,7 +24,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.0",
-    "react-router-dom": "^6.3.0"
+    "react-router-dom": "^6.3.0",
+    "zustand": "^4.1.5"
   },
   "devDependencies": {
     "@types/react": "^18.0.15",
