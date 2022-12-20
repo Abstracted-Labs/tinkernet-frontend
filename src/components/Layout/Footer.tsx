@@ -46,7 +46,7 @@ const Footer = () => {
   const { setHost, host } = useRPC();
 
   return (
-    <footer className="bg-neutral-800">
+    <footer>
       <div className="mx-auto max-w-7xl py-12 px-4 md:flex md:items-center md:justify-between lg:px-8">
         <div className="flex justify-center space-x-6 md:order-2">
           {navigation.map((item) => (
