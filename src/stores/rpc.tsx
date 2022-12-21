@@ -3,7 +3,8 @@ import { ApiOptions } from "@polkadot/api/types";
 import create from "zustand";
 
 enum Host {
-  REMOTE = "wss://tinker.invarch.network",
+  // REMOTE = "wss://tinker.invarch.network",
+  REMOTE = "wss://invarch-tinkernet.api.onfinality.io/public-ws",
   LOCAL = "ws://127.0.0.1:9944",
 }
 
