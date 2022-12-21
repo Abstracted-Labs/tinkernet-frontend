@@ -1,6 +1,6 @@
 import "@polkadot/api-augment";
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import { web3FromAddress } from "@polkadot/extension-dapp";
+import { web3FromAddress, web3Enable } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { useEffect, useState } from "react";
 import { BN, formatBalance, u8aToHex } from "@polkadot/util";
@@ -135,6 +135,8 @@ const XTransfer = () => {
 
   const handleXTransferToBasilisk = async () => {
     if (!selectedAccount) return;
+    
+    await web3Enable('Tinkernet');
 
     const injector = await web3FromAddress(selectedAccount.address);
 
@@ -169,6 +171,9 @@ const XTransfer = () => {
 
   const handleXTransferToTinkernet = async () => {
     if (!selectedAccount) return;
+    
+    await web3Enable('Tinkernet');
+    
     const injector = await web3FromAddress(selectedAccount.address);
 
     const wsProvider = new WsProvider(RPC_PROVIDER_BSX);
