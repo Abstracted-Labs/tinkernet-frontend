@@ -1,8 +1,3 @@
-import { Switch } from "@headlessui/react";
-import { Fragment } from "react";
-
-import useRPC, { Host } from "../../stores/rpc";
-
 type NavigationProps = {
   className: string;
   "aria-hidden": "true" | "false";
@@ -43,8 +38,6 @@ const navigation = [
 ];
 
 const Footer = () => {
-  const { setHost, host } = useRPC();
-
   return (
     <footer>
       <div className="mx-auto max-w-7xl py-12 px-4 md:flex md:items-center md:justify-between lg:px-8">
@@ -61,33 +54,6 @@ const Footer = () => {
               <item.icon className="h-6 w-6" aria-hidden="true" />
             </a>
           ))}
-
-          <Switch.Group as="div" className="flex items-center space-x-4">
-            <Switch.Label className="text-base text-neutral-400">
-              Use local RPC
-            </Switch.Label>
-            <Switch
-              checked={host === Host.LOCAL}
-              onChange={(enabled) =>
-                setHost(enabled ? Host.LOCAL : Host.REMOTE)
-              }
-              as={Fragment}
-            >
-              {({ checked }) => (
-                <button
-                  className={`${
-                    checked ? "bg-neutral-600" : "bg-neutral-200"
-                  } relative inline-flex h-6 w-11 items-center rounded-full`}
-                >
-                  <span
-                    className={`${
-                      checked ? "translate-x-6" : "translate-x-1"
-                    } inline-block h-4 w-4 transform rounded-full bg-white transition`}
-                  />
-                </button>
-              )}
-            </Switch>
-          </Switch.Group>
         </div>
         <div className="mt-8 md:order-1 md:mt-0">
           <p className="text-center text-base text-neutral-400">
