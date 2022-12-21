@@ -69,7 +69,7 @@ const XTransfer = () => {
         // vested locked
         api.query.balances.locks(address),
         // total
-        api.query.system.selectedAccount<SystemAccount>(address),
+        api.query.system.account<SystemAccount>(address),
       ]);
 
       const vestedLocked = new BigNumber(
