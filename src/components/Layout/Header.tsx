@@ -20,12 +20,12 @@ const Header = () => {
         <div className="flex items-center gap-8">
           <Link to="/">
             <img
-              className="block h-12 w-auto lg:hidden"
+              className="block h-6 w-auto lg:hidden"
               src={logoIcon}
               alt="Tinkernet Logo"
             />
             <img
-              className="hidden h-12 w-auto lg:block"
+              className="hidden h-6 w-auto lg:block"
               src={logoFull}
               alt="Tinkernet Logo"
             />
