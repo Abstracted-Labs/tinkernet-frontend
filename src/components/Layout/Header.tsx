@@ -1,9 +1,9 @@
 import { Menu } from "@headlessui/react";
-import { FingerPrintIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import shallow from "zustand/shallow";
 
-import logo from "../../assets/logo.svg";
+import logoFull from "../../assets/logo-full.svg";
+import logoIcon from "../../assets/logo-icon.svg";
 import useConnect from "../../hooks/useConnect";
 import useAccount from "../../stores/account";
 
@@ -19,7 +19,16 @@ const Header = () => {
       <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Link to="/">
-            <img src={logo} alt="Tinker Network Logo" />
+            <img
+              className="block h-12 w-auto lg:hidden"
+              src={logoIcon}
+              alt="Tinkernet Logo"
+            />
+            <img
+              className="hidden h-12 w-auto lg:block"
+              src={logoFull}
+              alt="Tinkernet Logo"
+            />
           </Link>
 
           <div className="flex items-center gap-4">
@@ -39,13 +48,7 @@ const Header = () => {
                   {selectedAccount ? (
                     selectedAccount.meta.name || selectedAccount.address
                   ) : (
-                    <>
-                      <FingerPrintIcon
-                        className="h-6 w-6 "
-                        aria-hidden="true"
-                      />
-                      <span className="ml-2">Log In</span>
-                    </>
+                    <>Log In</>
                   )}
                 </Menu.Button>
               </div>
@@ -72,10 +75,7 @@ const Header = () => {
               className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
               onClick={handleConnect}
             >
-              <>
-                <FingerPrintIcon className="h-6 w-6" aria-hidden="true" />
-                <span className="ml-2">Log In</span>
-              </>
+              Log In
             </button>
           )}
         </div>
