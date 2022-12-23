@@ -12,21 +12,32 @@ type RPCState = {
   host: Host;
   setHost: (host: Host) => void;
   createApi: (options?: ApiOptions) => Promise<ApiPromise>;
+  error: unknown | null;
 };
 
 const useRPC = create<RPCState>()((set, get) => ({
   host: Host.REMOTE,
   setHost: (host: Host) => set(() => ({ host })),
+  error: null,
   createApi: async () => {
     const { host } = get();
 
     const wsProvider = new WsProvider(host);
 
-    const api = await ApiPromise.create({
-      provider: wsProvider,
-    });
+    try {
+      const api = await ApiPromise.create({
+        provider: wsProvider,
+        throwOnConnect: true,
+      });
 
-    return api;
+      set(() => ({ error: null }));
+
+      return api;
+    } catch (e) {
+      set(() => ({ error: e }));
+
+      throw new Error("Unable to connect to RPC");
+    }
   },
 }));
 
