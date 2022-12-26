@@ -135,14 +135,12 @@ const XTransfer = () => {
 
   const handleXTransferToBasilisk = async () => {
     if (!selectedAccount) return;
-    
-    await web3Enable('Tinkernet');
+
+    await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
 
-    const wsProvider = new WsProvider(RPC_PROVIDER);
-
-    const api = await ApiPromise.create({ provider: wsProvider });
+    const api = await createApi();
 
     api.tx.xTokens
       .transfer(
@@ -171,16 +169,16 @@ const XTransfer = () => {
 
   const handleXTransferToTinkernet = async () => {
     if (!selectedAccount) return;
-    
-    await web3Enable('Tinkernet');
-    
+
+    await web3Enable("Tinkernet");
+
     const injector = await web3FromAddress(selectedAccount.address);
 
-    const wsProvider = new WsProvider(RPC_PROVIDER_BSX);
+    const wsProviderBSX = new WsProvider(RPC_PROVIDER_BSX);
 
-    const api = await ApiPromise.create({ provider: wsProvider });
+    const apiBSX = await ApiPromise.create({ provider: wsProviderBSX });
 
-    api.tx.xTokens
+    apiBSX.tx.xTokens
       .transfer(
         6,
         amount,
