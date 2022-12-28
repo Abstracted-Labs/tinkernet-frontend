@@ -40,9 +40,6 @@ const Header = () => {
             <Link to="/xtransfer">
               <span className="text-white">X-Transfer</span>
             </Link>
-            <Link to="/staking">
-              <span className="text-white">Staking</span>
-            </Link>
           </div>
         </div>
         <div className="flex items-center gap-4">
