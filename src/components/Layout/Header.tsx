@@ -15,21 +15,23 @@ const Header = () => {
   );
 
   return (
-    <nav className="z-10">
+    <nav className="bg-black">
       <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
-          <Link to="/">
-            <img
-              className="block h-6 w-auto lg:hidden"
-              src={logoIcon}
-              alt="Tinkernet Logo"
-            />
-            <img
-              className="hidden h-6 w-auto lg:block"
-              src={logoFull}
-              alt="Tinkernet Logo"
-            />
-          </Link>
+          <div className="flex-shrink-0">
+            <Link to="/">
+              <img
+                className="block h-6 w-auto lg:hidden"
+                src={logoIcon}
+                alt="Tinkernet Logo"
+              />
+              <img
+                className="hidden h-6 w-auto lg:block"
+                src={logoFull}
+                alt="Tinkernet Logo"
+              />
+            </Link>
+          </div>
 
           <div className="flex items-center gap-4">
             <Link to="/claim">
@@ -37,6 +39,9 @@ const Header = () => {
             </Link>
             <Link to="/xtransfer">
               <span className="text-white">X-Transfer</span>
+            </Link>
+            <Link to="/staking">
+              <span className="text-white">Staking</span>
             </Link>
           </div>
         </div>

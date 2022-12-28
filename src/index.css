@@ -3,5 +3,5 @@
 @tailwind utilities;
 
 html {
-  @apply bg-black;
+  font-feature-settings: "salt", "zero", "calt", "ccmp", "kern";
 }

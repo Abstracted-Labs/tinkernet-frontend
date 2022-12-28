@@ -14,8 +14,8 @@ import { toast } from "react-hot-toast";
 import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
 import shallow from "zustand/shallow";
+import LoadingSpinner from "../components/LoadingSpinner";
 
-const RPC_PROVIDER = "wss://tinker.invarch.network";
 const RPC_PROVIDER_BSX = "wss://rpc.basilisk.cloud";
 
 type SystemAccount = Struct & {
@@ -48,6 +48,7 @@ const XTransfer = () => {
     from: Currency.BASILISK,
     to: Currency.TINKERNET,
   });
+  const [isLoading, setLoading] = useState(false);
 
   const [balanceInTinkernet, setBalanceInTinkernet] = useState<BigNumber>(
     new BigNumber(0)
@@ -57,6 +58,8 @@ const XTransfer = () => {
   );
 
   const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
+    setLoading(true);
+
     try {
       toast.loading("Loading balances...");
       const api = await createApi();
@@ -96,9 +99,13 @@ const XTransfer = () => {
 
       toast.dismiss();
 
+      setLoading(false);
+
       toast.success("Balances loaded");
     } catch (error) {
       toast.dismiss();
+
+      setLoading(false);
 
       toast.error("Failed to load balances");
 
@@ -213,7 +220,7 @@ const XTransfer = () => {
   };
 
   return (
-    <>
+    <div className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
       <div
         className="hidden md:absolute md:inset-y-0 md:block md:h-full md:w-full"
         aria-hidden="true"
@@ -231,7 +238,6 @@ const XTransfer = () => {
           />
         </div>
       </div>
-
       <div className="z-10 w-full py-6 px-8 sm:max-w-2xl">
         {!selectedAccount ? (
           <div className="text-center">
@@ -244,8 +250,14 @@ const XTransfer = () => {
           </div>
         ) : null}
 
-        {selectedAccount ? (
-          <div className="overflow-hidden rounded-lg border border-neutral-50 bg-black shadow">
+        {isLoading ? (
+          <div className="flex items-center justify-center">
+            <LoadingSpinner />
+          </div>
+        ) : null}
+
+        {!isLoading && selectedAccount ? (
+          <div className="overflow-hidden rounded-md border border-neutral-50 bg-black shadow">
             <div className="p-4">
               <div className="grid grid-cols-5 items-center justify-between p-6 pb-2">
                 <select
@@ -462,7 +474,7 @@ const XTransfer = () => {
           </div>
         ) : null}
       </div>
-    </>
+    </div>
   );
 };
 

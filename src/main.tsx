@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Claim from "./routes/claim";
 import XTransfer from "./routes/xtransfer";
+import Staking from "./routes/staking";
 import NotFound from "./routes/not-found";
 
 import "./index.css";
@@ -26,6 +27,8 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
               <Route path="claim" element={<Claim />} />
 
               <Route path="xtransfer" element={<XTransfer />} />
+
+              <Route path="staking" element={<Staking />} />
 
               <Route path="404" element={<NotFound />} />
 
