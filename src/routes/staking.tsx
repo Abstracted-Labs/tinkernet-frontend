@@ -180,8 +180,12 @@ const Staking = () => {
             {stakingCores.map((core) => (
               <div
                 key={core.account}
-                className="flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 p-6 sm:flex-row"
+                className="relative flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 p-6 sm:flex-row"
               >
+                <div className="absolute top-6 right-6">
+                  <span>12 TNKR</span>
+                </div>
+
                 <div className="flex flex-shrink-0">
                   <img
                     src={core.metadata.image}
@@ -208,7 +212,7 @@ const Staking = () => {
                       type="button"
                       className="inline-flex items-center justify-center rounded-md border border-pink-600 bg-pink-600 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-pink-500 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
                     >
-                      Unstake 12 TNKR
+                      Unstake
                     </button>
                   </div>
                 </div>
