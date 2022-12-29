@@ -1,7 +1,7 @@
 import "@polkadot/api-augment";
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { SVGProps, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
