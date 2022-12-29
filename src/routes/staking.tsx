@@ -42,7 +42,7 @@ const Staking = () => {
         apiBST.query.checkedInflation.currentEra()
       ]);
 
-      setCurrentEra({era: results[1].toNumber(), erasPerYear: apiBST.consts.checkedInflation.erasPerYear.toNumber()});
+      setCurrentEra({era: results[1].toPrimitive() as number, erasPerYear: apiBST.consts.checkedInflation.erasPerYear.toPrimitive() as number});
 
       const stakingCores = results[0].map(([, core]) => {
         return core.toPrimitive() as {
