@@ -1,4 +1,5 @@
 import { WsProvider, ApiPromise } from "@polkadot/api";
+import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
@@ -72,23 +73,30 @@ const Staking = () => {
         apiBST.query.checkedInflation.currentEra(),
       ]);
 
-        const stakingCores = results[0].map(([{ args: [key] }, core]) => {
-        const c = core.toPrimitive() as {
-          account: string;
-          metadata: {
-            name: string;
-            description: string;
-            image: string;
+      const stakingCores = results[0].map(
+        ([
+          {
+            args: [key],
+          },
+          core,
+        ]) => {
+          const c = core.toPrimitive() as {
+            account: string;
+            metadata: {
+              name: string;
+              description: string;
+              image: string;
+            };
           };
-        };
 
-        const primitiveKey = key.toPrimitive() as number;
+          const primitiveKey = key.toPrimitive() as number;
 
-        return {
-          key: primitiveKey,
-          ...c,
-        };
-      });
+          return {
+            key: primitiveKey,
+            ...c,
+          };
+        }
+      );
 
       setStakingCores(stakingCores);
 
@@ -140,8 +148,7 @@ const Staking = () => {
           const generalStakerInfo =
             await apiBST.query.ocifStaking.generalStakerInfo(
               stakingCore.key,
-              // selectedAccount.address
-              "i52rHjTpyEPda2cpmrxPkmuBu5JM2i1QMWZTSHBcRPb3g7BMn"
+              selectedAccount.address
             );
 
           const info = generalStakerInfo.toPrimitive() as {
@@ -151,7 +158,7 @@ const Staking = () => {
           const unclaimed = info.stakes.length - 1;
 
           if (unclaimed > unclaimedEras) {
-              setUnclaimedEras(unclaimed);
+            setUnclaimedEras(unclaimed);
           }
 
           const latestInfo = info.stakes.at(-1);
@@ -196,7 +203,31 @@ const Staking = () => {
   };
 
   const handleClaimAll = async () => {
-    console.log("TODO");
+    if (!selectedAccount) return;
+
+    await web3Enable("Tinkernet");
+
+    const injector = await web3FromAddress(selectedAccount.address);
+
+    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
+
+    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
+
+    apiBST.tx.ocifStaking
+      .withdrawUnstaked()
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        (result) => {
+          if (result.status.isInBlock) {
+            console.log("In block");
+          } else if (result.status.isFinalized) {
+            console.log("Finalized");
+
+            toast.success("Successfully claimed all rewards!");
+          }
+        }
+      );
   };
 
   useEffect(() => {
@@ -252,7 +283,9 @@ const Staking = () => {
                     <span className="text-sm">Unclaimed Eras</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">{unclaimedEras} eras</span>
+                    <span className="text-2xl font-bold">
+                      {unclaimedEras} eras
+                    </span>
                   </div>
                 </div>
 

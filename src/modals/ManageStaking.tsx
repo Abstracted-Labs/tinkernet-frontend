@@ -1,10 +1,26 @@
-import { Dialog } from "@headlessui/react";
+import { Dialog, Tab } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { WsProvider, ApiPromise } from "@polkadot/api";
+import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
+import { useState } from "react";
+import toast from "react-hot-toast";
 import shallow from "zustand/shallow";
+import useAccount from "../stores/account";
 
 import useModal from "../stores/modals";
 
-const SelectWallet = ({ isOpen }: { isOpen: boolean }) => {
+enum FormType {
+  STAKE = "STAKE",
+  UNSTAKE = "UNSTAKE",
+}
+
+const classNames = (...classes: string[]) => {
+  return classes.filter(Boolean).join(" ");
+};
+
+const BRAINSTORM_RPC_URL = "wss://brainstorm.invarch.network";
+
+const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const { setOpenModal, metadata } = useModal(
     (state) => ({
       setOpenModal: state.setOpenModal,
@@ -12,15 +28,80 @@ const SelectWallet = ({ isOpen }: { isOpen: boolean }) => {
     }),
     shallow
   );
+  const { selectedAccount } = useAccount(
+    (state) => ({ selectedAccount: state.selectedAccount }),
+    shallow
+  );
+  const [stakeAmount, setStakeAmount] = useState("");
+  const [unstakeAmount, setUnstakeAmount] = useState("");
 
   if (!metadata) return null;
 
   const handleStake = async () => {
-    console.log("STAKE");
+    if (!selectedAccount) return;
+
+    toast.loading("Staking...");
+
+    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
+
+    await web3Enable("Tinkernet");
+
+    const injector = await web3FromAddress(selectedAccount.address);
+
+    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
+
+    await apiBST.tx.ocifStaking
+      .stake(metadata.key, stakeAmount)
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        (result) => {
+          toast.dismiss();
+
+          if (result.status.isInBlock) {
+            console.log("In block");
+          } else if (result.status.isFinalized) {
+            console.log("Finalized");
+
+            toast.success("Successfully staked!");
+          }
+        }
+      );
+
+    setOpenModal({ name: null });
   };
 
   const handleUnstake = async () => {
-    console.log("UNSTAKE");
+    if (!selectedAccount) return;
+
+    toast.loading("Unstaking...");
+
+    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
+
+    await web3Enable("Tinkernet");
+
+    const injector = await web3FromAddress(selectedAccount.address);
+
+    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
+
+    await apiBST.tx.ocifStaking
+      .unstake(metadata.key, unstakeAmount)
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        (result) => {
+          toast.dismiss();
+          if (result.status.isInBlock) {
+            console.log("In block");
+          } else if (result.status.isFinalized) {
+            console.log("Finalized");
+
+            toast.success("Successfully unstaked!");
+          }
+        }
+      );
+
+    setOpenModal({ name: null });
   };
 
   return (
@@ -33,11 +114,127 @@ const SelectWallet = ({ isOpen }: { isOpen: boolean }) => {
       </button>
       <Dialog.Panel>
         <div className="fixed left-1/2 top-1/2 z-50 mx-auto block max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-gray-50 bg-black p-6 sm:w-full">
-          <span className="text-white">asdasdasdas</span>
+          <h2 className="text-xl font-bold text-white">Manage Staking</h2>
+
+          <div className="mt-4 block justify-between gap-4">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Tab.Group>
+                  <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
+                    <Tab
+                      key={FormType.STAKE}
+                      className={({ selected }) =>
+                        classNames(
+                          "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
+                          "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
+                          selected
+                            ? "bg-white shadow"
+                            : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
+                        )
+                      }
+                    >
+                      Stake
+                    </Tab>
+                    <Tab
+                      key={FormType.UNSTAKE}
+                      className={({ selected }) =>
+                        classNames(
+                          "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
+                          "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
+                          selected
+                            ? "bg-white shadow"
+                            : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
+                        )
+                      }
+                    >
+                      Unstake
+                    </Tab>
+                  </Tab.List>
+                  <Tab.Panels className="mt-4">
+                    <Tab.Panel
+                      key={FormType.STAKE}
+                      className={classNames(
+                        "flex flex-col gap-4 rounded-md",
+                        "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2"
+                      )}
+                    >
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="stakeAmount"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Stake Amount
+                        </label>
+                        <input
+                          name="stakeAmount"
+                          id="stakeAmount"
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          onChange={(e) => setStakeAmount(e.target.value)}
+                        />
+
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                          <span className="text-white sm:text-sm" id="currency">
+                            TNKR
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                        onClick={handleStake}
+                      >
+                        Stake
+                      </button>
+                    </Tab.Panel>
+                    <Tab.Panel
+                      key={FormType.UNSTAKE}
+                      className={classNames(
+                        "flex flex-col gap-4 rounded-md",
+                        "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2"
+                      )}
+                    >
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="unstakeAmount"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Unstake Amount
+                        </label>
+                        <input
+                          type="text"
+                          name="unstakeAmount"
+                          id="unstakeAmount"
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          onChange={(e) => setUnstakeAmount(e.target.value)}
+                        />
+
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                          <span className="text-white sm:text-sm" id="currency">
+                            TNKR
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                        onClick={handleUnstake}
+                      >
+                        Unstake
+                      </button>
+                    </Tab.Panel>
+                  </Tab.Panels>
+                </Tab.Group>
+              </div>
+            </div>
+          </div>
         </div>
       </Dialog.Panel>
     </Dialog>
   );
 };
 
-export default SelectWallet;
+/*  */
+
+export default ManageStaking;
