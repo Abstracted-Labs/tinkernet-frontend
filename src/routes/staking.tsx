@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import shallow from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useAccount from "../stores/account";
+import useModal, { ModalName } from "../stores/modals";
 
 type StakingCore = {
   key: string;
@@ -21,6 +22,7 @@ type StakingCore = {
 const BRAINSTORM_RPC_URL = "wss://brainstorm.invarch.network";
 
 const Staking = () => {
+  const setOpenModal = useModal((state) => state.setOpenModal);
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
@@ -30,6 +32,15 @@ const Staking = () => {
     era: number;
     erasPerYear: number;
   }>();
+  const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
+    {
+      account: string;
+      total: string;
+      numberOfStakers: number;
+      rewardClaimed: boolean;
+      active: boolean;
+    }[]
+  >([]);
   const [totalStaked, setTotalStaked] = useState<BigNumber>();
   const [userStakedInfo, setUserStakedInfo] = useState<
     {
@@ -70,8 +81,10 @@ const Staking = () => {
           };
         };
 
+        const [primitiveKey] = key.toPrimitive() as [string];
+
         return {
-          key: key.toHuman() as string,
+          key: primitiveKey,
           ...c,
         };
       });
@@ -86,7 +99,34 @@ const Staking = () => {
 
       setCurrentEra(currentEra);
 
-      // take coreEraStake
+      const coreEraStakeInfo: {
+        account: string;
+        total: string;
+        numberOfStakers: number;
+        rewardClaimed: boolean;
+        active: boolean;
+      }[] = [];
+
+      for (const stakingCore of stakingCores) {
+        const coreEraStake = (
+          await apiBST.query.ocifStaking.coreEraStake(
+            stakingCore.key,
+            currentEra.era
+          )
+        ).toPrimitive() as {
+          total: string;
+          numberOfStakers: number;
+          rewardClaimed: boolean;
+          active: boolean;
+        };
+
+        coreEraStakeInfo.push({
+          account: stakingCore.account,
+          ...coreEraStake,
+        });
+      }
+
+      setCoreEraStakeInfo(coreEraStakeInfo);
 
       if (selectedAccount) {
         const userStakedInfo: {
@@ -144,12 +184,8 @@ const Staking = () => {
     }
   };
 
-  const handleStake = async (core: StakingCore) => {
-    console.log(core);
-  };
-
-  const handleUnstake = async (core: StakingCore) => {
-    console.log(core);
+  const handleManageStaking = async (core: StakingCore) => {
+    setOpenModal({ name: ModalName.MANAGE_STAKING, metadata: core });
   };
 
   const handleClaimAll = async () => {
@@ -269,7 +305,7 @@ const Staking = () => {
                         <button
                           type="button"
                           className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
-                          onClick={() => handleStake(core)}
+                          onClick={() => handleManageStaking(core)}
                         >
                           Manage Staking
                         </button>
