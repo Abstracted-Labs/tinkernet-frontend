@@ -131,7 +131,7 @@ const Staking = () => {
 
       if (selectedAccount) {
         const userStakedInfo: {
-          account: string;
+          coreId: number;
           era: number;
           staked: BigNumber;
         }[] = [];
@@ -273,7 +273,7 @@ const Staking = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {stakingCores.map((core) => {
               const totalStaked = userStakedInfo.find(
-                (info) => info.account === core.account
+                (info) => info.coreId === core.key
               )?.staked;
 
               return (
