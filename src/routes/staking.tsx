@@ -30,6 +30,7 @@ const Staking = () => {
     era: number;
     erasPerYear: number;
   }>();
+  const [totalStaked, setTotalStaked] = useState<BigNumber>();
   const [userStakedInfo, setUserStakedInfo] = useState<
     {
       account: string;
@@ -120,6 +121,13 @@ const Staking = () => {
         }
 
         setUserStakedInfo(userStakedInfo);
+
+        const totalStaked = userStakedInfo.reduce(
+          (acc, cur) => acc.plus(cur.staked),
+          new BigNumber(0)
+        );
+
+        setTotalStaked(totalStaked);
       }
 
       toast.dismiss();
@@ -162,7 +170,7 @@ const Staking = () => {
 
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
-          {selectedAccount && currentEra ? (
+          {selectedAccount && currentEra && totalStaked ? (
             <>
               <div className="flex items-center justify-between">
                 <div>
@@ -186,7 +194,13 @@ const Staking = () => {
                     <span className="text-sm">Total staked</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">123 TNKR</span>
+                    <span className="text-2xl font-bold">
+                      {formatBalance(totalStaked.toString(), {
+                        decimals: 12,
+                        withUnit: "TNKR",
+                        forceUnit: "-",
+                      })}
+                    </span>
                   </div>
                 </div>
 
@@ -275,7 +289,7 @@ const Staking = () => {
                 <button
                   type="button"
                   disabled
-                  className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                  className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-40"
                 >
                   Register Project (Coming Soon)
                 </button>
