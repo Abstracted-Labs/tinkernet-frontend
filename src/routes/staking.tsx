@@ -72,7 +72,7 @@ const Staking = () => {
         apiBST.query.checkedInflation.currentEra(),
       ]);
 
-      const stakingCores = results[0].map(([key, core]) => {
+        const stakingCores = results[0].map(([{ args: [key] }, core]) => {
         const c = core.toPrimitive() as {
           account: string;
           metadata: {
@@ -82,7 +82,7 @@ const Staking = () => {
           };
         };
 
-        const [primitiveKey] = key.toPrimitive() as [string];
+        const primitiveKey = key.toPrimitive() as BigNumber;
 
         return {
           key: primitiveKey,
@@ -137,6 +137,7 @@ const Staking = () => {
         }[] = [];
 
         for (const stakingCore of stakingCores) {
+            console.log(stakingCores)
           const generalStakerInfo =
             await apiBST.query.ocifStaking.generalStakerInfo(
               stakingCore.key,
@@ -161,7 +162,7 @@ const Staking = () => {
           }
 
           userStakedInfo.push({
-            account: stakingCore.account,
+            coreId: stakingCore.key,
             era: parseInt(latestInfo.era),
             staked: new BigNumber(latestInfo.staked),
           });
