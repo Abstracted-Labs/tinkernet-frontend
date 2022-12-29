@@ -1,10 +1,10 @@
+import { WsProvider, ApiPromise } from "@polkadot/api";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import shallow from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useAccount from "../stores/account";
-import useRPC from "../stores/rpc";
 
 type StakingCore = {
   account: string;
@@ -15,71 +15,14 @@ type StakingCore = {
   };
 };
 
-const FAKE_STAKING_CORES: StakingCore[] = [
-  {
-    account: "i4wxAfKsX2WZHQotzBGyNgXZWamTu22m7rtbjXgDHQeMhvy9r",
-    metadata: {
-      name: "Cool Core",
-      description: "This is my super cool Core, feel free to stake to it!",
-      image:
-        "https://yt3.ggpht.com/a/AGF-l7-jWu56d0aIy6YuMLuVkGaPWpvirw0_wZjBig=s900-c-k-c0xffffffff-no-rj-mo",
-    },
-  },
-  {
-    account: "i4wxAfKsX2WZHQotzBGyNgXZWamTu22m7rtbjXgDHQeMhvy9r",
-    metadata: {
-      name: "Cool Core",
-      description: "This is my super cool Core, feel free to stake to it!",
-      image:
-        "https://yt3.ggpht.com/a/AGF-l7-jWu56d0aIy6YuMLuVkGaPWpvirw0_wZjBig=s900-c-k-c0xffffffff-no-rj-mo",
-    },
-  },
-  {
-    account: "i4wxAfKsX2WZHQotzBGyNgXZWamTu22m7rtbjXgDHQeMhvy9r",
-    metadata: {
-      name: "Cool Core",
-      description: "This is my super cool Core, feel free to stake to it!",
-      image:
-        "https://yt3.ggpht.com/a/AGF-l7-jWu56d0aIy6YuMLuVkGaPWpvirw0_wZjBig=s900-c-k-c0xffffffff-no-rj-mo",
-    },
-  },
-  {
-    account: "i4wxAfKsX2WZHQotzBGyNgXZWamTu22m7rtbjXgDHQeMhvy9r",
-    metadata: {
-      name: "Cool Core",
-      description: "This is my super cool Core, feel free to stake to it!",
-      image:
-        "https://yt3.ggpht.com/a/AGF-l7-jWu56d0aIy6YuMLuVkGaPWpvirw0_wZjBig=s900-c-k-c0xffffffff-no-rj-mo",
-    },
-  },
-  {
-    account: "i4wxAfKsX2WZHQotzBGyNgXZWamTu22m7rtbjXgDHQeMhvy9r",
-    metadata: {
-      name: "Cool Core",
-      description: "This is my super cool Core, feel free to stake to it!",
-      image:
-        "https://yt3.ggpht.com/a/AGF-l7-jWu56d0aIy6YuMLuVkGaPWpvirw0_wZjBig=s900-c-k-c0xffffffff-no-rj-mo",
-    },
-  },
-  {
-    account: "i4wxAfKsX2WZHQotzBGyNgXZWamTu22m7rtbjXgDHQeMhvy9r",
-    metadata: {
-      name: "Cool Core",
-      description: "This is my super cool Core, feel free to stake to it!",
-      image:
-        "https://yt3.ggpht.com/a/AGF-l7-jWu56d0aIy6YuMLuVkGaPWpvirw0_wZjBig=s900-c-k-c0xffffffff-no-rj-mo",
-    },
-  },
-];
+const BRAINSTORM_RPC_URL = "wss://brainstorm.invarch.network";
 
 const Staking = () => {
-  const { createApi } = useRPC();
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
   );
-  const [stakingCores, setStakingCores] =
-    useState<StakingCore[]>(FAKE_STAKING_CORES);
+  const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [isLoading, setLoading] = useState(false);
 
   const loadStakingCores = async ({ address }: InjectedAccountWithMeta) => {
@@ -87,7 +30,28 @@ const Staking = () => {
 
     try {
       toast.loading("Loading staking cores...");
-      // const api = await createApi();
+
+      const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
+
+      const apiBST = await ApiPromise.create({ provider: wsProviderBST });
+
+      const results = await Promise.all([
+        // registered cores
+        apiBST.query.ocifStaking.registeredCore.entries(),
+      ]);
+
+      const stakingCores = results[0].map(([, core]) => {
+        return core.toPrimitive() as {
+          account: string;
+          metadata: {
+            name: string;
+            description: string;
+            image: string;
+          };
+        };
+      });
+
+      setStakingCores(stakingCores);
 
       toast.dismiss();
 
@@ -204,6 +168,7 @@ const Staking = () => {
                     <button
                       type="button"
                       className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                      onClick={() => handleStake(core)}
                     >
                       Stake
                     </button>
@@ -211,6 +176,7 @@ const Staking = () => {
                     <button
                       type="button"
                       className="inline-flex items-center justify-center rounded-md border border-pink-600 bg-pink-600 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-pink-500 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                      onClick={() => handleUnstake(core)}
                     >
                       Unstake
                     </button>
