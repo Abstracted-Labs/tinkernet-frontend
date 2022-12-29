@@ -49,6 +49,7 @@ const Staking = () => {
       staked: BigNumber;
     }[]
   >([]);
+  const [unclaimedEras, setUnclaimedEras] = useState<number>(0);
 
   const [isLoading, setLoading] = useState(false);
 
@@ -136,16 +137,22 @@ const Staking = () => {
         }[] = [];
 
         for (const stakingCore of stakingCores) {
-          const generalStakingInfo =
+          const generalStakerInfo =
             await apiBST.query.ocifStaking.generalStakerInfo(
               stakingCore.key,
               // selectedAccount.address
               "i52rHjTpyEPda2cpmrxPkmuBu5JM2i1QMWZTSHBcRPb3g7BMn"
             );
 
-          const info = generalStakingInfo.toPrimitive() as {
+          const info = generalStakerInfo.toPrimitive() as {
             stakes: { era: string; staked: string }[];
           };
+
+          const unclaimed = info.length - 1;
+
+          if (unclaimed > unclaimedEras) {
+              setUnclaimedEras(unclaimed);
+          }
 
           const latestInfo = info.stakes.at(-1);
 
@@ -242,10 +249,10 @@ const Staking = () => {
 
                 <div className="flex flex-col gap-2 p-6">
                   <div>
-                    <span className="text-sm">Available to claim</span>
+                    <span className="text-sm">Unclaimed Eras</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">123 TNKR</span>
+                    <span className="text-2xl font-bold">{unclaimedEras} eras</span>
                   </div>
                 </div>
 
