@@ -10,7 +10,7 @@ import useAccount from "../stores/account";
 import useModal, { ModalName } from "../stores/modals";
 
 type StakingCore = {
-  key: string;
+  key: number;
   account: string;
   metadata: {
     name: string;
@@ -44,7 +44,7 @@ const Staking = () => {
   const [totalStaked, setTotalStaked] = useState<BigNumber>();
   const [userStakedInfo, setUserStakedInfo] = useState<
     {
-      account: string;
+      coreId: number;
       era: number;
       staked: BigNumber;
     }[]
@@ -148,7 +148,7 @@ const Staking = () => {
             stakes: { era: string; staked: string }[];
           };
 
-          const unclaimed = info.length - 1;
+          const unclaimed = info.stakes.length - 1;
 
           if (unclaimed > unclaimedEras) {
               setUnclaimedEras(unclaimed);
