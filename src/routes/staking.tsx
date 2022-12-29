@@ -23,6 +23,7 @@ const Staking = () => {
     shallow
   );
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
+  const [currentEra, setCurrentEra] = useState<{era: number; erasPerYear: number}>([]);
   const [isLoading, setLoading] = useState(false);
 
   const loadStakingCores = async ({ address }: InjectedAccountWithMeta) => {
@@ -38,7 +39,10 @@ const Staking = () => {
       const results = await Promise.all([
         // registered cores
         apiBST.query.ocifStaking.registeredCore.entries(),
+        apiBST.query.checkedInflation.currentEra()
       ]);
+
+      setCurrentEra({era: results[1].toNumber(), erasPerYear: apiBST.consts.checkedInflation.erasPerYear.toNumber()});
 
       const stakingCores = results[0].map(([, core]) => {
         return core.toPrimitive() as {
@@ -132,10 +136,10 @@ const Staking = () => {
 
             <div className="flex flex-col gap-2 p-6">
               <div>
-                <span className="text-sm">Total earned</span>
+                <span className="text-sm">Current Era</span>
               </div>
               <div>
-                <span className="text-2xl font-bold">123 TNKR</span>
+                <span className="text-2xl font-bold">{currentEra.era} / {currentEra.erasPerYear}</span>
               </div>
             </div>
           </div>
