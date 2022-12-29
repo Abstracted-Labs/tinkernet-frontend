@@ -26,10 +26,9 @@ const Staking = () => {
     shallow
   );
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
-  const [info, setInfo] = useState<{
-    totalStaked: number;
-    availableToClaim: number;
-    totalEarned: number;
+  const [currentEra, setCurrentEra] = useState<{
+    era: number;
+    erasPerYear: number;
   }>();
   const [userStakedInfo, setUserStakedInfo] = useState<
     {
@@ -53,10 +52,14 @@ const Staking = () => {
 
       const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
-      const registeredCores =
-        await apiBST.query.ocifStaking.registeredCore.entries();
+      const results = await Promise.all([
+        // registered cores
+        apiBST.query.ocifStaking.registeredCore.entries(),
+        // current era
+        apiBST.query.checkedInflation.currentEra(),
+      ]);
 
-      const stakingCores = registeredCores.map(([key, core]) => {
+      const stakingCores = results[0].map(([key, core]) => {
         const c = core.toPrimitive() as {
           account: string;
           metadata: {
@@ -73,6 +76,14 @@ const Staking = () => {
       });
 
       setStakingCores(stakingCores);
+
+      const currentEra = {
+        era: results[1].toPrimitive() as number,
+        erasPerYear:
+          apiBST.consts.checkedInflation.erasPerYear.toPrimitive() as number,
+      };
+
+      setCurrentEra(currentEra);
 
       // take coreEraStake
 
@@ -151,7 +162,7 @@ const Staking = () => {
 
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
-          {selectedAccount && info ? (
+          {selectedAccount && currentEra ? (
             <>
               <div className="flex items-center justify-between">
                 <div>
@@ -175,9 +186,7 @@ const Staking = () => {
                     <span className="text-sm">Total staked</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
-                      {info.totalStaked} TNKR
-                    </span>
+                    <span className="text-2xl font-bold">123 TNKR</span>
                   </div>
                 </div>
 
@@ -186,19 +195,17 @@ const Staking = () => {
                     <span className="text-sm">Available to claim</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
-                      {info.availableToClaim} TNKR
-                    </span>
+                    <span className="text-2xl font-bold">123 TNKR</span>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2 p-6">
                   <div>
-                    <span className="text-sm">Total earned</span>
+                    <span className="text-sm">Current Era</span>
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {info.totalEarned} TNKR
+                      {currentEra.era} / {currentEra.erasPerYear}
                     </span>
                   </div>
                 </div>
