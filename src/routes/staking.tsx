@@ -82,7 +82,7 @@ const Staking = () => {
           };
         };
 
-        const primitiveKey = key.toPrimitive() as BigNumber;
+        const primitiveKey = key.toPrimitive() as number;
 
         return {
           key: primitiveKey,
@@ -137,7 +137,6 @@ const Staking = () => {
         }[] = [];
 
         for (const stakingCore of stakingCores) {
-            console.log(stakingCores)
           const generalStakerInfo =
             await apiBST.query.ocifStaking.generalStakerInfo(
               stakingCore.key,
