@@ -4,7 +4,7 @@ import { WsProvider, ApiPromise } from "@polkadot/api";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import shallow from "zustand/shallow";
 import useAccount from "../stores/account";
@@ -36,8 +36,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   );
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");
-  const [stakedAmount, setStakedAmount] = useState<BigNumber>();
-  const [availableAmount, setAvailableAmount] = useState<BigNumber>();
 
   const handleStake = async () => {
     if (!selectedAccount) return;
@@ -110,62 +108,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     setOpenModal({ name: null });
   };
 
-  const loadBalances = async () => {
-    if (!selectedAccount) return;
-
-    if (!metadata) return;
-
-    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
-
-    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
-
-    const balanceInfo = await apiBST.query.system.account(
-      selectedAccount.address
-    );
-
-    const balance = balanceInfo.toPrimitive() as {
-      nonce: string;
-      consumers: string;
-      providers: string;
-      sufficients: string;
-      data: {
-        free: string;
-        reserved: string;
-        miscFrozen: string;
-        feeFrozen: string;
-      };
-    };
-
-    const availableAmount = new BigNumber(balance.data.free);
-
-    setAvailableAmount(availableAmount);
-
-    const generalStakerInfo = await apiBST.query.ocifStaking.generalStakerInfo(
-      metadata.key,
-      selectedAccount.address
-    );
-
-    const info = generalStakerInfo.toPrimitive() as {
-      stakes: { era: string; staked: string }[];
-    };
-
-    const latestInfo = info.stakes.at(-1);
-
-    if (!latestInfo) {
-      setStakedAmount(new BigNumber(0));
-      setAvailableAmount(new BigNumber(0));
-      return;
-    }
-
-    const stakedAmount = new BigNumber(latestInfo.staked);
-
-    setStakedAmount(stakedAmount);
-  };
-
-  useEffect(() => {
-    loadBalances();
-  }, [metadata?.key]);
-
   return (
     <Dialog open={isOpen} onClose={() => setOpenModal({ name: null })}>
       <Dialog.Overlay className="fixed inset-0 z-40 h-screen w-full bg-black/40 backdrop-blur-md" />
@@ -181,12 +123,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
           <div className="mt-4 flex flex-col justify-between gap-4">
             <div className="flex flex-col justify-between gap-4 sm:flex-auto">
               <div className="text-sm text-white">
-                {availableAmount ? (
+                {metadata?.availableAmount ? (
                   <>
                     Available:{" "}
                     <span className="font-bold">
                       {" "}
-                      {formatBalance(availableAmount.toString(), {
+                      {formatBalance(metadata?.availableAmount.toString(), {
                         decimals: 12,
                         withUnit: "TNKR",
                         forceUnit: "-",
@@ -197,11 +139,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
               </div>
 
               <div className="text-sm text-white">
-                {stakedAmount && stakedAmount.toString() !== "0" ? (
+                {metadata?.stakedAmount &&
+                metadata?.stakedAmount.toString() !== "0" ? (
                   <>
                     Staked:{" "}
                     <span className="font-bold">
-                      {formatBalance(stakedAmount.toString(), {
+                      {formatBalance(metadata?.stakedAmount.toString(), {
                         decimals: 12,
                         withUnit: "TNKR",
                         forceUnit: "-",
@@ -215,7 +158,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Tab.Group>
-                  {stakedAmount && stakedAmount.toString() !== "0" ? (
+                  {metadata?.stakedAmount &&
+                  metadata?.stakedAmount.toString() !== "0" ? (
                     <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
                       <Tab
                         key={FormType.STAKE}

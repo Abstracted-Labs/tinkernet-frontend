@@ -244,8 +244,19 @@ const Staking = () => {
     }
   };
 
-  const handleManageStaking = async (core: StakingCore) => {
-    setOpenModal({ name: ModalName.MANAGE_STAKING, metadata: core });
+  const handleManageStaking = async ({
+    core,
+    totalStaked,
+    availableBalance,
+  }: {
+    core: StakingCore;
+    totalStaked: BigNumber;
+    availableBalance: BigNumber;
+  }) => {
+    setOpenModal({
+      name: ModalName.MANAGE_STAKING,
+      metadata: { ...core, totalStaked, availableBalance },
+    });
   };
 
   const handleClaimAll = async () => {
@@ -451,7 +462,14 @@ const Staking = () => {
                         <button
                           type="button"
                           className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
-                          onClick={() => handleManageStaking(core)}
+                          onClick={() =>
+                            handleManageStaking({
+                              core,
+                              totalStaked: totalStaked || new BigNumber("0"),
+                              availableBalance:
+                                availableBalance || new BigNumber("0"),
+                            })
+                          }
                         >
                           {totalStaked ? "Manage Staking" : "Stake"}
                         </button>
