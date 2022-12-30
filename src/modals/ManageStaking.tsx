@@ -52,8 +52,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
+    const parsedStakeAmount = new BigNumber(stakeAmount).multipliedBy(
+      new BigNumber(10).pow(12)
+    );
+
     await apiBST.tx.ocifStaking
-      .stake(metadata.key, stakeAmount)
+      .stake(metadata.key, parsedStakeAmount.toString())
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
@@ -88,8 +92,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
+    const parsedUnstakeAmount = new BigNumber(unstakeAmount).multipliedBy(
+      new BigNumber(10).pow(12)
+    );
+
     await apiBST.tx.ocifStaking
-      .unstake(metadata.key, unstakeAmount)
+      .unstake(metadata.key, parsedUnstakeAmount)
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
