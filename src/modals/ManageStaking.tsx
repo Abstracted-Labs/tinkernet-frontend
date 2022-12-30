@@ -190,7 +190,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                         decimals: 12,
                         withUnit: "TNKR",
                         forceUnit: "-",
-                      })}
+                      }).replace(".0000", "")}
                     </span>
                   </>
                 ) : null}
@@ -205,7 +205,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                         decimals: 12,
                         withUnit: "TNKR",
                         forceUnit: "-",
-                      })}
+                      }).replace(".0000", "")}
                     </span>
                   </>
                 ) : null}

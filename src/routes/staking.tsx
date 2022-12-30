@@ -341,7 +341,7 @@ const Staking = () => {
                         decimals: 12,
                         withUnit: "TNKR",
                         forceUnit: "-",
-                      })}
+                      }).replace(".0000", "")}
                     </span>
                   </div>
                 </div>
@@ -356,7 +356,7 @@ const Staking = () => {
                         decimals: 12,
                         withUnit: "TNKR",
                         forceUnit: "-",
-                      })}
+                      }).replace(".0000", "")}
                     </span>
                   </div>
                 </div>
@@ -392,19 +392,23 @@ const Staking = () => {
                 (info) => info.coreId === core.key
               )?.staked;
 
+              const coreInfo = coreEraStakeInfo.find(
+                (info) => info.account === core.account
+              );
+
               return (
                 <div
                   key={core.account}
                   className="relative flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 p-6 sm:flex-row"
                 >
                   <div className="absolute top-6 right-6">
-                    <span className="text-sm">
+                    <span className="block text-sm">
                       {totalStaked
                         ? `Staked ${formatBalance(totalStaked.toString(), {
                             decimals: 12,
                             withUnit: "TNKR",
                             forceUnit: "-",
-                          })}`
+                          }).replace(".0000", "")}`
                         : null}
                     </span>
                   </div>
@@ -422,6 +426,27 @@ const Staking = () => {
                     <p className="text-sm line-clamp-3">
                       {core.metadata.description}
                     </p>
+
+                    <div className="flex flex-col gap-2">
+                      <div className="text-xs">
+                        {coreInfo?.numberOfStakers
+                          ? `Number of stakers ${coreInfo.numberOfStakers}`
+                          : null}
+                      </div>
+
+                      <div className="text-xs">
+                        {coreInfo?.total && coreInfo.total.toString() !== "0"
+                          ? `Total staked ${formatBalance(
+                              coreInfo.total.toString(),
+                              {
+                                decimals: 12,
+                                withUnit: "TNKR",
+                                forceUnit: "-",
+                              }
+                            ).replace(".0000", "")}`
+                          : null}
+                      </div>
+                    </div>
 
                     {selectedAccount ? (
                       <div className="flex gap-2">
