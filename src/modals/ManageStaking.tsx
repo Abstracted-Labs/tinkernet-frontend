@@ -2,7 +2,9 @@ import { Dialog, Tab } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { WsProvider, ApiPromise } from "@polkadot/api";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
-import { useState } from "react";
+import { formatBalance } from "@polkadot/util";
+import BigNumber from "bignumber.js";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import shallow from "zustand/shallow";
 import useAccount from "../stores/account";
@@ -34,11 +36,13 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   );
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");
-
-  if (!metadata) return null;
+  const [stakedAmount, setStakedAmount] = useState<BigNumber>();
+  const [availableAmount, setAvailableAmount] = useState<BigNumber>();
 
   const handleStake = async () => {
     if (!selectedAccount) return;
+
+    if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
 
     toast.loading("Staking...");
 
@@ -74,6 +78,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const handleUnstake = async () => {
     if (!selectedAccount) return;
 
+    if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
+
     toast.loading("Unstaking...");
 
     const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
@@ -104,6 +110,56 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     setOpenModal({ name: null });
   };
 
+  const loadBalances = async () => {
+    if (!selectedAccount) return;
+
+    if (!metadata) return;
+
+    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
+
+    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
+
+    const generalStakerInfo = await apiBST.query.ocifStaking.generalStakerInfo(
+      metadata.key,
+      selectedAccount.address
+    );
+
+    const info = generalStakerInfo.toPrimitive() as {
+      stakes: { era: string; staked: string }[];
+    };
+
+    const latestInfo = info.stakes.at(-1);
+
+    if (!latestInfo) {
+      setStakedAmount(new BigNumber(0));
+      setAvailableAmount(new BigNumber(0));
+      return;
+    }
+
+    const stakedAmount = new BigNumber(latestInfo.staked);
+
+    setStakedAmount(stakedAmount);
+
+    const balanceInfo = await apiBST.query.balances.account(
+      selectedAccount.address
+    );
+
+    const balance = balanceInfo.toPrimitive() as {
+      free: string;
+      reserved: string;
+      miscFrozen: string;
+      feeFrozen: string;
+    };
+
+    const availableAmount = new BigNumber(balance.free);
+
+    setAvailableAmount(availableAmount);
+  };
+
+  useEffect(() => {
+    loadBalances();
+  }, [metadata?.key]);
+
   return (
     <Dialog open={isOpen} onClose={() => setOpenModal({ name: null })}>
       <Dialog.Overlay className="fixed inset-0 z-40 h-screen w-full bg-black/40 backdrop-blur-md" />
@@ -116,7 +172,40 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         <div className="fixed left-1/2 top-1/2 z-50 mx-auto block max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-gray-50 bg-black p-6 sm:w-full">
           <h2 className="text-xl font-bold text-white">Manage Staking</h2>
 
-          <div className="mt-4 block justify-between gap-4">
+          <div className="mt-4 flex flex-col justify-between gap-4">
+            <div className="flex justify-between gap-4">
+              <div className="text-sm text-white">
+                {availableAmount ? (
+                  <>
+                    Available:{" "}
+                    <span className="font-bold">
+                      {" "}
+                      {formatBalance(availableAmount.toString(), {
+                        decimals: 12,
+                        withUnit: "TNKR",
+                        forceUnit: "-",
+                      })}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+
+              <div className="text-sm text-white">
+                {stakedAmount && stakedAmount.toString() !== "0" ? (
+                  <>
+                    Staked:{" "}
+                    <span className="font-bold">
+                      {formatBalance(stakedAmount.toString(), {
+                        decimals: 12,
+                        withUnit: "TNKR",
+                        forceUnit: "-",
+                      })}
+                    </span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Tab.Group>
@@ -135,20 +224,22 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                     >
                       Stake
                     </Tab>
-                    <Tab
-                      key={FormType.UNSTAKE}
-                      className={({ selected }) =>
-                        classNames(
-                          "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
-                          "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
-                          selected
-                            ? "bg-white shadow"
-                            : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
-                        )
-                      }
-                    >
-                      Unstake
-                    </Tab>
+                    {stakedAmount && stakedAmount.toString() !== "0" ? (
+                      <Tab
+                        key={FormType.UNSTAKE}
+                        className={({ selected }) =>
+                          classNames(
+                            "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
+                            "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
+                            selected
+                              ? "bg-white shadow"
+                              : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
+                          )
+                        }
+                      >
+                        Unstake
+                      </Tab>
+                    ) : null}
                   </Tab.List>
                   <Tab.Panels className="mt-4">
                     <Tab.Panel

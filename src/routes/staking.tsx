@@ -286,8 +286,6 @@ const Staking = () => {
         </div>
       ) : null}
 
-      {console.log(selectedAccount, currentEra, totalStaked, unclaimedEras)}
-
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
           {selectedAccount && currentEra && totalStaked && unclaimedEras ? (
@@ -393,7 +391,7 @@ const Staking = () => {
                           className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
                           onClick={() => handleManageStaking(core)}
                         >
-                          Manage Staking
+                          {totalStaked ? "Manage Staking" : "Stake"}
                         </button>
                       </div>
                     ) : null}
