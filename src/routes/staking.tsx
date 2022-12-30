@@ -55,6 +55,7 @@ const Staking = () => {
     cores: { coreId: number; earliestEra: number }[];
     total: number;
   }>({ cores: [], total: 0 });
+  const [availableBalance, setAvailableBalance] = useState<BigNumber>();
 
   const [isLoading, setLoading] = useState(false);
 
@@ -144,6 +145,25 @@ const Staking = () => {
       setCoreEraStakeInfo(coreEraStakeInfo);
 
       if (selectedAccount) {
+        const balanceInfo = await apiBST.query.system.account(
+          selectedAccount.address
+        );
+
+        const balance = balanceInfo.toPrimitive() as {
+          nonce: string;
+          consumers: string;
+          providers: string;
+          sufficients: string;
+          data: {
+            free: string;
+            reserved: string;
+            miscFrozen: string;
+            feeFrozen: string;
+          };
+        };
+
+        setAvailableBalance(new BigNumber(balance.data.free));
+
         const userStakedInfo: {
           coreId: number;
           era: number;
@@ -288,7 +308,11 @@ const Staking = () => {
 
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
-          {selectedAccount && currentEra && totalStaked && unclaimedEras ? (
+          {selectedAccount &&
+          currentEra &&
+          totalStaked &&
+          unclaimedEras &&
+          availableBalance ? (
             <>
               <div className="flex items-center justify-between">
                 <div>
@@ -306,7 +330,22 @@ const Staking = () => {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-black shadow sm:grid sm:grid-cols-3">
+              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-black shadow sm:grid sm:grid-cols-4">
+                <div className="flex flex-col gap-2 p-6">
+                  <div>
+                    <span className="text-sm">Available balance</span>
+                  </div>
+                  <div>
+                    <span className="truncate text-2xl font-bold">
+                      {formatBalance(availableBalance.toString(), {
+                        decimals: 12,
+                        withUnit: "TNKR",
+                        forceUnit: "-",
+                      })}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Total staked</span>
