@@ -179,7 +179,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
           <h2 className="text-xl font-bold text-white">Manage Staking</h2>
 
           <div className="mt-4 flex flex-col justify-between gap-4">
-            <div className="flex justify-between gap-4">
+            <div className="flex flex-col justify-between gap-4 sm:flex-auto">
               <div className="text-sm text-white">
                 {availableAmount ? (
                   <>
