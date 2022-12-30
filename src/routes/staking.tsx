@@ -423,9 +423,7 @@ const Staking = () => {
                   <div className="flex flex-col gap-4">
                     <h4 className="font-bold">{core.metadata.name}</h4>
 
-                    <p className="text-sm line-clamp-3">
-                      {core.metadata.description}
-                    </p>
+                    <p className="text-sm">{core.metadata.description}</p>
 
                     <div className="flex flex-col gap-2">
                       <div className="text-xs">
