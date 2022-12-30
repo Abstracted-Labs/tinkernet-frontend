@@ -119,27 +119,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
-    const generalStakerInfo = await apiBST.query.ocifStaking.generalStakerInfo(
-      metadata.key,
-      selectedAccount.address
-    );
-
-    const info = generalStakerInfo.toPrimitive() as {
-      stakes: { era: string; staked: string }[];
-    };
-
-    const latestInfo = info.stakes.at(-1);
-
-    if (!latestInfo) {
-      setStakedAmount(new BigNumber(0));
-      setAvailableAmount(new BigNumber(0));
-      return;
-    }
-
-    const stakedAmount = new BigNumber(latestInfo.staked);
-
-    setStakedAmount(stakedAmount);
-
     const balanceInfo = await apiBST.query.system.account(
       selectedAccount.address
     );
@@ -160,6 +139,27 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     const availableAmount = new BigNumber(balance.data.free);
 
     setAvailableAmount(availableAmount);
+
+    const generalStakerInfo = await apiBST.query.ocifStaking.generalStakerInfo(
+      metadata.key,
+      selectedAccount.address
+    );
+
+    const info = generalStakerInfo.toPrimitive() as {
+      stakes: { era: string; staked: string }[];
+    };
+
+    const latestInfo = info.stakes.at(-1);
+
+    if (!latestInfo) {
+      setStakedAmount(new BigNumber(0));
+      setAvailableAmount(new BigNumber(0));
+      return;
+    }
+
+    const stakedAmount = new BigNumber(latestInfo.staked);
+
+    setStakedAmount(stakedAmount);
   };
 
   useEffect(() => {
@@ -215,22 +215,22 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <Tab.Group>
-                  <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
-                    <Tab
-                      key={FormType.STAKE}
-                      className={({ selected }) =>
-                        classNames(
-                          "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
-                          "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
-                          selected
-                            ? "bg-white shadow"
-                            : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
-                        )
-                      }
-                    >
-                      Stake
-                    </Tab>
-                    {stakedAmount && stakedAmount.toString() !== "0" ? (
+                  {stakedAmount && stakedAmount.toString() !== "0" ? (
+                    <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
+                      <Tab
+                        key={FormType.STAKE}
+                        className={({ selected }) =>
+                          classNames(
+                            "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
+                            "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
+                            selected
+                              ? "bg-white shadow"
+                              : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
+                          )
+                        }
+                      >
+                        Stake
+                      </Tab>
                       <Tab
                         key={FormType.UNSTAKE}
                         className={({ selected }) =>
@@ -245,8 +245,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       >
                         Unstake
                       </Tab>
-                    ) : null}
-                  </Tab.List>
+                    </Tab.List>
+                  ) : null}
                   <Tab.Panels className="mt-4">
                     <Tab.Panel
                       key={FormType.STAKE}
