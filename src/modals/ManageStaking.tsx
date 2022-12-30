@@ -140,18 +140,24 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     setStakedAmount(stakedAmount);
 
-    const balanceInfo = await apiBST.query.balances.account(
+    const balanceInfo = await apiBST.query.system.account(
       selectedAccount.address
     );
 
     const balance = balanceInfo.toPrimitive() as {
-      free: string;
-      reserved: string;
-      miscFrozen: string;
-      feeFrozen: string;
+      nonce: string;
+      consumers: string;
+      providers: string;
+      sufficients: string;
+      data: {
+        free: string;
+        reserved: string;
+        miscFrozen: string;
+        feeFrozen: string;
+      };
     };
 
-    const availableAmount = new BigNumber(balance.free);
+    const availableAmount = new BigNumber(balance.data.free);
 
     setAvailableAmount(availableAmount);
   };
