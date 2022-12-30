@@ -30,8 +30,9 @@ const Staking = () => {
   );
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentEra, setCurrentEra] = useState<{
-    era: number;
-    erasPerYear: number;
+      era: number;
+      inflationEra: number;
+      erasPerYear: number;
   }>();
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
     {
@@ -50,7 +51,7 @@ const Staking = () => {
       staked: BigNumber;
     }[]
   >([]);
-  const [unclaimedEras, setUnclaimedEras] = useState<number>(0);
+  const [unclaimedEras, setUnclaimedEras] = useState<{cores: {coreId: number; earliestEra: number}[]; total: number}>({cores: [], total: 0});
 
   const [isLoading, setLoading] = useState(false);
 
@@ -71,6 +72,7 @@ const Staking = () => {
         apiBST.query.ocifStaking.registeredCore.entries(),
         // current era
         apiBST.query.checkedInflation.currentEra(),
+          apiBST.query.ocifStaking.currentEra(),
       ]);
 
       const stakingCores = results[0].map(
@@ -101,7 +103,8 @@ const Staking = () => {
       setStakingCores(stakingCores);
 
       const currentEra = {
-        era: results[1].toPrimitive() as number,
+          inflationEra: results[1].toPrimitive() as number,
+        era: results[2].toPrimitive() as number,
         erasPerYear:
           apiBST.consts.checkedInflation.erasPerYear.toPrimitive() as number,
       };
@@ -144,35 +147,49 @@ const Staking = () => {
           staked: BigNumber;
         }[] = [];
 
-        for (const stakingCore of stakingCores) {
-          const generalStakerInfo =
-            await apiBST.query.ocifStaking.generalStakerInfo(
-              stakingCore.key,
-              selectedAccount.address
-            );
+          for (const stakingCore of stakingCores) {
+              const generalStakerInfo =
+                  await apiBST.query.ocifStaking.generalStakerInfo(
+                      stakingCore.key,
+                      selectedAccount.address
+                  );
 
-          const info = generalStakerInfo.toPrimitive() as {
-            stakes: { era: string; staked: string }[];
-          };
+              const info = generalStakerInfo.toPrimitive() as {
+                  stakes: { era: string; staked: string }[];
+              };
 
-          const unclaimed = info.stakes.length - 1;
+              if (info.stakes.length) {
 
-          if (unclaimed > unclaimedEras) {
-            setUnclaimedEras(unclaimed);
+                  let unclaimedEarliest = info.stakes[0].era;
+
+                  if (unclaimedEarliest < currentEra.era) {
+                      const unclaimed = unclaimedEras;
+
+                      unclaimed.cores.filter(function(value, index, arr){
+                          return value.coreId != stakingCore.key;
+                      });
+                      unclaimed.cores.push({ coreId: stakingCore.key, earliestEra: unclaimedEarliest });
+
+                      if ((currentEra.era - unclaimedEarliest) > unclaimed.total) {
+                          unclaimed.total = (currentEra.era - unclaimedEarliest);
+                      }
+
+                      setUnclaimedEras(unclaimed);
+                  }
+
+                  const latestInfo = info.stakes.at(-1);
+
+                  if (!latestInfo) {
+                      continue;
+                  }
+
+                  userStakedInfo.push({
+                      coreId: stakingCore.key,
+                      era: parseInt(latestInfo.era),
+                      staked: new BigNumber(latestInfo.staked),
+                  });
+              }
           }
-
-          const latestInfo = info.stakes.at(-1);
-
-          if (!latestInfo) {
-            continue;
-          }
-
-          userStakedInfo.push({
-            coreId: stakingCore.key,
-            era: parseInt(latestInfo.era),
-            staked: new BigNumber(latestInfo.staked),
-          });
-        }
 
         setUserStakedInfo(userStakedInfo);
 
@@ -213,8 +230,20 @@ const Staking = () => {
 
     const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
-    apiBST.tx.ocifStaking
-      .withdrawUnstaked()
+      let batch = [];
+
+      for (const core of uniqBy(unclaimedEras.cores)) {
+          for (let i = 0; i < currentEra.era - core.earliestEra; i++) {
+              batch.push(apiBST.tx.ocifStaking.stakerClaimRewards(core.coreId))
+          }
+      }
+
+      console.log(uniqBy(unclaimedEras.cores))
+
+      console.log(batch);
+
+    apiBST.tx.utility
+      .batch(batch)
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
@@ -229,6 +258,15 @@ const Staking = () => {
         }
       );
   };
+
+    function uniqBy(a) {
+        return [
+            ...new Map(
+                a.map(x => [x.coreId, x])
+            ).values()
+        ]
+    }
+
 
   useEffect(() => {
     loadStakingCores(selectedAccount);
@@ -284,7 +322,7 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {unclaimedEras} eras
+                      {unclaimedEras.total} eras
                     </span>
                   </div>
                 </div>
@@ -295,7 +333,7 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {currentEra.era} / {currentEra.erasPerYear}
+                      {currentEra.inflationEra} / {currentEra.erasPerYear}
                     </span>
                   </div>
                 </div>
