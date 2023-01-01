@@ -6,7 +6,7 @@ const useApi = () => {
   const api = useContext(ApiContext);
 
   if (!api) {
-    throw new Error("No API found");
+    throw new Error("API_NOT_FOUND");
   }
 
   return api;
