@@ -389,9 +389,9 @@ const Staking = () => {
                     <span className="truncate text-2xl font-bold">
                       {formatBalance(availableBalance.toString(), {
                         decimals: 12,
-                        withUnit: "TNKR",
+                        withUnit: false,
                         forceUnit: "-",
-                      }).replace(".0000", "")}
+                      }).slice(0, -2)} TNKR
                     </span>
                   </div>
                 </div>
@@ -403,10 +403,10 @@ const Staking = () => {
                   <div>
                     <span className="text-2xl font-bold">
                       {formatBalance(totalStaked.toString(), {
-                        decimals: 12,
-                        withUnit: "TNKR",
-                        forceUnit: "-",
-                      }).replace(".0000", "")}
+                          decimals: 12,
+                          withUnit: false,
+                          forceUnit: "-",
+                      }).slice(0, -2)} TNKR
                     </span>
                   </div>
                 </div>
@@ -430,9 +430,9 @@ const Staking = () => {
                         <span className="text-2xl font-bold">
                             {formatBalance(totalClaimed.toString(), {
                                 decimals: 12,
-                                withUnit: "TNKR",
+                                withUnit: false,
                                 forceUnit: "-",
-                            }).replace(".0000", "")}
+                            }).slice(0, -2)} TNKR
                         </span>
                     </div>
                 </div>
@@ -503,11 +503,10 @@ const Staking = () => {
                               ? `Staked ${formatBalance(
                                   totalStaked.toString(),
                                   {
-                                    decimals: 12,
-                                    withUnit: "TNKR",
-                                    forceUnit: "-",
-                                  }
-                                ).replace(".0000", "")}`
+                                  decimals: 12,
+                                  withUnit: false,
+                                  forceUnit: "-",
+                              }).slice(0, -2)} TNKR`
                               : null}
                           </span>
                         </div>
@@ -521,10 +520,10 @@ const Staking = () => {
                         {coreInfo?.total
                           ? formatBalance(coreInfo.total.toString(), {
                               decimals: 12,
-                              withUnit: "TNKR",
+                              withUnit: false,
                               forceUnit: "-",
-                            }).replace(".0000", "")
-                          : "0"}{" "}
+                          }).slice(0, -2)
+                          : "0"} TNKR {" "}
                         staked
                       </div>
                     </div>
