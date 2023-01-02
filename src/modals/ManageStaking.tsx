@@ -1,21 +1,29 @@
 import { Dialog, Tab } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { z } from "zod";
 import shallow from "zustand/shallow";
+
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
-
 import useModal from "../stores/modals";
 import classNames from "../utils/classNames";
 
-enum FormType {
-  STAKE = "STAKE",
-  UNSTAKE = "UNSTAKE",
-}
+const mode = {
+  STAKE: "STAKE",
+  UNSTAKE: "UNSTAKE",
+} as const;
+
+const schema = z.object({
+  amount: z.string().refine((val) => !Number.isNaN(parseFloat(val)), {
+    message: "Amount must be a number",
+  }),
+});
 
 const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const { setOpenModal, metadata } = useModal(
@@ -25,23 +33,22 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     }),
     shallow
   );
-  const { selectedAccount } = useAccount(
-    (state) => ({ selectedAccount: state.selectedAccount }),
-    shallow
-  );
-  const [stakeAmount, setStakeAmount] = useState("");
-  const [unstakeAmount, setUnstakeAmount] = useState("");
+  const selectedAccount = useAccount((state) => state.selectedAccount);
+
+  const stakeForm = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+  });
+
+  const unstakeForm = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+  });
+
   const api = useApi();
 
-  const handleStake = async () => {
+  const handleStake = stakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
 
     if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
-
-    if (!stakeAmount) {
-      toast.error("Please enter an amount to stake");
-      return;
-    }
 
     toast.loading("Staking...");
 
@@ -49,15 +56,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const injector = await web3FromAddress(selectedAccount.address);
 
-    const parsedStakeAmount = new BigNumber(stakeAmount).multipliedBy(
+    const parsedStakeAmount = new BigNumber(amount).multipliedBy(
       new BigNumber(10).pow(12)
     );
-
-    if (parsedStakeAmount.isNaN()) {
-      toast.error("Please enter a valid amount");
-
-      return;
-    }
 
     await api.tx.ocifStaking
       .stake(metadata.key, parsedStakeAmount.toString())
@@ -86,18 +87,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       );
 
     setOpenModal({ name: null });
-  };
+  });
 
-  const handleUnstake = async () => {
+  const handleUnstake = unstakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
 
     if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
-
-    if (!unstakeAmount) {
-      toast.error("Please enter an amount to stake");
-
-      return;
-    }
 
     toast.loading("Unstaking...");
 
@@ -105,15 +100,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const injector = await web3FromAddress(selectedAccount.address);
 
-    const parsedUnstakeAmount = new BigNumber(unstakeAmount).multipliedBy(
+    const parsedUnstakeAmount = new BigNumber(amount).multipliedBy(
       new BigNumber(10).pow(12)
     );
-
-    if (parsedUnstakeAmount.isNaN()) {
-      toast.error("Please enter a valid amount");
-
-      return;
-    }
 
     await api.tx.ocifStaking
       .unstake(metadata.key, parsedUnstakeAmount.toString())
@@ -142,6 +131,14 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       );
 
     setOpenModal({ name: null });
+  });
+
+  const handleStakeMax = () => {
+    console.log("TODO");
+  };
+
+  const handleUnstakeMax = () => {
+    console.log("TODO");
   };
 
   return (
@@ -199,7 +196,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                 metadata?.totalStaked.toString() !== "0" ? (
                   <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
                     <Tab
-                      key={FormType.STAKE}
+                      key={mode.STAKE}
                       className={({ selected }) =>
                         classNames(
                           "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
@@ -213,7 +210,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       Stake
                     </Tab>
                     <Tab
-                      key={FormType.UNSTAKE}
+                      key={mode.UNSTAKE}
                       className={({ selected }) =>
                         classNames(
                           "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
@@ -230,79 +227,120 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                 ) : null}
                 <Tab.Panels>
                   <Tab.Panel
-                    key={FormType.STAKE}
+                    key={mode.STAKE}
                     className={classNames(
                       "flex flex-col gap-4 rounded-md",
                       "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2"
                     )}
                   >
-                    <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                      <label
-                        htmlFor="stakeAmount"
-                        className="block text-xs font-medium text-white"
-                      >
-                        Stake Amount
-                      </label>
-                      <input
-                        name="stakeAmount"
-                        id="stakeAmount"
-                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                        onChange={(e) => setStakeAmount(e.target.value)}
-                      />
-
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <span className="text-white sm:text-sm" id="currency">
-                          TNKR
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
-                      onClick={handleStake}
-                      disabled={!stakeAmount}
+                    <form
+                      className="flex flex-col gap-4"
+                      onSubmit={handleStake}
                     >
-                      Stake
-                    </button>
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="stakeAmount"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Stake Amount
+                        </label>
+                        <input
+                          {...stakeForm.register("amount", {
+                            required: true,
+                          })}
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                        />
+
+                        <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
+                          <span
+                            className="pointer-events-none block text-white sm:text-sm"
+                            id="currency"
+                          >
+                            TNKR
+                          </span>
+
+                          <span
+                            className="block cursor-pointer text-white sm:text-sm"
+                            id="currency"
+                            onClick={handleStakeMax}
+                          >
+                            MAX
+                          </span>
+                        </div>
+                      </div>
+
+                      {stakeForm.formState.errors.amount ? (
+                        <div className="text-red-400">
+                          {stakeForm.formState.errors.amount.message}
+                        </div>
+                      ) : null}
+
+                      <button
+                        type="submit"
+                        disabled={!stakeForm.formState.isValid}
+                        className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                      >
+                        Stake
+                      </button>
+                    </form>
                   </Tab.Panel>
                   <Tab.Panel
-                    key={FormType.UNSTAKE}
+                    key={mode.UNSTAKE}
                     className={classNames(
-                      "flex flex-col gap-4 rounded-md",
+                      "rounded-md",
                       "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2"
                     )}
                   >
-                    <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                      <label
-                        htmlFor="unstakeAmount"
-                        className="block text-xs font-medium text-white"
-                      >
-                        Unstake Amount
-                      </label>
-                      <input
-                        type="text"
-                        name="unstakeAmount"
-                        id="unstakeAmount"
-                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                        onChange={(e) => setUnstakeAmount(e.target.value)}
-                      />
-
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <span className="text-white sm:text-sm" id="currency">
-                          TNKR
-                        </span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
-                      onClick={handleUnstake}
-                      disabled={!unstakeAmount}
+                    <form
+                      className="flex flex-col gap-4"
+                      onSubmit={handleUnstake}
                     >
-                      Unstake
-                    </button>
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                        <label
+                          htmlFor="unstakeAmount"
+                          className="block text-xs font-medium text-white"
+                        >
+                          Unstake Amount
+                        </label>
+                        <input
+                          {...unstakeForm.register("amount", {
+                            required: true,
+                          })}
+                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                        />
+
+                        <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
+                          <span
+                            className="pointer-events-none block text-white sm:text-sm"
+                            id="currency"
+                          >
+                            TNKR
+                          </span>
+
+                          <span
+                            className="block cursor-pointer text-white sm:text-sm"
+                            id="currency"
+                            onClick={handleUnstakeMax}
+                          >
+                            MAX
+                          </span>
+                        </div>
+                      </div>
+
+                      {unstakeForm.formState.errors.amount ? (
+                        <div className="text-red-400">
+                          {unstakeForm.formState.errors.amount.message}
+                        </div>
+                      ) : null}
+
+                      <button
+                        type="submit"
+                        disabled={!unstakeForm.formState.isValid}
+                        className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                      >
+                        Unstake
+                      </button>
+                    </form>
                   </Tab.Panel>
                 </Tab.Panels>
               </Tab.Group>
