@@ -367,6 +367,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                         </div>
                       </div>
 
+                      <div>
+                        <span className="text-sm text-white">
+                          Funds will be subject to a 7 day unbonding period
+                        </span>
+                      </div>
+
                       {unstakeForm.formState.errors.amount ? (
                         <div className="text-red-400">
                           {unstakeForm.formState.errors.amount.message}

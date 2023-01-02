@@ -14,7 +14,6 @@ const ApiProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     (async () => {
-      console.log(location.pathname);
       if (location.pathname === "/staking") {
         setHost(Host.BRAINSTORM);
       }
