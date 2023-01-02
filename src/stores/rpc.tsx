@@ -27,8 +27,7 @@ const useRPC = create<RPCState>()((set, get) => ({
     try {
       const api = await ApiPromise.create({
         provider: wsProvider,
-        // while we are testing on another chain, we don't want to throw errors on connect
-        // throwOnConnect: true,
+        throwOnConnect: true,
       });
 
       set(() => ({ error: null }));

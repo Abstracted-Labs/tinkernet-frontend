@@ -8,7 +8,7 @@ const Layout = () => {
     <>
       <Header />
 
-      <main className="min-h-screen bg-black py-8 text-white">
+      <main className="min-h-screen bg-neutral-900 py-8 text-white">
         <Outlet />
       </main>
 
