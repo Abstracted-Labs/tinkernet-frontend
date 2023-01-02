@@ -74,8 +74,8 @@ const Staking = () => {
 
     const [query] = useQuery({
         query: totalRewardsClaimed,
-        variables: { accountId: currentAddress },
-        pause: !currentAddress,
+        variables: { accountId: selectedAccount ? encodeAddress(selectedAccount.address, 2) : "" },
+        pause: !selectedAccount,
     });
 
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
@@ -167,17 +167,6 @@ const Staking = () => {
       setCoreEraStakeInfo(coreEraStakeInfo);
 
       if (selectedAccount) {
-          setCurrentAddress(encodeAddress(selectedAccount.address, 2));
-
-        //  if (query.fetching) return;
-
-          if (query.data) {
-              const totalClaimedQuery: BigNumber = query.data.stakers.map(
-                  ({ totalRewards, latestClaimBlock }: { totalRewards: BigNumber; latestClaimBlock: number; }) => totalRewards
-              );
-
-              setTotalClaimed(totalClaimedQuery);
-          }
 
         const balanceInfo = await apiBST.query.system.account(
           selectedAccount.address
@@ -343,7 +332,21 @@ const Staking = () => {
 
   useEffect(() => {
     loadStakingCores(selectedAccount);
-  }, [selectedAccount]);
+
+      if (selectedAccount) {
+
+          if (query.fetching) return;
+
+          if (!query.data) return;
+
+          const totalClaimedQuery: BigNumber = query.data.stakers.map(
+              ({ totalRewards, latestClaimBlock }: { totalRewards: BigNumber; latestClaimBlock: number; }) => totalRewards
+          );
+
+          setTotalClaimed(totalClaimedQuery);
+      }
+
+  }, [selectedAccount, query.fetching]);
 
   return (
     <>
