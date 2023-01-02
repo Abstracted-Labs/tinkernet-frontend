@@ -75,10 +75,10 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         (result) => {
           toast.dismiss();
 
-          if (result.status.isInBlock) {
-            console.log("In block");
-          } else if (result.status.isFinalized) {
-            console.log("Finalized");
+          toast.loading("Submitting transaction...");
+
+          if (result.status.isFinalized) {
+            toast.dismiss();
 
             toast.success("Successfully staked!");
           }
@@ -126,10 +126,11 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         { signer: injector.signer },
         (result) => {
           toast.dismiss();
-          if (result.status.isInBlock) {
-            console.log("In block");
-          } else if (result.status.isFinalized) {
-            console.log("Finalized");
+
+          toast.loading("Submitting transaction...");
+
+          if (result.status.isFinalized) {
+            toast.dismiss();
 
             toast.success("Successfully unstaked!");
           }
@@ -157,10 +158,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                 <>
                   Available:{" "}
                   <span className="font-bold">
-                    {" "}
                     {formatBalance(
-                      metadata?.availableAmount
-                        ? metadata?.availableAmount.toString()
+                      metadata?.availableBalance
+                        ? metadata?.availableBalance.toString()
                         : "0",
                       {
                         decimals: 12,

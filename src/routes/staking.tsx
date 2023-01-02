@@ -74,8 +74,9 @@ const Staking = () => {
       const results = await Promise.all([
         // registered cores
         apiBST.query.ocifStaking.registeredCore.entries(),
-        // current era
+        // current era of inflation
         apiBST.query.checkedInflation.currentEra(),
+        // current era of staking
         apiBST.query.ocifStaking.currentEra(),
       ]);
 
@@ -187,7 +188,7 @@ const Staking = () => {
             if (parseInt(unclaimedEarliest) < currentEra.era) {
               const unclaimed = unclaimedEras;
 
-              unclaimed.cores.filter(function (value, index, arr) {
+              unclaimed.cores.filter((value) => {
                 return value.coreId != stakingCore.key;
               });
 
@@ -276,7 +277,11 @@ const Staking = () => {
 
     const batch = [];
 
-    for (const core of uniqBy(unclaimedEras.cores) as any) {
+    const uniqueCores = [
+      ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
+    ];
+
+    for (const core of uniqueCores) {
       if (!core?.earliestEra) continue;
 
       for (let i = 0; i < currentEra.era - core.earliestEra; i++) {
@@ -290,20 +295,18 @@ const Staking = () => {
         selectedAccount.address,
         { signer: injector.signer },
         (result) => {
-          if (result.status.isInBlock) {
-            console.log("In block");
-          } else if (result.status.isFinalized) {
-            console.log("Finalized");
+          toast.dismiss();
+
+          toast.loading("Submitting transaction...");
+
+          if (result.status.isFinalized) {
+            toast.dismiss();
 
             toast.success("Successfully claimed all rewards!");
           }
         }
       );
   };
-
-  function uniqBy(a: any) {
-    return [...new Map(a.map((x: { coreId: any }) => [x.coreId, x])).values()];
-  }
 
   useEffect(() => {
     loadStakingCores(selectedAccount);
@@ -410,71 +413,70 @@ const Staking = () => {
               return (
                 <div
                   key={core.account}
-                  className="relative flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 p-6 sm:flex-row"
+                  className="flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 p-6 sm:flex-row"
                 >
-                  <div className="absolute top-6 right-6">
-                    <span className="block text-sm">
-                      {totalStaked
-                        ? `Staked ${formatBalance(totalStaked.toString(), {
-                            decimals: 12,
-                            withUnit: "TNKR",
-                            forceUnit: "-",
-                          }).replace(".0000", "")}`
-                        : null}
-                    </span>
-                  </div>
+                  <div className="flex w-full flex-col justify-between gap-4">
+                    <div className="flex flex-shrink-0">
+                      <img
+                        src={core.metadata.image}
+                        alt={core.metadata.name}
+                        className="h-16 w-16 rounded-full"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-4">
+                      <h4 className="font-bold">{core.metadata.name}</h4>
 
-                  <div className="flex flex-shrink-0">
-                    <img
-                      src={core.metadata.image}
-                      alt={core.metadata.name}
-                      className="h-16 w-16 rounded-full"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <h4 className="font-bold">{core.metadata.name}</h4>
+                      <p className="h-16 text-sm line-clamp-3">
+                        {core.metadata.description}
+                      </p>
 
-                    <p className="text-sm">{core.metadata.description}</p>
+                      {selectedAccount ? (
+                        <div className="flex items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                            onClick={() => {
+                              handleManageStaking({
+                                core,
+                                totalStaked: totalStaked || new BigNumber("0"),
+                                availableBalance:
+                                  availableBalance || new BigNumber("0"),
+                              });
+                            }}
+                          >
+                            {totalStaked ? "Manage Staking" : "Stake"}
+                          </button>
 
-                    <div className="flex flex-col gap-2">
-                      <div className="text-xs">
-                        {coreInfo?.numberOfStakers
-                          ? `Number of stakers ${coreInfo.numberOfStakers}`
-                          : null}
+                          <span className="block text-sm">
+                            {totalStaked
+                              ? `Staked ${formatBalance(
+                                  totalStaked.toString(),
+                                  {
+                                    decimals: 12,
+                                    withUnit: "TNKR",
+                                    forceUnit: "-",
+                                  }
+                                ).replace(".0000", "")}`
+                              : null}
+                          </span>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="truncate text-sm">
+                        {coreInfo ? coreInfo.numberOfStakers : "0"} stakers
                       </div>
-
-                      <div className="text-xs">
-                        {coreInfo?.total && coreInfo.total.toString() !== "0"
-                          ? `Total staked ${formatBalance(
-                              coreInfo.total.toString(),
-                              {
-                                decimals: 12,
-                                withUnit: "TNKR",
-                                forceUnit: "-",
-                              }
-                            ).replace(".0000", "")}`
-                          : null}
+                      <div className="truncate text-sm">
+                        {coreInfo?.total
+                          ? formatBalance(coreInfo.total.toString(), {
+                              decimals: 12,
+                              withUnit: "TNKR",
+                              forceUnit: "-",
+                            }).replace(".0000", "")
+                          : "0"}{" "}
+                        staked
                       </div>
                     </div>
-
-                    {selectedAccount ? (
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
-                          onClick={() =>
-                            handleManageStaking({
-                              core,
-                              totalStaked: totalStaked || new BigNumber("0"),
-                              availableBalance:
-                                availableBalance || new BigNumber("0"),
-                            })
-                          }
-                        >
-                          {totalStaked ? "Manage Staking" : "Stake"}
-                        </button>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
               );
