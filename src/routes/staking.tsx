@@ -310,7 +310,15 @@ const Staking = () => {
 
           toast.loading("Submitting transaction...");
 
-          if (result.status.isFinalized) {
+          if (result.status.isInvalid) {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          } else if (result.status.isDropped) {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+          } else if (result.status.isFinalized) {
             toast.dismiss();
 
             toast.success("Successfully claimed all rewards!");

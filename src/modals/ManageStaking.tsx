@@ -69,7 +69,15 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
           toast.loading("Submitting transaction...");
 
-          if (result.status.isFinalized) {
+          if (result.status.isInvalid) {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          } else if (result.status.isDropped) {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+          } else if (result.status.isFinalized) {
             toast.dismiss();
 
             toast.success("Successfully staked!");
@@ -117,7 +125,15 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
           toast.loading("Submitting transaction...");
 
-          if (result.status.isFinalized) {
+          if (result.status.isInvalid) {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          } else if (result.status.isDropped) {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+          } else if (result.status.isFinalized) {
             toast.dismiss();
 
             toast.success("Successfully unstaked!");
@@ -245,6 +261,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       type="button"
                       className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
                       onClick={handleStake}
+                      disabled={!stakeAmount}
                     >
                       Stake
                     </button>
@@ -282,6 +299,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       type="button"
                       className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
                       onClick={handleUnstake}
+                      disabled={!unstakeAmount}
                     >
                       Unstake
                     </button>
