@@ -4,8 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import shallow from "zustand/shallow";
 
@@ -34,7 +36,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     shallow
   );
   const selectedAccount = useAccount((state) => state.selectedAccount);
-
+  const navigate = useNavigate();
   const stakeForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
   });
@@ -95,6 +97,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
             toast.dismiss();
 
             toast.success("Successfully staked!");
+
+            navigate("/staking");
           }
         }
       );
@@ -136,6 +140,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         selectedAccount.address,
         { signer: injector.signer },
         (result) => {
+          console.log(result);
           toast.dismiss();
 
           toast.loading("Submitting transaction...");
@@ -152,6 +157,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
             toast.dismiss();
 
             toast.success("Successfully unstaked!");
+
+            navigate("/staking");
           }
         }
       );
@@ -180,6 +187,11 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         .toString()
     );
   };
+
+  useEffect(() => {
+    stakeForm.reset();
+    unstakeForm.reset();
+  }, [metadata?.key]);
 
   return (
     <Dialog open={isOpen} onClose={() => setOpenModal({ name: null })}>
