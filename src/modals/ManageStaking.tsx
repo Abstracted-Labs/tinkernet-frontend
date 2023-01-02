@@ -120,7 +120,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     }
 
     await apiBST.tx.ocifStaking
-      .unstake(metadata.key, parsedUnstakeAmount)
+      .unstake(metadata.key, parsedUnstakeAmount.toString())
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
@@ -172,13 +172,13 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                 </>
               </div>
 
-              {metadata?.stakedAmount &&
-              metadata?.stakedAmount.toString() !== "0" ? (
+              {metadata?.totalStaked &&
+              metadata?.totalStaked.toString() !== "0" ? (
                 <div className="text-sm text-white">
                   <>
                     Staked:{" "}
                     <span className="font-bold">
-                      {formatBalance(metadata?.stakedAmount.toString(), {
+                      {formatBalance(metadata?.totalStaked.toString(), {
                         decimals: 12,
                         withUnit: "TNKR",
                         forceUnit: "-",
@@ -191,8 +191,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
             <div className="flex flex-col gap-4">
               <Tab.Group>
-                {metadata?.stakedAmount &&
-                metadata?.stakedAmount.toString() !== "0" ? (
+                {metadata?.totalStaked &&
+                metadata?.totalStaked.toString() !== "0" ? (
                   <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
                     <Tab
                       key={FormType.STAKE}
