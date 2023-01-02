@@ -16,35 +16,38 @@ import Modals from "./modals";
 import { createClient, Provider as URQLProvider } from "urql";
 
 const client = createClient({
-    url: "https://squid.subsquid.io/ocif-squid/v/v1/graphql",
+  url: "https://squid.subsquid.io/ocif-squid/v/v1/graphql",
 });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <ApiProvider>
-        <URQLProvider value={client}>
-      <>
-        <Toaster position="bottom-right" />
-        <BrowserRouter>
-          <Modals />
+    <>
+      <Toaster position="bottom-right" />
+      <BrowserRouter>
+        <ApiProvider>
+          <URQLProvider value={client}>
+            <Modals />
 
-          <Routes>
-            <Route index element={<Navigate to="claim" replace={true} />} />
-            <Route path="/" element={<Layout />}>
-              <Route path="claim" element={<Claim />} />
+            <Routes>
+              <Route index element={<Navigate to="claim" replace={true} />} />
+              <Route path="/" element={<Layout />}>
+                <Route path="claim" element={<Claim />} />
 
-              <Route path="xtransfer" element={<XTransfer />} />
+                <Route path="xtransfer" element={<XTransfer />} />
 
-              <Route path="staking" element={<Staking />} />
+                <Route path="staking" element={<Staking />} />
 
-              <Route path="404" element={<NotFound />} />
+                <Route path="404" element={<NotFound />} />
 
-              <Route path="*" element={<Navigate to="/404" replace={true} />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
-      </>
-        </URQLProvider>
-    </ApiProvider>
+                <Route
+                  path="*"
+                  element={<Navigate to="/404" replace={true} />}
+                />
+              </Route>
+            </Routes>
+          </URQLProvider>
+        </ApiProvider>
+      </BrowserRouter>
+    </>
   </React.StrictMode>
 );

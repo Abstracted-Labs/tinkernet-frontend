@@ -1,26 +1,21 @@
 import { Dialog, Tab } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { WsProvider, ApiPromise } from "@polkadot/api";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import shallow from "zustand/shallow";
+import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 
 import useModal from "../stores/modals";
+import classNames from "../utils/classNames";
 
 enum FormType {
   STAKE = "STAKE",
   UNSTAKE = "UNSTAKE",
 }
-
-const classNames = (...classes: string[]) => {
-  return classes.filter(Boolean).join(" ");
-};
-
-const BRAINSTORM_RPC_URL = "wss://brainstorm.invarch.network";
 
 const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const { setOpenModal, metadata } = useModal(
@@ -36,6 +31,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   );
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");
+  const api = useApi();
 
   const handleStake = async () => {
     if (!selectedAccount) return;
@@ -49,13 +45,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     toast.loading("Staking...");
 
-    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
-
     await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
-
-    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
     const parsedStakeAmount = new BigNumber(stakeAmount).multipliedBy(
       new BigNumber(10).pow(12)
@@ -67,7 +59,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       return;
     }
 
-    await apiBST.tx.ocifStaking
+    await api.tx.ocifStaking
       .stake(metadata.key, parsedStakeAmount.toString())
       .signAndSend(
         selectedAccount.address,
@@ -77,7 +69,15 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
           toast.loading("Submitting transaction...");
 
-          if (result.status.isFinalized) {
+          if (result.status.isInvalid) {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          } else if (result.status.isDropped) {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+          } else if (result.status.isFinalized) {
             toast.dismiss();
 
             toast.success("Successfully staked!");
@@ -101,13 +101,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     toast.loading("Unstaking...");
 
-    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
-
     await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
-
-    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
     const parsedUnstakeAmount = new BigNumber(unstakeAmount).multipliedBy(
       new BigNumber(10).pow(12)
@@ -119,7 +115,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       return;
     }
 
-    await apiBST.tx.ocifStaking
+    await api.tx.ocifStaking
       .unstake(metadata.key, parsedUnstakeAmount.toString())
       .signAndSend(
         selectedAccount.address,
@@ -129,7 +125,15 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
           toast.loading("Submitting transaction...");
 
-          if (result.status.isFinalized) {
+          if (result.status.isInvalid) {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          } else if (result.status.isDropped) {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+          } else if (result.status.isFinalized) {
             toast.dismiss();
 
             toast.success("Successfully unstaked!");
@@ -257,6 +261,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       type="button"
                       className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
                       onClick={handleStake}
+                      disabled={!stakeAmount}
                     >
                       Stake
                     </button>
@@ -294,6 +299,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       type="button"
                       className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
                       onClick={handleUnstake}
+                      disabled={!unstakeAmount}
                     >
                       Unstake
                     </button>
