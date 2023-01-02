@@ -57,7 +57,7 @@ const Footer = () => {
         </div>
         <div className="mt-8 md:order-1 md:mt-0">
           <p className="text-center text-base text-neutral-400">
-            &copy; {new Date().getFullYear()} InvArch Tinkernet. All rights
+    &copy; {new Date().getFullYear()} The InvArch Association. All rights
             reserved.
           </p>
         </div>
