@@ -1,4 +1,3 @@
-import { WsProvider, ApiPromise } from "@polkadot/api";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { formatBalance } from "@polkadot/util";
@@ -6,8 +5,8 @@ import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import shallow from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
+import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { ModalName } from "../stores/modals";
 import { useQuery } from "urql";
@@ -31,14 +30,11 @@ type StakingCore = {
   };
 };
 
-const BRAINSTORM_RPC_URL = "wss://brainstorm.invarch.network";
-
 const Staking = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
-  const { selectedAccount } = useAccount(
-    (state) => ({ selectedAccount: state.selectedAccount }),
-    shallow
-  );
+  const selectedAccount = useAccount((state) => state.selectedAccount);
+  const api = useApi();
+
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentEra, setCurrentEra] = useState<{
     era: number;
@@ -70,13 +66,15 @@ const Staking = () => {
 
   const [isLoading, setLoading] = useState(false);
 
-    const [currentAddress, setCurrentAddress] = useState<string | null>(null);
-
-    const [query] = useQuery({
-        query: totalRewardsClaimed,
-        variables: { accountId: selectedAccount ? encodeAddress(selectedAccount.address, 2) : "" },
-        pause: !selectedAccount,
-    });
+  const [query] = useQuery({
+    query: totalRewardsClaimed,
+    variables: {
+      accountId: selectedAccount
+        ? encodeAddress(selectedAccount.address, 2)
+        : "",
+    },
+    pause: !selectedAccount,
+  });
 
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
 
@@ -88,17 +86,13 @@ const Staking = () => {
     try {
       toast.loading("Loading staking cores...");
 
-      const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
-
-      const apiBST = await ApiPromise.create({ provider: wsProviderBST });
-
       const results = await Promise.all([
         // registered cores
-        apiBST.query.ocifStaking.registeredCore.entries(),
+        api.query.ocifStaking.registeredCore.entries(),
         // current era of inflation
-        apiBST.query.checkedInflation.currentEra(),
+        api.query.checkedInflation.currentEra(),
         // current era of staking
-        apiBST.query.ocifStaking.currentEra(),
+        api.query.ocifStaking.currentEra(),
       ]);
 
       const stakingCores = results[0].map(
@@ -132,7 +126,7 @@ const Staking = () => {
         inflationEra: results[1].toPrimitive() as number,
         era: results[2].toPrimitive() as number,
         erasPerYear:
-          apiBST.consts.checkedInflation.erasPerYear.toPrimitive() as number,
+          api.consts.checkedInflation.erasPerYear.toPrimitive() as number,
       };
 
       setCurrentEra(currentEra);
@@ -147,7 +141,7 @@ const Staking = () => {
 
       for (const stakingCore of stakingCores) {
         const coreEraStake = (
-          await apiBST.query.ocifStaking.coreEraStake(
+          await api.query.ocifStaking.coreEraStake(
             stakingCore.key,
             currentEra.era
           )
@@ -167,8 +161,7 @@ const Staking = () => {
       setCoreEraStakeInfo(coreEraStakeInfo);
 
       if (selectedAccount) {
-
-        const balanceInfo = await apiBST.query.system.account(
+        const balanceInfo = await api.query.system.account(
           selectedAccount.address
         );
 
@@ -195,7 +188,7 @@ const Staking = () => {
 
         for (const stakingCore of stakingCores) {
           const generalStakerInfo =
-            await apiBST.query.ocifStaking.generalStakerInfo(
+            await api.query.ocifStaking.generalStakerInfo(
               stakingCore.key,
               selectedAccount.address
             );
@@ -293,10 +286,6 @@ const Staking = () => {
 
     const injector = await web3FromAddress(selectedAccount.address);
 
-    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
-
-    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
-
     const batch = [];
 
     const uniqueCores = [
@@ -307,11 +296,11 @@ const Staking = () => {
       if (!core?.earliestEra) continue;
 
       for (let i = 0; i < currentEra.era - core.earliestEra; i++) {
-        batch.push(apiBST.tx.ocifStaking.stakerClaimRewards(core.coreId));
+        batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
       }
     }
 
-    apiBST.tx.utility
+    api.tx.utility
       .batch(batch)
       .signAndSend(
         selectedAccount.address,
@@ -333,19 +322,17 @@ const Staking = () => {
   useEffect(() => {
     loadStakingCores(selectedAccount);
 
-      if (selectedAccount) {
+    if (selectedAccount) {
+      if (query.fetching) return;
 
-          if (query.fetching) return;
+      if (!query.data) return;
 
-          if (!query.data) return;
+      const totalClaimedQuery: BigNumber = query.data.stakers.map(
+        ({ totalRewards }: { totalRewards: BigNumber }) => totalRewards
+      );
 
-          const totalClaimedQuery: BigNumber = query.data.stakers.map(
-              ({ totalRewards, latestClaimBlock }: { totalRewards: BigNumber; latestClaimBlock: number; }) => totalRewards
-          );
-
-          setTotalClaimed(totalClaimedQuery);
-      }
-
+      setTotalClaimed(totalClaimedQuery);
+    }
   }, [selectedAccount, query.fetching]);
 
   return (
@@ -423,18 +410,18 @@ const Staking = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 p-6">
-                    <div>
-                        <span className="text-sm">Total Rewards Claimed</span>
-                    </div>
-                    <div>
-                        <span className="text-2xl font-bold">
-                            {formatBalance(totalClaimed.toString(), {
-                                decimals: 12,
-                                withUnit: "TNKR",
-                                forceUnit: "-",
-                            }).replace(".0000", "")}
-                        </span>
-                    </div>
+                  <div>
+                    <span className="text-sm">Total Rewards Claimed</span>
+                  </div>
+                  <div>
+                    <span className="text-2xl font-bold">
+                      {formatBalance(totalClaimed.toString(), {
+                        decimals: 12,
+                        withUnit: "TNKR",
+                        forceUnit: "-",
+                      }).replace(".0000", "")}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2 p-6">

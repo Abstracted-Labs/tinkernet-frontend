@@ -1,26 +1,21 @@
 import { Dialog, Tab } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { WsProvider, ApiPromise } from "@polkadot/api";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import shallow from "zustand/shallow";
+import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 
 import useModal from "../stores/modals";
+import classNames from "../utils/classNames";
 
 enum FormType {
   STAKE = "STAKE",
   UNSTAKE = "UNSTAKE",
 }
-
-const classNames = (...classes: string[]) => {
-  return classes.filter(Boolean).join(" ");
-};
-
-const BRAINSTORM_RPC_URL = "wss://brainstorm.invarch.network";
 
 const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const { setOpenModal, metadata } = useModal(
@@ -36,6 +31,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   );
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");
+  const api = useApi();
 
   const handleStake = async () => {
     if (!selectedAccount) return;
@@ -49,13 +45,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     toast.loading("Staking...");
 
-    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
-
     await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
-
-    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
     const parsedStakeAmount = new BigNumber(stakeAmount).multipliedBy(
       new BigNumber(10).pow(12)
@@ -67,7 +59,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       return;
     }
 
-    await apiBST.tx.ocifStaking
+    await api.tx.ocifStaking
       .stake(metadata.key, parsedStakeAmount.toString())
       .signAndSend(
         selectedAccount.address,
@@ -101,13 +93,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     toast.loading("Unstaking...");
 
-    const wsProviderBST = new WsProvider(BRAINSTORM_RPC_URL);
-
     await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
-
-    const apiBST = await ApiPromise.create({ provider: wsProviderBST });
 
     const parsedUnstakeAmount = new BigNumber(unstakeAmount).multipliedBy(
       new BigNumber(10).pow(12)
@@ -119,7 +107,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       return;
     }
 
-    await apiBST.tx.ocifStaking
+    await api.tx.ocifStaking
       .unstake(metadata.key, parsedUnstakeAmount.toString())
       .signAndSend(
         selectedAccount.address,

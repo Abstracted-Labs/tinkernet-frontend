@@ -1,7 +1,6 @@
 import { Menu } from "@headlessui/react";
 
 import { Link } from "react-router-dom";
-import shallow from "zustand/shallow";
 
 import logoFull from "../../assets/logo-full.svg";
 import logoIcon from "../../assets/logo-icon.svg";
@@ -11,13 +10,10 @@ import useAccount from "../../stores/account";
 
 const Header = () => {
   const { handleConnect } = useConnect();
-  const { selectedAccount } = useAccount(
-    (state) => ({ selectedAccount: state.selectedAccount }),
-    shallow
-  );
+  const selectedAccount = useAccount((state) => state.selectedAccount);
 
   return (
-    <nav className="bg-neutral-900">
+    <nav className="bg-black">
       <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <div className="flex-shrink-0">
@@ -62,7 +58,7 @@ const Header = () => {
                     <button
                       className={`${
                         active
-                          ? "bg-neutral-900 text-white"
+                          ? "bg-neutral-800 text-white"
                           : "text-neutral-900"
                       } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                       onClick={handleConnect}
