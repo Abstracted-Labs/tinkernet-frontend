@@ -490,7 +490,7 @@ const Staking = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="truncate text-sm">
-                          {coreInfo.numberOfStakers || "0"} stakers
+                          {coreInfo?.numberOfStakers || "0"} stakers
                       </div>
                       <div className="truncate text-sm">
                         {coreInfo?.total
