@@ -46,7 +46,7 @@ const ApiProvider = ({ children }: { children: ReactNode }) => {
 
   if (!api)
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-black">
+      <div className="flex h-screen w-screen items-center justify-center bg-neutral-900">
         <LoadingSpinner />
       </div>
     );

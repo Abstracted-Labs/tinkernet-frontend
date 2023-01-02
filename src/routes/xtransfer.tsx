@@ -257,7 +257,7 @@ const XTransfer = () => {
         ) : null}
 
         {!isLoading && selectedAccount ? (
-          <div className="overflow-hidden rounded-md border border-neutral-50 bg-black shadow">
+          <div className="overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow">
             <div className="p-4">
               <div className="grid grid-cols-5 items-center justify-between p-6 pb-2">
                 <select

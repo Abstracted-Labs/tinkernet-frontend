@@ -344,7 +344,7 @@ const Staking = () => {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-black shadow sm:grid md:grid-cols-2 lg:grid-cols-4">
+              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-4">
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Available balance</span>

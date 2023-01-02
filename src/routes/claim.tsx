@@ -232,7 +232,7 @@ const Home = () => {
         ) : null}
 
         {!isLoading && selectedAccount && vestingData ? (
-          <div className="overflow-hidden rounded-md border border-gray-50 bg-black shadow">
+          <div className="overflow-hidden rounded-md border border-gray-50 bg-neutral-900 shadow">
             <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="flex flex-col p-6">
                 <span className="text-lg font-normal text-white">
