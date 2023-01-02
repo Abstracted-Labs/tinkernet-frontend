@@ -2,6 +2,7 @@ import { Dialog, Tab } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
+import { ISubmittableResult } from "@polkadot/types/types";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
 import { useEffect } from "react";
@@ -47,6 +48,35 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
   const api = useApi();
 
+  const getSignAndSendCallback = () => {
+    let hasFinished = false;
+
+    return ({ status }: ISubmittableResult) => {
+      if (hasFinished) {
+        return;
+      }
+
+      if (status.isInvalid) {
+        toast.error("Transaction is invalid");
+
+        hasFinished = true;
+      } else if (status.isReady) {
+        toast.loading("Submitting transaction...");
+      } else if (status.isDropped) {
+        toast.error("Transaction dropped");
+
+        hasFinished = true;
+      } else if (status.isInBlock || status.isFinalized) {
+        toast.dismiss();
+
+        toast.success("Transaction submitted!");
+        hasFinished = true;
+
+        navigate(0);
+      } else throw new Error("UNKNOWN_RESULT");
+    };
+  };
+
   const handleStake = stakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
 
@@ -80,27 +110,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        (result) => {
-          toast.dismiss();
-
-          toast.loading("Submitting transaction...");
-
-          if (result.status.isInvalid) {
-            toast.dismiss();
-
-            toast.error("Invalid transaction");
-          } else if (result.status.isDropped) {
-            toast.dismiss();
-
-            toast.error("Transaction dropped");
-          } else if (result.status.isFinalized) {
-            toast.dismiss();
-
-            toast.success("Successfully staked!");
-
-            navigate("/staking");
-          }
-        }
+        getSignAndSendCallback()
       );
 
     setOpenModal({ name: null });
@@ -139,28 +149,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        (result) => {
-          console.log(result);
-          toast.dismiss();
-
-          toast.loading("Submitting transaction...");
-
-          if (result.status.isInvalid) {
-            toast.dismiss();
-
-            toast.error("Invalid transaction");
-          } else if (result.status.isDropped) {
-            toast.dismiss();
-
-            toast.error("Transaction dropped");
-          } else if (result.status.isFinalized) {
-            toast.dismiss();
-
-            toast.success("Successfully unstaked!");
-
-            navigate("/staking");
-          }
-        }
+        getSignAndSendCallback()
       );
 
     setOpenModal({ name: null });
