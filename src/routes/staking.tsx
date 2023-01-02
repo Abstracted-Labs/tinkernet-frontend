@@ -353,11 +353,7 @@ const Staking = () => {
 
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
-          {selectedAccount &&
-          currentEra &&
-          totalStaked &&
-          unclaimedEras &&
-          availableBalance ? (
+          {selectedAccount && currentEra && totalStaked && unclaimedEras ? (
             <>
               <div className="flex items-center justify-between">
                 <div>
@@ -376,21 +372,6 @@ const Staking = () => {
               </div>
 
               <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-4">
-                <div className="flex flex-col gap-2 p-6">
-                  <div>
-                    <span className="text-sm">Available balance</span>
-                  </div>
-                  <div>
-                    <span className="truncate text-2xl font-bold">
-                      {formatBalance(availableBalance.toString(), {
-                        decimals: 12,
-                        withUnit: "TNKR",
-                        forceUnit: "-",
-                      }).replace(".0000", "")}
-                    </span>
-                  </div>
-                </div>
-
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Total staked</span>
