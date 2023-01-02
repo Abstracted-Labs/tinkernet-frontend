@@ -49,7 +49,7 @@ const Header = () => {
   }, [selectedAccount]);
 
   return (
-    <nav className="bg-black">
+    <nav className="bg-neutral-900">
       <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <div className="flex-shrink-0">
