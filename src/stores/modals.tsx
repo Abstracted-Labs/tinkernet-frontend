@@ -2,6 +2,7 @@ import create from "zustand";
 
 enum ModalName {
   SELECT_ACCOUNT,
+  MANAGE_STAKING,
 }
 
 type Metadata = Record<string, unknown>;

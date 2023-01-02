@@ -1,7 +1,7 @@
 import "@polkadot/api-augment";
 import { web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { SVGProps, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
@@ -11,6 +11,7 @@ import { toast } from "react-hot-toast";
 import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
 import shallow from "zustand/shallow";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 type SystemAccount = Struct & {
   data: {
@@ -21,29 +22,13 @@ type SystemAccount = Struct & {
   };
 };
 
-const Spinner = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    className="-ml-1 mr-3 h-5 w-5 animate-spin text-white"
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    {...props}
-  >
-    <circle
-      className="opacity-25"
-      cx="12"
-      cy="12"
-      r="10"
-      stroke="currentColor"
-      strokeWidth="4"
-    ></circle>
-    <path
-      className="opacity-75"
-      fill="currentColor"
-      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-    ></path>
-  </svg>
-);
+type VestingData = {
+  vestedLocked: string;
+  vestedClaimable: string;
+  total: string;
+  transferable: string;
+  remainingVestingPeriod: string;
+};
 
 const Home = () => {
   const { createApi } = useRPC();
@@ -51,15 +36,12 @@ const Home = () => {
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
   );
-  const [vestingData, setVestingData] = useState<{
-    vestedLocked: string;
-    vestedClaimable: string;
-    total: string;
-    transferable: string;
-    remainingVestingPeriod: string;
-  } | null>(null);
+  const [vestingData, setVestingData] = useState<VestingData | null>(null);
+  const [isLoading, setLoading] = useState(false);
 
   const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
+    setLoading(true);
+
     try {
       toast.loading("Loading balances...");
       const api = await createApi();
@@ -160,9 +142,13 @@ const Home = () => {
 
       toast.dismiss();
 
+      setLoading(false);
+
       toast.success("Balances loaded");
     } catch (error) {
       toast.dismiss();
+
+      setLoading(false);
 
       toast.error("Failed to load balances!");
       console.error(error);
@@ -208,7 +194,7 @@ const Home = () => {
   }, [selectedAccount]);
 
   return (
-    <>
+    <div className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
       <div
         className="hidden md:absolute md:inset-y-0 md:block md:h-full md:w-full"
         aria-hidden="true"
@@ -228,7 +214,7 @@ const Home = () => {
       </div>
 
       <div className="z-10 w-full py-6 px-8 sm:max-w-3xl">
-        {!selectedAccount && !vestingData ? (
+        {!selectedAccount ? (
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white">
               Wallet not connected
@@ -239,14 +225,14 @@ const Home = () => {
           </div>
         ) : null}
 
-        {selectedAccount && !vestingData ? (
+        {isLoading ? (
           <div className="flex items-center justify-center">
-            <Spinner className="h-8 w-8 animate-spin text-white" />
+            <LoadingSpinner />
           </div>
         ) : null}
 
-        {selectedAccount && vestingData ? (
-          <div className="overflow-hidden rounded-lg border border-gray-50 bg-black shadow">
+        {!isLoading && selectedAccount && vestingData ? (
+          <div className="overflow-hidden rounded-md border border-gray-50 bg-neutral-900 shadow">
             <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="flex flex-col p-6">
                 <span className="text-lg font-normal text-white">
@@ -301,7 +287,7 @@ const Home = () => {
           </div>
         ) : null}
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,35 +1,71 @@
 import { Menu } from "@headlessui/react";
+import { formatBalance } from "@polkadot/util";
+import BigNumber from "bignumber.js";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import shallow from "zustand/shallow";
 
 import logoFull from "../../assets/logo-full.svg";
 import logoIcon from "../../assets/logo-icon.svg";
+
 import useConnect from "../../hooks/useConnect";
 import useAccount from "../../stores/account";
+import useRPC from "../../stores/rpc";
 
 const Header = () => {
   const { handleConnect } = useConnect();
+  const { createApi } = useRPC();
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
   );
+  const [balance, setBalance] = useState<BigNumber>();
+
+  const loadBalance = async () => {
+    if (!selectedAccount) return;
+
+    const api = await createApi();
+
+    const balanceInfo = await api.query.system.account(selectedAccount.address);
+
+    const balance = balanceInfo.toPrimitive() as {
+      nonce: string;
+      consumers: string;
+      providers: string;
+      sufficients: string;
+      data: {
+        free: string;
+        reserved: string;
+        miscFrozen: string;
+        feeFrozen: string;
+      };
+    };
+
+    setBalance(new BigNumber(balance.data.free));
+  };
+
+  useEffect(() => {
+    loadBalance();
+  }, [selectedAccount]);
 
   return (
-    <nav className="z-10">
+    <nav className="bg-black">
       <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
-          <Link to="/">
-            <img
-              className="block h-6 w-auto lg:hidden"
-              src={logoIcon}
-              alt="Tinkernet Logo"
-            />
-            <img
-              className="hidden h-6 w-auto lg:block"
-              src={logoFull}
-              alt="Tinkernet Logo"
-            />
-          </Link>
+          <div className="flex-shrink-0">
+            <Link to="/">
+              <img
+                className="block h-6 w-auto lg:hidden"
+                src={logoIcon}
+                alt="Tinkernet Logo"
+              />
+              <img
+                className="hidden h-6 w-auto lg:block"
+                src={logoFull}
+                alt="Tinkernet Logo"
+              />
+            </Link>
+          </div>
 
           <div className="flex items-center gap-4">
             <Link to="/claim">
@@ -44,9 +80,18 @@ const Header = () => {
           {selectedAccount ? (
             <Menu as="div" className="relative inline-block text-left">
               <div>
-                <Menu.Button className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2">
+                <Menu.Button className="inline-flex items-center justify-center truncate rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2">
                   {selectedAccount ? (
-                    selectedAccount.meta.name || selectedAccount.address
+                    <>
+                      {selectedAccount.meta.name || selectedAccount.address}
+                      {balance
+                        ? ` (${formatBalance(balance.toString(), {
+                            decimals: 12,
+                            withUnit: "TNKR",
+                            forceUnit: "-",
+                          })})`
+                        : null}
+                    </>
                   ) : (
                     <>Log In</>
                   )}

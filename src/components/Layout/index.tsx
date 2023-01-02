@@ -8,7 +8,7 @@ const Layout = () => {
     <>
       <Header />
 
-      <main className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
+      <main className="min-h-screen bg-neutral-900 py-8 text-white">
         <Outlet />
       </main>
 
