@@ -161,11 +161,12 @@ const Staking = () => {
       setCoreEraStakeInfo(coreEraStakeInfo);
 
       if (selectedAccount) {
-        const balanceInfo = await api.query.system.account(
-          selectedAccount.address
-        );
+        const results = await Promise.all([
+          api.query.system.account(selectedAccount.address),
+          api.query.ocifStaking.ledger(selectedAccount.address),
+        ]);
 
-        const balance = balanceInfo.toPrimitive() as {
+        const balance = results[0].toPrimitive() as {
           nonce: string;
           consumers: string;
           providers: string;
@@ -178,7 +179,13 @@ const Staking = () => {
           };
         };
 
-        setAvailableBalance(new BigNumber(balance.data.free));
+        const locked = results[1].toPrimitive() as {
+          locked: string;
+        };
+
+        setAvailableBalance(
+          new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
+        );
 
         const userStakedInfo: {
           coreId: number;
@@ -456,9 +463,7 @@ const Staking = () => {
                     <div className="flex flex-col gap-4">
                       <h4 className="font-bold">{core.metadata.name}</h4>
 
-                      <p className="text-sm">
-                        {core.metadata.description}
-                      </p>
+                      <p className="text-sm">{core.metadata.description}</p>
 
                       {selectedAccount ? (
                         <div className="flex items-center justify-between gap-2">
