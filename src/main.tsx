@@ -13,9 +13,16 @@ import ApiProvider from "./providers/api";
 import Layout from "./components/Layout";
 import Modals from "./modals";
 
+import { createClient, Provider as URQLProvider } from "urql";
+
+const client = createClient({
+    url: "https://squid.subsquid.io/ocif-squid/v/v1/graphql",
+});
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <ApiProvider>
+        <URQLProvider value={client}>
       <>
         <Toaster position="bottom-right" />
         <BrowserRouter>
@@ -37,6 +44,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           </Routes>
         </BrowserRouter>
       </>
+        </URQLProvider>
     </ApiProvider>
   </React.StrictMode>
 );

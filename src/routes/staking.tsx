@@ -2,6 +2,7 @@ import { WsProvider, ApiPromise } from "@polkadot/api";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { formatBalance } from "@polkadot/util";
+import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -9,6 +10,16 @@ import shallow from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useAccount from "../stores/account";
 import useModal, { ModalName } from "../stores/modals";
+import { useQuery } from "urql";
+
+const totalRewardsClaimed = `
+  query totalRewardsClaimed($accountId: String!) {
+    stakers(where: {account_eq: $accountId}) {
+      latestClaimBlock
+      totalRewards
+    }
+  }
+`;
 
 type StakingCore = {
   key: number;
@@ -58,6 +69,16 @@ const Staking = () => {
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
 
   const [isLoading, setLoading] = useState(false);
+
+    const [currentAddress, setCurrentAddress] = useState<string | null>(null);
+
+    const [query] = useQuery({
+        query: totalRewardsClaimed,
+        variables: { accountId: currentAddress },
+        pause: !currentAddress,
+    });
+
+  const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
 
   const loadStakingCores = async (
     selectedAccount: InjectedAccountWithMeta | null
@@ -146,6 +167,18 @@ const Staking = () => {
       setCoreEraStakeInfo(coreEraStakeInfo);
 
       if (selectedAccount) {
+          setCurrentAddress(encodeAddress(selectedAccount.address, 2));
+
+        //  if (query.fetching) return;
+
+          if (query.data) {
+              const totalClaimedQuery: BigNumber = query.data.stakers.map(
+                  ({ totalRewards, latestClaimBlock }: { totalRewards: BigNumber; latestClaimBlock: number; }) => totalRewards
+              );
+
+              setTotalClaimed(totalClaimedQuery);
+          }
+
         const balanceInfo = await apiBST.query.system.account(
           selectedAccount.address
         );
@@ -384,6 +417,21 @@ const Staking = () => {
                       {unclaimedEras.total} eras
                     </span>
                   </div>
+                </div>
+
+                <div className="flex flex-col gap-2 p-6">
+                    <div>
+                        <span className="text-sm">Total Rewards Claimed</span>
+                    </div>
+                    <div>
+                        <span className="text-2xl font-bold">
+                            {formatBalance(totalClaimed.toString(), {
+                                decimals: 12,
+                                withUnit: "TNKR",
+                                forceUnit: "-",
+                            }).replace(".0000", "")}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="flex flex-col gap-2 p-6">
