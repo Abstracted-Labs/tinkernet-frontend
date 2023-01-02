@@ -50,15 +50,28 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
 
+    const maxValue = new BigNumber(metadata.availableBalance as string)
+      .dividedBy(new BigNumber(10).pow(12))
+      .toString();
+
+    if (new BigNumber(amount).isGreaterThan(maxValue)) {
+      stakeForm.setError("amount", {
+        type: "manual",
+        message: "Amount must be less than or equal to available balance",
+      });
+
+      return;
+    }
+
+    const parsedStakeAmount = new BigNumber(amount).multipliedBy(
+      new BigNumber(10).pow(12)
+    );
+
     toast.loading("Staking...");
 
     await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
-
-    const parsedStakeAmount = new BigNumber(amount).multipliedBy(
-      new BigNumber(10).pow(12)
-    );
 
     await api.tx.ocifStaking
       .stake(metadata.key, parsedStakeAmount.toString())
@@ -94,15 +107,28 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
 
+    const maxValue = new BigNumber(metadata.totalStaked as string)
+      .dividedBy(new BigNumber(10).pow(12))
+      .toString();
+
+    if (new BigNumber(amount).isGreaterThan(maxValue)) {
+      unstakeForm.setError("amount", {
+        type: "manual",
+        message: "Amount must be less than or equal to total staked",
+      });
+
+      return;
+    }
+
+    const parsedUnstakeAmount = new BigNumber(amount).multipliedBy(
+      new BigNumber(10).pow(12)
+    );
+
     toast.loading("Unstaking...");
 
     await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
-
-    const parsedUnstakeAmount = new BigNumber(amount).multipliedBy(
-      new BigNumber(10).pow(12)
-    );
 
     await api.tx.ocifStaking
       .unstake(metadata.key, parsedUnstakeAmount.toString())
@@ -134,11 +160,25 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   });
 
   const handleStakeMax = () => {
-    console.log("TODO");
+    if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
+
+    stakeForm.setValue(
+      "amount",
+      new BigNumber(metadata.availableBalance as string)
+        .dividedBy(new BigNumber(10).pow(12))
+        .toString()
+    );
   };
 
   const handleUnstakeMax = () => {
-    console.log("TODO");
+    if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
+
+    unstakeForm.setValue(
+      "amount",
+      new BigNumber(metadata.totalStaked as string)
+        .dividedBy(new BigNumber(10).pow(12))
+        .toString()
+    );
   };
 
   return (

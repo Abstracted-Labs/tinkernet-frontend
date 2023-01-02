@@ -379,10 +379,11 @@ const Staking = () => {
                   <div>
                     <span className="text-2xl font-bold">
                       {formatBalance(totalStaked.toString(), {
-                          decimals: 12,
-                          withUnit: false,
-                          forceUnit: "-",
-                      }).slice(0, -2)} TNKR
+                        decimals: 12,
+                        withUnit: false,
+                        forceUnit: "-",
+                      }).slice(0, -2)}{" "}
+                      TNKR
                     </span>
                   </div>
                 </div>
@@ -399,18 +400,19 @@ const Staking = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 p-6">
-                    <div>
-                        <span className="text-sm">Total Rewards Claimed</span>
-                    </div>
-                    <div>
-                        <span className="text-2xl font-bold">
-                            {formatBalance(totalClaimed.toString(), {
-                                decimals: 12,
-                                withUnit: false,
-                                forceUnit: "-",
-                            }).slice(0, -2)} TNKR
-                        </span>
-                    </div>
+                  <div>
+                    <span className="text-sm">Total Rewards Claimed</span>
+                  </div>
+                  <div>
+                    <span className="text-2xl font-bold">
+                      {formatBalance(totalClaimed.toString(), {
+                        decimals: 12,
+                        withUnit: false,
+                        forceUnit: "-",
+                      }).slice(0, -2)}{" "}
+                      TNKR
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2 p-6">
@@ -467,7 +469,9 @@ const Staking = () => {
                                 core,
                                 totalStaked: totalStaked || new BigNumber("0"),
                                 availableBalance:
-                                  availableBalance || new BigNumber("0"),
+                                  availableBalance?.minus(
+                                    new BigNumber(10).pow(11)
+                                  ) || new BigNumber("0"),
                               });
                             }}
                           >
@@ -479,10 +483,11 @@ const Staking = () => {
                               ? `Staked ${formatBalance(
                                   totalStaked.toString(),
                                   {
-                                  decimals: 12,
-                                  withUnit: false,
-                                  forceUnit: "-",
-                              }).slice(0, -2)} TNKR`
+                                    decimals: 12,
+                                    withUnit: false,
+                                    forceUnit: "-",
+                                  }
+                                ).slice(0, -2)} TNKR`
                               : null}
                           </span>
                         </div>
@@ -490,7 +495,7 @@ const Staking = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="truncate text-sm">
-                          {coreInfo?.numberOfStakers || "0"} stakers
+                        {coreInfo?.numberOfStakers || "0"} stakers
                       </div>
                       <div className="truncate text-sm">
                         {coreInfo?.total
@@ -498,9 +503,9 @@ const Staking = () => {
                               decimals: 12,
                               withUnit: false,
                               forceUnit: "-",
-                          }).slice(0, -2)
-                          : "0"} TNKR {" "}
-                        staked
+                            }).slice(0, -2)
+                          : "0"}{" "}
+                        TNKR staked
                       </div>
                     </div>
                   </div>
