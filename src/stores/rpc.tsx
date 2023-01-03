@@ -29,7 +29,7 @@ const useRPC = create<RPCState>()((set, get) => ({
     try {
       const api = await ApiPromise.create({
         provider: wsProvider,
-        throwOnConnect: true,
+        // throwOnConnect: true,
       });
 
       set(() => ({ error: null }));
