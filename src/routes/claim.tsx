@@ -1,5 +1,5 @@
 import "@polkadot/api-augment";
-import { web3FromAddress } from "@polkadot/extension-dapp";
+import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { useEffect, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
@@ -160,6 +160,8 @@ const Home = () => {
 
     try {
       const api = await createApi();
+
+      web3Enable("Tinkernet");
 
       const injector = await web3FromAddress(selectedAccount.address);
 
