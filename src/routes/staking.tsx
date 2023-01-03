@@ -475,13 +475,21 @@ const Staking = () => {
                             type="button"
                             className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
                             onClick={() => {
+                              const parsedTotalStaked =
+                                totalStaked || new BigNumber("0");
+
+                              const parsedAvailableBalance =
+                                availableBalance?.minus(
+                                  new BigNumber(10).pow(11)
+                                ) || new BigNumber("0");
+
                               handleManageStaking({
                                 core,
-                                totalStaked: totalStaked || new BigNumber("0"),
+                                totalStaked: parsedTotalStaked,
                                 availableBalance:
-                                  availableBalance?.minus(
-                                    new BigNumber(10).pow(11)
-                                  ) || new BigNumber("0"),
+                                  parsedAvailableBalance.isNegative()
+                                    ? new BigNumber("0")
+                                    : parsedAvailableBalance,
                               });
                             }}
                           >
