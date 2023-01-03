@@ -164,6 +164,10 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         .dividedBy(new BigNumber(10).pow(12))
         .toString()
     );
+
+    stakeForm.trigger("amount", {
+      shouldFocus: true,
+    });
   };
 
   const handleUnstakeMax = () => {
@@ -175,6 +179,10 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         .dividedBy(new BigNumber(10).pow(12))
         .toString()
     );
+
+    unstakeForm.trigger("amount", {
+      shouldFocus: true,
+    });
   };
 
   useEffect(() => {
