@@ -2,7 +2,7 @@ import { web3Accounts, web3Enable } from "@polkadot/extension-dapp";
 import shallow from "zustand/shallow";
 
 import useAccount from "../stores/account";
-import useModal, { ModalName } from "../stores/modals";
+import useModal, { modalName } from "../stores/modals";
 
 const useConnect = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
@@ -36,7 +36,7 @@ const useConnect = () => {
       return;
     }
 
-    setOpenModal({ name: ModalName.SELECT_ACCOUNT });
+    setOpenModal({ name: modalName.SELECT_ACCOUNT });
   };
 
   return { handleConnect };

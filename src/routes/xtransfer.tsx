@@ -27,10 +27,12 @@ type SystemAccount = Struct & {
   };
 };
 
-enum Currency {
-  BASILISK = "Basilisk",
-  TINKERNET = "Tinkernet",
-}
+const currency = {
+  BASILISK: "Basilisk",
+  TINKERNET: "Tinkernet",
+} as const;
+
+type Currency = typeof currency[keyof typeof currency];
 
 const XTransfer = () => {
   const { createApi } = useRPC();
@@ -45,8 +47,8 @@ const XTransfer = () => {
     from: Currency;
     to: Currency;
   }>({
-    from: Currency.BASILISK,
-    to: Currency.TINKERNET,
+    from: currency.BASILISK,
+    to: currency.TINKERNET,
   });
   const [isLoading, setLoading] = useState(false);
 
@@ -274,8 +276,8 @@ const XTransfer = () => {
                     }));
                   }}
                 >
-                  <option value={Currency.BASILISK}>Basilisk</option>
-                  <option value={Currency.TINKERNET}>Tinkernet</option>
+                  <option value={currency.BASILISK}>Basilisk</option>
+                  <option value={currency.TINKERNET}>Tinkernet</option>
                 </select>
 
                 <div className="flex justify-center">
@@ -291,17 +293,17 @@ const XTransfer = () => {
                   className="col-span-2 block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
                   value={pair.to}
                 >
-                  {pair.from === Currency.BASILISK ? (
-                    <option value={Currency.TINKERNET}>Tinkernet</option>
+                  {pair.from === currency.BASILISK ? (
+                    <option value={currency.TINKERNET}>Tinkernet</option>
                   ) : null}
-                  {pair.from === Currency.TINKERNET ? (
-                    <option value={Currency.BASILISK}>Basilisk</option>
+                  {pair.from === currency.TINKERNET ? (
+                    <option value={currency.BASILISK}>Basilisk</option>
                   ) : null}
                 </select>
               </div>
 
-              {pair.from === Currency.TINKERNET &&
-              pair.to === Currency.BASILISK ? (
+              {pair.from === currency.TINKERNET &&
+              pair.to === currency.BASILISK ? (
                 <div className="flex flex-col gap-4 p-6">
                   <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                     <label
@@ -367,8 +369,8 @@ const XTransfer = () => {
                 </div>
               ) : null}
 
-              {pair.from === Currency.BASILISK &&
-              pair.to === Currency.TINKERNET ? (
+              {pair.from === currency.BASILISK &&
+              pair.to === currency.TINKERNET ? (
                 <div className="flex flex-col gap-4 p-6">
                   <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                     <label

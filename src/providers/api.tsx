@@ -3,9 +3,11 @@ import { createContext, ReactNode, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 import LoadingSpinner from "../components/LoadingSpinner";
-import useRPC, { Host } from "../stores/rpc";
+import useRPC, { host } from "../stores/rpc";
 
 const ApiContext = createContext<ApiPromise | null>(null);
+
+const { BRAINSTORM, REMOTE } = host;
 
 const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [api, setApi] = useState<ApiPromise | null>(null);
@@ -15,14 +17,16 @@ const ApiProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     (async () => {
       if (location.pathname === "/staking") {
-        setHost(Host.BRAINSTORM);
+        setHost(BRAINSTORM);
+      } else {
+        setHost(REMOTE);
       }
 
       const api = await createApi();
 
       setApi(api);
     })();
-  }, [createApi, host]);
+  }, [createApi, host, location.pathname]);
 
   if (error)
     return (

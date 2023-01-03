@@ -1,4 +1,4 @@
-import useModal, { ModalName } from "../stores/modals";
+import useModal, { modalName } from "../stores/modals";
 import SelectAccount from "./SelectAccount";
 import ManageStaking from "./ManageStaking";
 
@@ -9,9 +9,9 @@ const Modals = () => {
 
   return (
     <>
-      <SelectAccount isOpen={openModal === ModalName.SELECT_ACCOUNT} />
+      <SelectAccount isOpen={openModal === modalName.SELECT_ACCOUNT} />
 
-      <ManageStaking isOpen={openModal === ModalName.MANAGE_STAKING} />
+      <ManageStaking isOpen={openModal === modalName.MANAGE_STAKING} />
     </>
   );
 };

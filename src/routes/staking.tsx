@@ -8,7 +8,7 @@ import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
-import useModal, { ModalName } from "../stores/modals";
+import useModal, { modalName } from "../stores/modals";
 import { useQuery } from "urql";
 
 const totalRewardsClaimed = `
@@ -277,7 +277,7 @@ const Staking = () => {
     availableBalance: BigNumber;
   }) => {
     setOpenModal({
-      name: ModalName.MANAGE_STAKING,
+      name: modalName.MANAGE_STAKING,
       metadata: { ...core, totalStaked, availableBalance },
     });
   };

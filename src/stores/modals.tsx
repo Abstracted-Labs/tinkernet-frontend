@@ -1,9 +1,11 @@
 import create from "zustand";
 
-enum ModalName {
-  SELECT_ACCOUNT,
-  MANAGE_STAKING,
-}
+const modalName = {
+  SELECT_ACCOUNT: "SELECT_ACCOUNT",
+  MANAGE_STAKING: "MANAGE_STAKING",
+} as const;
+
+type ModalName = typeof modalName[keyof typeof modalName];
 
 type Metadata = Record<string, unknown>;
 
@@ -31,6 +33,8 @@ const useModal = create<ModalState>()((set) => ({
   metadata: undefined,
 }));
 
-export { ModalName };
+export type { ModalName, Metadata };
+
+export { modalName };
 
 export default useModal;

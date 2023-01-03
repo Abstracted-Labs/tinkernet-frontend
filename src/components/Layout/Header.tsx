@@ -14,7 +14,7 @@ import useRPC from "../../stores/rpc";
 
 const Header = () => {
   const { handleConnect } = useConnect();
-  const { createApi } = useRPC();
+  const { createApi, host } = useRPC();
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
@@ -26,27 +26,26 @@ const Header = () => {
 
     const api = await createApi();
 
-    const balanceInfo = await api.query.system.account(selectedAccount.address);
+    const unsub = await api.query.system.account(
+      selectedAccount.address,
+      ({ data }) => {
+        const balance = data.toPrimitive() as {
+          free: string;
+          reserved: string;
+          miscFrozen: string;
+          feeFrozen: string;
+        };
 
-    const balance = balanceInfo.toPrimitive() as {
-      nonce: string;
-      consumers: string;
-      providers: string;
-      sufficients: string;
-      data: {
-        free: string;
-        reserved: string;
-        miscFrozen: string;
-        feeFrozen: string;
-      };
-    };
+        setBalance(new BigNumber(balance.free));
+      }
+    );
 
-    setBalance(new BigNumber(balance.data.free));
+    return unsub;
   };
 
   useEffect(() => {
     loadBalance();
-  }, [selectedAccount]);
+  }, [selectedAccount, host]);
 
   return (
     <nav className="bg-neutral-900">
