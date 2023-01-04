@@ -271,14 +271,16 @@ const Staking = () => {
     core,
     totalStaked,
     availableBalance,
+    handleCallback,
   }: {
     core: StakingCore;
     totalStaked: BigNumber;
     availableBalance: BigNumber;
+    handleCallback: () => void;
   }) => {
     setOpenModal({
       name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalStaked, availableBalance },
+      metadata: { ...core, totalStaked, availableBalance, handleCallback },
     });
   };
 
@@ -329,6 +331,8 @@ const Staking = () => {
             toast.dismiss();
 
             toast.success("Successfully claimed all rewards!");
+
+            loadStakingCores(selectedAccount);
           }
         }
       );
@@ -483,6 +487,10 @@ const Staking = () => {
                                   new BigNumber(10).pow(11)
                                 ) || new BigNumber("0");
 
+                              const handleCallback = () => {
+                                loadStakingCores(selectedAccount);
+                              };
+
                               handleManageStaking({
                                 core,
                                 totalStaked: parsedTotalStaked,
@@ -490,6 +498,7 @@ const Staking = () => {
                                   parsedAvailableBalance.isNegative()
                                     ? new BigNumber("0")
                                     : parsedAvailableBalance,
+                                handleCallback,
                               });
                             }}
                           >
