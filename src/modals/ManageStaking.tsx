@@ -54,6 +54,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         return;
       }
 
+      toast.dismiss();
+
       if (status.isInvalid) {
         toast.error("Transaction is invalid");
 
