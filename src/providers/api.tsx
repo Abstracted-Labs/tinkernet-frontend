@@ -1,27 +1,17 @@
 import { ApiPromise } from "@polkadot/api";
 import { createContext, ReactNode, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 import LoadingSpinner from "../components/LoadingSpinner";
-import useRPC, { host } from "../stores/rpc";
+import useRPC from "../stores/rpc";
 
 const ApiContext = createContext<ApiPromise | null>(null);
 
-const { BRAINSTORM, REMOTE } = host;
-
 const ApiProvider = ({ children }: { children: ReactNode }) => {
   const [api, setApi] = useState<ApiPromise | null>(null);
-  const { createApi, host, error, setHost } = useRPC();
-  const location = useLocation();
+  const { createApi, host, error } = useRPC();
 
   useEffect(() => {
     (async () => {
-      if (location.pathname === "/staking") {
-        setHost(BRAINSTORM);
-      } else {
-        setHost(REMOTE);
-      }
-
       const api = await createApi();
 
       setApi(api);
@@ -32,7 +22,7 @@ const ApiProvider = ({ children }: { children: ReactNode }) => {
         api.disconnect();
       }
     };
-  }, [createApi, host, location.pathname]);
+  }, [createApi, host]);
 
   if (error)
     return (

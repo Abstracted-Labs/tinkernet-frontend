@@ -10,6 +10,9 @@ import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 import { useQuery } from "urql";
+import useRPC, { host } from "../stores/rpc";
+
+const { REMOTE, BRAINSTORM } = host;
 
 const totalRewardsClaimed = `
   query totalRewardsClaimed($accountId: String!) {
@@ -34,7 +37,7 @@ const Staking = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const api = useApi();
-
+  const { host, setHost } = useRPC();
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentEra, setCurrentEra] = useState<{
     era: number;
@@ -339,6 +342,8 @@ const Staking = () => {
   };
 
   useEffect(() => {
+    if (!api.query.ocifStaking) return;
+
     loadStakingCores(selectedAccount);
 
     if (selectedAccount) {
@@ -352,7 +357,15 @@ const Staking = () => {
 
       setTotalClaimed(totalClaimedQuery);
     }
-  }, [selectedAccount, query.fetching]);
+  }, [selectedAccount, query.fetching, api]);
+
+  useEffect(() => {
+    setHost(BRAINSTORM);
+
+    return () => {
+      setHost(REMOTE);
+    };
+  }, [host]);
 
   return (
     <>

@@ -7,14 +7,14 @@ import shallow from "zustand/shallow";
 
 import logoFull from "../../assets/logo-full.svg";
 import logoIcon from "../../assets/logo-icon.svg";
+import useApi from "../../hooks/useApi";
 
 import useConnect from "../../hooks/useConnect";
 import useAccount from "../../stores/account";
-import useRPC from "../../stores/rpc";
 
 const Header = () => {
   const { handleConnect } = useConnect();
-  const { createApi, host } = useRPC();
+  const api = useApi();
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
@@ -24,28 +24,21 @@ const Header = () => {
   const loadBalance = async () => {
     if (!selectedAccount) return;
 
-    const api = await createApi();
+    await api.query.system.account(selectedAccount.address, ({ data }) => {
+      const balance = data.toPrimitive() as {
+        free: string;
+        reserved: string;
+        miscFrozen: string;
+        feeFrozen: string;
+      };
 
-    const unsub = await api.query.system.account(
-      selectedAccount.address,
-      ({ data }) => {
-        const balance = data.toPrimitive() as {
-          free: string;
-          reserved: string;
-          miscFrozen: string;
-          feeFrozen: string;
-        };
-
-        setBalance(new BigNumber(balance.free));
-      }
-    );
-
-    return unsub;
+      setBalance(new BigNumber(balance.free));
+    });
   };
 
   useEffect(() => {
     loadBalance();
-  }, [selectedAccount, host]);
+  }, [selectedAccount, api]);
 
   return (
     <nav className="bg-neutral-900">
