@@ -54,8 +54,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         return;
       }
 
-      toast.dismiss();
-
       if (status.isInvalid) {
         toast.error("Transaction is invalid");
 
@@ -105,8 +103,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     );
 
     toast.loading("Staking...");
-
-    await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
 
