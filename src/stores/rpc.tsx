@@ -23,7 +23,6 @@ const useRPC = create<RPCState>()((set, get) => ({
   error: null,
   createApi: async () => {
     const { host } = get();
-
     const wsProvider = new WsProvider(host);
 
     try {

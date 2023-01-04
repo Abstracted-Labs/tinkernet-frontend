@@ -8,7 +8,6 @@ import BigNumber from "bignumber.js";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import shallow from "zustand/shallow";
 
@@ -37,7 +36,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     shallow
   );
   const selectedAccount = useAccount((state) => state.selectedAccount);
-  const navigate = useNavigate();
   const stakeForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
   });
@@ -56,6 +54,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         return;
       }
 
+      toast.dismiss();
+
       if (status.isInvalid) {
         toast.error("Transaction is invalid");
 
@@ -72,7 +72,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         toast.success("Transaction submitted!");
         hasFinished = true;
 
-        navigate(0);
+        if (
+          metadata?.handleCallback &&
+          typeof metadata.handleCallback === "function"
+        ) {
+          metadata.handleCallback();
+        }
       } else throw new Error("UNKNOWN_RESULT");
     };
   };

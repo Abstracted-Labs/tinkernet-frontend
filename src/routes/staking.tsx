@@ -10,6 +10,9 @@ import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 import { useQuery } from "urql";
+import useRPC, { host } from "../stores/rpc";
+
+const { REMOTE, BRAINSTORM } = host;
 
 const totalRewardsClaimed = `
   query totalRewardsClaimed($accountId: String!) {
@@ -34,7 +37,7 @@ const Staking = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const api = useApi();
-
+  const { host, setHost } = useRPC();
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentEra, setCurrentEra] = useState<{
     era: number;
@@ -271,14 +274,16 @@ const Staking = () => {
     core,
     totalStaked,
     availableBalance,
+    handleCallback,
   }: {
     core: StakingCore;
     totalStaked: BigNumber;
     availableBalance: BigNumber;
+    handleCallback: () => void;
   }) => {
     setOpenModal({
       name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalStaked, availableBalance },
+      metadata: { ...core, totalStaked, availableBalance, handleCallback },
     });
   };
 
@@ -329,12 +334,16 @@ const Staking = () => {
             toast.dismiss();
 
             toast.success("Successfully claimed all rewards!");
+
+            loadStakingCores(selectedAccount);
           }
         }
       );
   };
 
   useEffect(() => {
+    if (!api.query.ocifStaking) return;
+
     loadStakingCores(selectedAccount);
 
     if (selectedAccount) {
@@ -348,7 +357,15 @@ const Staking = () => {
 
       setTotalClaimed(totalClaimedQuery);
     }
-  }, [selectedAccount, query.fetching]);
+  }, [selectedAccount, query.fetching, api]);
+
+  useEffect(() => {
+    setHost(BRAINSTORM);
+
+    return () => {
+      setHost(REMOTE);
+    };
+  }, [host]);
 
   return (
     <>
@@ -483,6 +500,10 @@ const Staking = () => {
                                   new BigNumber(10).pow(11)
                                 ) || new BigNumber("0");
 
+                              const handleCallback = () => {
+                                loadStakingCores(selectedAccount);
+                              };
+
                               handleManageStaking({
                                 core,
                                 totalStaked: parsedTotalStaked,
@@ -490,6 +511,7 @@ const Staking = () => {
                                   parsedAvailableBalance.isNegative()
                                     ? new BigNumber("0")
                                     : parsedAvailableBalance,
+                                handleCallback,
                               });
                             }}
                           >
