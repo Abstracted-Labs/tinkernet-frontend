@@ -28,7 +28,9 @@ const ApiProvider = ({ children }: { children: ReactNode }) => {
     })();
 
     return () => {
-      api?.disconnect();
+      if (api) {
+        api.disconnect();
+      }
     };
   }, [createApi, host, location.pathname]);
 

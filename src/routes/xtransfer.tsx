@@ -292,6 +292,14 @@ const XTransfer = () => {
                   name="destination"
                   className="col-span-2 block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
                   value={pair.to}
+                  onChange={(e) => {
+                    const to = e.target.value as Currency;
+
+                    setPair((pair) => ({
+                      from: to === pair.from ? pair.to : pair.from,
+                      to: to,
+                    }));
+                  }}
                 >
                   {pair.from === currency.BASILISK ? (
                     <option value={currency.TINKERNET}>Tinkernet</option>
