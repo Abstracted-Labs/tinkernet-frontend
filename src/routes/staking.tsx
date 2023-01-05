@@ -408,7 +408,7 @@ const Staking = () => {
                         withUnit: false,
                         forceUnit: "-",
                       }).slice(0, -2) || "0"}{" "}
-                      TNKR
+                        🧠⛈️
                     </span>
                   </div>
                 </div>
@@ -435,7 +435,7 @@ const Staking = () => {
                         withUnit: false,
                         forceUnit: "-",
                       }).slice(0, -2) || "0"}{" "}
-                      TNKR
+                        🧠⛈️
                     </span>
                   </div>
                 </div>
@@ -497,7 +497,7 @@ const Staking = () => {
 
                               const parsedAvailableBalance =
                                 availableBalance?.minus(
-                                  new BigNumber(10).pow(11)
+                                  new BigNumber(10).pow(12)
                                 ) || new BigNumber("0");
 
                               const handleCallback = () => {
@@ -527,7 +527,7 @@ const Staking = () => {
                                     withUnit: false,
                                     forceUnit: "-",
                                   }
-                                ).slice(0, -2)} TNKR`
+                                ).slice(0, -2)} 🧠⛈️`
                               : null}
                           </span>
                         </div>
@@ -545,7 +545,7 @@ const Staking = () => {
                                 forceUnit: "-",
                               }).slice(0, -2)
                             : "0"}{" "}
-                          TNKR staked
+                            🧠⛈️ staked
                         </div>
                       </div>
                     </div>

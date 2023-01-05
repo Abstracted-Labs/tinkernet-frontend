@@ -12,7 +12,12 @@ import useApi from "../../hooks/useApi";
 import useConnect from "../../hooks/useConnect";
 import useAccount from "../../stores/account";
 
+import useRPC, { host } from "../../stores/rpc";
+
+const { REMOTE, BRAINSTORM } = host;
+
 const Header = () => {
+    const { host } = useRPC();
   const { handleConnect } = useConnect();
   const api = useApi();
   const { selectedAccount } = useAccount(
@@ -79,7 +84,7 @@ const Header = () => {
                       {balance
                         ? ` (${formatBalance(balance.toString(), {
                             decimals: 12,
-                            withUnit: "TNKR",
+                            withUnit: host == BRAINSTORM ? "🧠⛈️" : "TNKR",
                             forceUnit: "-",
                           })})`
                         : null}
