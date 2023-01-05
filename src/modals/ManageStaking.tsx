@@ -104,6 +104,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     toast.loading("Staking...");
 
+    await web3Enable("Tinkernet");
+
     const injector = await web3FromAddress(selectedAccount.address);
 
     await api.tx.ocifStaking
