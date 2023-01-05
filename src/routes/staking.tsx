@@ -11,6 +11,7 @@ import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 import { useQuery } from "urql";
 import useRPC, { host } from "../stores/rpc";
+import { ISubmittableResult } from "@polkadot/types/types";
 
 const { REMOTE, BRAINSTORM } = host;
 
@@ -80,6 +81,36 @@ const Staking = () => {
   });
 
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
+
+  const getSignAndSendCallback = () => {
+    let hasFinished = false;
+
+    return ({ status }: ISubmittableResult) => {
+      if (hasFinished) {
+        return;
+      }
+
+      if (status.isInvalid) {
+        toast.error("Transaction is invalid");
+
+        hasFinished = true;
+      } else if (status.isReady) {
+        toast.loading("Submitting transaction...");
+      } else if (status.isDropped) {
+        toast.error("Transaction dropped");
+
+        hasFinished = true;
+      } else if (status.isInBlock || status.isFinalized) {
+        toast.dismiss();
+
+        toast.success("Transaction submitted!");
+
+        hasFinished = true;
+
+        loadStakingCores(selectedAccount);
+      } else throw new Error("UNKNOWN_RESULT");
+    };
+  };
 
   const loadStakingCores = async (
     selectedAccount: InjectedAccountWithMeta | null
@@ -317,27 +348,7 @@ const Staking = () => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        (result) => {
-          toast.dismiss();
-
-          toast.loading("Submitting transaction...");
-
-          if (result.status.isInvalid) {
-            toast.dismiss();
-
-            toast.error("Invalid transaction");
-          } else if (result.status.isDropped) {
-            toast.dismiss();
-
-            toast.error("Transaction dropped");
-          } else if (result.status.isFinalized) {
-            toast.dismiss();
-
-            toast.success("Successfully claimed all rewards!");
-
-            loadStakingCores(selectedAccount);
-          }
-        }
+        getSignAndSendCallback()
       );
   };
 
