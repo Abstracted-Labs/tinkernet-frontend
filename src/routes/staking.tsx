@@ -9,14 +9,23 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
-import { useQuery } from "urql";
+import { useQuery, useSubscription } from "urql";
 import useRPC, { host } from "../stores/rpc";
 import { ISubmittableResult } from "@polkadot/types/types";
 
 const { REMOTE, BRAINSTORM } = host;
 
-const totalRewardsClaimed = `
+const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
+    stakers(where: {account_eq: $accountId}) {
+      latestClaimBlock
+      totalRewards
+    }
+  }
+`;
+
+const TotalRewardsClaimedSubscription = `
+  subscription totalRewardsClaimed($accountId: String!) {
     stakers(where: {account_eq: $accountId}) {
       latestClaimBlock
       totalRewards
@@ -70,15 +79,28 @@ const Staking = () => {
 
   const [isLoading, setLoading] = useState(false);
 
-  const [query] = useQuery({
-    query: totalRewardsClaimed,
+  const [rewardsClaimedQuery] = useQuery({
+    query: TotalRewardsClaimedQuery,
     variables: {
       accountId: selectedAccount
         ? encodeAddress(selectedAccount.address, 2)
-        : "",
+        : null,
     },
     pause: !selectedAccount,
   });
+
+  const [rewardsClaimedSubscription] = useSubscription(
+    {
+      query: TotalRewardsClaimedSubscription,
+      variables: {
+        accountId: selectedAccount
+          ? encodeAddress(selectedAccount.address, 2)
+          : null,
+      },
+      pause: !selectedAccount,
+    }
+    // handleRewardsClaimedSubscription
+  );
 
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
 
@@ -353,22 +375,40 @@ const Staking = () => {
   };
 
   useEffect(() => {
+    if (!selectedAccount) return;
+
     if (!api.query.ocifStaking) return;
 
     loadStakingCores(selectedAccount);
+  }, [selectedAccount, api]);
 
-    if (selectedAccount) {
-      if (query.fetching) return;
+  useEffect(() => {
+    if (!selectedAccount) return;
 
-      if (!query.data) return;
+    if (rewardsClaimedQuery.fetching) return;
 
-      const totalClaimedQuery: BigNumber = query.data.stakers.map(
-        ({ totalRewards }: { totalRewards: BigNumber }) => totalRewards
-      );
+    if (!rewardsClaimedQuery.data) return;
 
-      setTotalClaimed(totalClaimedQuery);
-    }
-  }, [selectedAccount, query.fetching, api]);
+    const totalClaimed = new BigNumber(
+      rewardsClaimedQuery.data.stakers[0].totalRewards
+    );
+
+    setTotalClaimed(totalClaimed);
+  }, [selectedAccount, rewardsClaimedQuery.fetching, api]);
+
+  useEffect(() => {
+    if (!selectedAccount) return;
+
+    if (rewardsClaimedSubscription.fetching) return;
+
+    if (!rewardsClaimedSubscription.data) return;
+
+    const totalClaimed = new BigNumber(
+      rewardsClaimedSubscription.data.stakers[0].totalRewards
+    );
+
+    setTotalClaimed(totalClaimed);
+  }, [selectedAccount, rewardsClaimedSubscription.fetching, api]);
 
   useEffect(() => {
     setHost(BRAINSTORM);
@@ -419,7 +459,7 @@ const Staking = () => {
                         withUnit: false,
                         forceUnit: "-",
                       }).slice(0, -2) || "0"}{" "}
-                        🧠⛈️
+                      🧠⛈️
                     </span>
                   </div>
                 </div>
@@ -446,7 +486,7 @@ const Staking = () => {
                         withUnit: false,
                         forceUnit: "-",
                       }).slice(0, -2) || "0"}{" "}
-                        🧠⛈️
+                      🧠⛈️
                     </span>
                   </div>
                 </div>
@@ -556,7 +596,7 @@ const Staking = () => {
                                 forceUnit: "-",
                               }).slice(0, -2)
                             : "0"}{" "}
-                            🧠⛈️ staked
+                          🧠⛈️ staked
                         </div>
                       </div>
                     </div>
