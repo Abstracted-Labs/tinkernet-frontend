@@ -215,11 +215,13 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       metadata?.availableBalance
                         ? metadata?.availableBalance.toString()
                         : "0",
-                        {
-                            decimals: 12,
-                            withUnit: false,
-                            forceUnit: "-",
-                    }).slice(0, -2) || "0"} 🧠⛈️
+                      {
+                        decimals: 12,
+                        withUnit: false,
+                        forceUnit: "-",
+                      }
+                    ).slice(0, -2) || "0"}{" "}
+                    🧠⛈️
                   </span>
                 </>
               </div>
@@ -230,11 +232,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                   <>
                     Staked:{" "}
                     <span className="font-bold">
-                        {formatBalance(metadata?.totalStaked.toString(), {
-                            decimals: 12,
-                            withUnit: false,
-                            forceUnit: "-",
-                        }).slice(0, -2) || "0"} 🧠⛈️
+                      {formatBalance(metadata?.totalStaked.toString(), {
+                        decimals: 12,
+                        withUnit: false,
+                        forceUnit: "-",
+                      }).slice(0, -2) || "0"}{" "}
+                      🧠⛈️
                     </span>
                   </>
                 </div>
@@ -307,7 +310,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                             className="pointer-events-none block text-white sm:text-sm"
                             id="currency"
                           >
-                              🧠⛈️
+                            🧠⛈️
                           </span>
 
                           <span
@@ -365,7 +368,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                             className="pointer-events-none block text-white sm:text-sm"
                             id="currency"
                           >
-                              🧠⛈️
+                            🧠⛈️
                           </span>
 
                           <span
