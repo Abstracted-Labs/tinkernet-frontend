@@ -89,7 +89,9 @@ const Staking = () => {
     pause: !selectedAccount,
   });
 
-  const [rewardsClaimedSubscription] = useSubscription(
+  const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
+
+  useSubscription(
     {
       query: TotalRewardsClaimedSubscription,
       variables: {
@@ -98,11 +100,18 @@ const Staking = () => {
           : null,
       },
       pause: !selectedAccount,
-    }
-    // handleRewardsClaimedSubscription
-  );
+    },
+    (
+      _: unknown,
+      result: { stakers: { latestClaimBlock: number; totalRewards: string }[] }
+    ) => {
+      if (result.stakers.length === 0) return;
 
-  const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
+      const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
+
+      setTotalClaimed(totalClaimed);
+    }
+  );
 
   const getSignAndSendCallback = () => {
     let hasFinished = false;
@@ -375,8 +384,6 @@ const Staking = () => {
   };
 
   useEffect(() => {
-    if (!selectedAccount) return;
-
     if (!api.query.ocifStaking) return;
 
     loadStakingCores(selectedAccount);
@@ -389,26 +396,14 @@ const Staking = () => {
 
     if (!rewardsClaimedQuery.data) return;
 
+    if (rewardsClaimedQuery.data.stakers.length === 0) return;
+
     const totalClaimed = new BigNumber(
       rewardsClaimedQuery.data.stakers[0].totalRewards
     );
 
     setTotalClaimed(totalClaimed);
   }, [selectedAccount, rewardsClaimedQuery.fetching, api]);
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-
-    if (rewardsClaimedSubscription.fetching) return;
-
-    if (!rewardsClaimedSubscription.data) return;
-
-    const totalClaimed = new BigNumber(
-      rewardsClaimedSubscription.data.stakers[0].totalRewards
-    );
-
-    setTotalClaimed(totalClaimed);
-  }, [selectedAccount, rewardsClaimedSubscription.fetching, api]);
 
   useEffect(() => {
     setHost(BRAINSTORM);
