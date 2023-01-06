@@ -92,7 +92,7 @@ const Staking = () => {
 
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
 
-  const [rewardsClaimedSubscriptionValue] = useSubscription(
+  useSubscription(
     {
       query: TotalRewardsClaimedSubscription,
       variables: {
@@ -110,7 +110,9 @@ const Staking = () => {
 
       const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
 
-      return totalClaimed;
+      setUnclaimedEras((unclaimed) => ({ ...unclaimed, total: 0 }));
+
+      setTotalClaimed(totalClaimed);
     }
   );
 
@@ -479,16 +481,11 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {formatBalance(
-                        rewardsClaimedSubscriptionValue.data
-                          ? rewardsClaimedSubscriptionValue.data.toString()
-                          : totalClaimed.toString(),
-                        {
-                          decimals: 12,
-                          withUnit: false,
-                          forceUnit: "-",
-                        }
-                      ).slice(0, -2) || "0"}{" "}
+                      {formatBalance(totalClaimed.toString(), {
+                        decimals: 12,
+                        withUnit: false,
+                        forceUnit: "-",
+                      }).slice(0, -2) || "0"}{" "}
                       🧠⛈️
                     </span>
                   </div>
