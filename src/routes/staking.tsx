@@ -79,19 +79,20 @@ const Staking = () => {
 
   const [isLoading, setLoading] = useState(false);
 
-  const [rewardsClaimedQuery] = useQuery({
+  const [rewardsClaimedQuery, executeRewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
     variables: {
       accountId: selectedAccount
         ? encodeAddress(selectedAccount.address, 2)
         : null,
     },
+
     pause: !selectedAccount,
   });
 
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
 
-  useSubscription(
+  const [rewardsClaimedSubscriptionValue] = useSubscription(
     {
       query: TotalRewardsClaimedSubscription,
       variables: {
@@ -109,7 +110,7 @@ const Staking = () => {
 
       const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
 
-      setTotalClaimed(totalClaimed);
+      return totalClaimed;
     }
   );
 
@@ -318,6 +319,8 @@ const Staking = () => {
         setTotalStaked(totalStaked);
       }
 
+      executeRewardsClaimedQuery({ requestPolicy: "network-only" });
+
       toast.dismiss();
 
       setLoading(false);
@@ -476,11 +479,16 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {formatBalance(totalClaimed.toString(), {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }).slice(0, -2) || "0"}{" "}
+                      {formatBalance(
+                        rewardsClaimedSubscriptionValue.data
+                          ? rewardsClaimedSubscriptionValue.data.toString()
+                          : totalClaimed.toString(),
+                        {
+                          decimals: 12,
+                          withUnit: false,
+                          forceUnit: "-",
+                        }
+                      ).slice(0, -2) || "0"}{" "}
                       🧠⛈️
                     </span>
                   </div>
