@@ -12,6 +12,8 @@ import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
 import useRPC, { host } from "../stores/rpc";
 import { ISubmittableResult } from "@polkadot/types/types";
+import { UserGroupIcon, NoSymbolIcon } from "@heroicons/react/24/solid";
+import { UserGroupIcon as UserGroupIconMini } from "@heroicons/react/20/solid";
 
 const { REMOTE, BRAINSTORM } = host;
 
@@ -52,7 +54,6 @@ const Staking = () => {
   const [currentEra, setCurrentEra] = useState<{
     era: number;
     inflationEra: number;
-    erasPerYear: number;
   }>();
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
     {
@@ -91,6 +92,10 @@ const Staking = () => {
   });
 
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
+
+  const [chainProperties, setChainProperties] = useState<{maxStakersPerCore: number; inflationErasPerYear: number}>();
+
+    const [hoveringMaxStakerIcon, setHoveringMaxStakerIcon] = useState<number | null>(null);
 
   useSubscription(
     {
@@ -154,6 +159,11 @@ const Staking = () => {
     try {
       toast.loading("Loading staking cores...");
 
+        setChainProperties({
+            maxStakersPerCore: api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number,
+            inflationErasPerYear: api.consts.checkedInflation.erasPerYear.toPrimitive() as number
+        });
+
       const results = await Promise.all([
         // registered cores
         api.query.ocifStaking.registeredCore.entries(),
@@ -192,9 +202,7 @@ const Staking = () => {
 
       const currentEra = {
         inflationEra: results[1].toPrimitive() as number,
-        era: results[2].toPrimitive() as number,
-        erasPerYear:
-          api.consts.checkedInflation.erasPerYear.toPrimitive() as number,
+        era: results[2].toPrimitive() as number
       };
 
       setCurrentEra(currentEra);
@@ -497,7 +505,7 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {currentEra.inflationEra} / {currentEra.erasPerYear}
+                      {currentEra.inflationEra} / {chainProperties.inflationErasPerYear}
                     </span>
                   </div>
                 </div>
@@ -541,7 +549,7 @@ const Staking = () => {
                         <div className="flex items-center justify-between gap-2">
                           <button
                             type="button"
-                            className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+                              className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400 disabled:border-neutral-400"
                             onClick={() => {
                               const parsedTotalStaked =
                                 totalStaked || new BigNumber("0");
@@ -565,6 +573,7 @@ const Staking = () => {
                                 handleCallback,
                               });
                             }}
+                            disabled={(coreInfo?.numberOfStakers >= chainProperties.maxStakersPerCore) && !totalStaked}
                           >
                             {totalStaked ? "Manage Staking" : "Stake"}
                           </button>
@@ -585,7 +594,68 @@ const Staking = () => {
                       ) : null}
 
                       <div className="flex items-center justify-between">
-                        <div className="truncate text-sm">
+                        <div className="truncate text-sm flex gap-1">
+                            {coreInfo?.numberOfStakers >= chainProperties.maxStakersPerCore ?
+                             (
+                                 <div className="flex justify-center" style={{"align-items": "center"}}
+                                 onMouseEnter={() => setHoveringMaxStakerIcon(core.key)}
+                                 onMouseLeave={() => setHoveringMaxStakerIcon(null)}
+                                 >
+                                     <NoSymbolIcon className="h-5 w-5 text-red-300" style={{position: "absolute"}} />
+                                     <UserGroupIconMini className="h-3 w-3 text-white" />
+                                     <div id="stakerLimitTooltip" style={{
+                                         "position": "absolute",
+                                         "left": "30px",
+                                         "bottom": "1px",
+                                         "font-family": "Helvetica Neue,Helvetica,Arial,sans-serif",
+                                         "font-style": "normal",
+                                         "font-weight": "400",
+                                         "letter-spacing": "normal",
+                                         "line-height": "1.42857143",
+                                         "text-align": "start",
+                                         "text-shadow": "none",
+                                         "text-transform": "none",
+                                         "white-space": "normal",
+                                         "word-break": "normal",
+                                         "word-spacing": "normal",
+                                         "word-wrap": "normal",
+                                         "font-size": "12px",
+                                         "display": hoveringMaxStakerIcon == core.key ? "block" : "none",
+                                         "margin-top": "-5px"
+                                         }}>
+                                     <div style={{
+                                         "top": "auto",
+                                         "bottom": "-5px",
+                                         "left": "50%",
+                                         "margin-left": "-5px",
+                                         "border-width": "5px 5px 0",
+                                         "border-top-color": "#000",
+                                         "position": "absolute",
+                                         "width": "0",
+                                         "height": "0",
+                                         "border-color": "transparent",
+                                         "border-right-color": "transparent",
+                                         "border-style": "solid",
+                                         }}>
+        </div>
+        <div style={{
+            "max-width": "200px",
+            "padding": "3px 8px",
+            "color": "#fff",
+            "text-align": "center",
+            "background-color": "#000",
+            "border-radius": "4px"
+        }}>
+            This core has reached the staker limit
+        </div>
+                                 </div>
+                                 </div>
+                             )
+                            :
+                             (
+                                 <UserGroupIcon className="h-5 w-5 text-white" />
+                             )
+                            }
                           {coreInfo?.numberOfStakers || "0"} stakers
                         </div>
                         <div className="truncate text-sm">
