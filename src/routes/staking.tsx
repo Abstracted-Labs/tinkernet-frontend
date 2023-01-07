@@ -505,7 +505,7 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {currentEra.inflationEra} / {chainProperties.inflationErasPerYear}
+                      {currentEra.inflationEra} / {chainProperties?.inflationErasPerYear || "0"}
                     </span>
                   </div>
                 </div>
@@ -573,7 +573,7 @@ const Staking = () => {
                                 handleCallback,
                               });
                             }}
-                            disabled={(coreInfo?.numberOfStakers >= chainProperties.maxStakersPerCore) && !totalStaked}
+                            disabled={((coreInfo?.numberOfStakers || 0) >= (chainProperties?.maxStakersPerCore || 0)) && !totalStaked}
                           >
                             {totalStaked ? "Manage Staking" : "Stake"}
                           </button>
@@ -595,56 +595,41 @@ const Staking = () => {
 
                       <div className="flex items-center justify-between">
                         <div className="truncate text-sm flex gap-1">
-                            {coreInfo?.numberOfStakers >= chainProperties.maxStakersPerCore ?
+                            {(coreInfo?.numberOfStakers || 0) >= (chainProperties?.maxStakersPerCore || 0) ?
                              (
-                                 <div className="flex justify-center" style={{"align-items": "center"}}
+                                 <div className="flex justify-center" style={{alignItems: "center"}}
                                  onMouseEnter={() => setHoveringMaxStakerIcon(core.key)}
                                  onMouseLeave={() => setHoveringMaxStakerIcon(null)}
                                  >
                                      <NoSymbolIcon className="h-5 w-5 text-red-300" style={{position: "absolute"}} />
                                      <UserGroupIconMini className="h-3 w-3 text-white" />
                                      <div id="stakerLimitTooltip" style={{
-                                         "position": "absolute",
-                                         "left": "30px",
-                                         "bottom": "1px",
-                                         "font-family": "Helvetica Neue,Helvetica,Arial,sans-serif",
-                                         "font-style": "normal",
-                                         "font-weight": "400",
-                                         "letter-spacing": "normal",
-                                         "line-height": "1.42857143",
-                                         "text-align": "start",
-                                         "text-shadow": "none",
-                                         "text-transform": "none",
-                                         "white-space": "normal",
-                                         "word-break": "normal",
-                                         "word-spacing": "normal",
-                                         "word-wrap": "normal",
-                                         "font-size": "12px",
-                                         "display": hoveringMaxStakerIcon == core.key ? "block" : "none",
-                                         "margin-top": "-5px"
+                                         position: "absolute",
+                                         left: "30px",
+                                         bottom: "1px",
+                                         fontFamily: "Helvetica Neue,Helvetica,Arial,sans-serif",
+                                         fontStyle: "normal",
+                                         fontWeight: "400",
+                                         letterSpacing: "normal",
+                                         lineHeight: "1.42857143",
+                                         textAlign: "start",
+                                         textShadow: "none",
+                                         textTransform: "none",
+                                         whiteSpace: "normal",
+                                         wordBreak: "normal",
+                                         wordSpacing: "normal",
+                                         wordWrap: "normal",
+                                         fontSize: "12px",
+                                         display: hoveringMaxStakerIcon == core.key ? "block" : "none",
+                                         marginTop: "-5px"
                                          }}>
-                                     <div style={{
-                                         "top": "auto",
-                                         "bottom": "-5px",
-                                         "left": "50%",
-                                         "margin-left": "-5px",
-                                         "border-width": "5px 5px 0",
-                                         "border-top-color": "#000",
-                                         "position": "absolute",
-                                         "width": "0",
-                                         "height": "0",
-                                         "border-color": "transparent",
-                                         "border-right-color": "transparent",
-                                         "border-style": "solid",
-                                         }}>
-        </div>
         <div style={{
-            "max-width": "200px",
-            "padding": "3px 8px",
-            "color": "#fff",
-            "text-align": "center",
-            "background-color": "#000",
-            "border-radius": "4px"
+            maxWidth: "200px",
+            padding: "3px 8px",
+            color: "#fff",
+            textAlign: "center",
+            backgroundColor: "#000",
+            borderRadius: "4px"
         }}>
             This core has reached the staker limit
         </div>
