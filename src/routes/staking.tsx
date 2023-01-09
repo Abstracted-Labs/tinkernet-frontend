@@ -123,6 +123,15 @@ const Staking = () => {
     }
   );
 
+    const setupSubscriptions = async () => {
+        // Current block subscription
+        await api.rpc.chain.subscribeNewHeads((header) => {
+            console.log(`Chain is at block: #${header.number}`);
+            setCurrentBlock(header.number.toNumber());
+        });
+
+    }
+
   const getSignAndSendCallback = () => {
     let hasFinished = false;
 
@@ -164,12 +173,6 @@ const Staking = () => {
         setChainProperties({
             maxStakersPerCore: api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number,
             inflationErasPerYear: api.consts.checkedInflation.erasPerYear.toPrimitive() as number
-        });
-
-        const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
-            console.log(`Chain is at block: #${header.number}`);
-
-            setCurrentBlock(header.number.toNumber());
         });
 
       const results = await Promise.all([
@@ -433,6 +436,12 @@ const Staking = () => {
       setHost(REMOTE);
     };
   }, [host]);
+
+    useEffect(() => {
+        if (host == BRAINSTORM && isLoading) {
+            setupSubscriptions();
+        }
+    }, [isLoading]);
 
   return (
     <>
