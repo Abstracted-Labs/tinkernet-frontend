@@ -2,6 +2,7 @@ import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { formatBalance } from "@polkadot/util";
 import { encodeAddress } from "@polkadot/util-crypto";
+import { Codec } from "@polkadot/types-codec";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -132,7 +133,7 @@ const Staking = () => {
         });
 
         // Next era starting block subscription
-        await api.query.ocifStaking.nextEraStartingBlock((blockNumber) => {
+        await api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
             setNextEraBlock(blockNumber.toNumber());
         });
 
