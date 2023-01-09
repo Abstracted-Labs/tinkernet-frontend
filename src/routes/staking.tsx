@@ -770,14 +770,21 @@ const Staking = () => {
                           (chainProperties?.maxStakersPerCore || 0) ? (
                             <LockClosedIcon
                               className="h-5 w-5 cursor-pointer text-white"
-                              onMouseEnter={() => {
+                              onClick={() => {
                                 toast.error(
                                   "This core has reached the staker limit"
                                 );
                               }}
                             />
                           ) : (
-                            <UserGroupIcon className="h-5 w-5 text-white" />
+                            <UserGroupIcon
+                              className="h-5 w-5 cursor-pointer text-white"
+                              onClick={() => {
+                                toast.success(
+                                  "This core can have more stakers"
+                                );
+                              }}
+                            />
                           )}
 
                           <span className="truncate text-sm">
