@@ -199,7 +199,7 @@ const Staking = () => {
 
                       const coreEraStake = c.toPrimitive() as {
                           total: string;
-                          numberofStakers: number;
+                          numberOfStakers: number;
                           rewardClaimed: boolean;
                           active: boolean;
                       };
