@@ -145,79 +145,71 @@ const Staking = () => {
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
-        const currentStakingEra = era.toPrimitive() as number;
+      const currentStakingEra = era.toPrimitive() as number;
       setCurrentStakingEra(currentStakingEra);
 
-
       // Registered cores subscription
-      api.query.ocifStaking.registeredCore.entries((cores: [
-       {args: Codec[]},
-        Codec
-      ][]) => {
-
+      api.query.ocifStaking.registeredCore.entries(
+        (cores: [{ args: Codec[] }, Codec][]) => {
           const stakingCores = cores.map(
-              ([
-                  {
-                      args: [key],
-                  },
-                  core,
-              ]) => {
-                  const c = core.toPrimitive() as {
-                      account: string;
-                      metadata: {
-                          name: string;
-                          description: string;
-                          image: string;
-                      };
-                  };
-                  const primitiveKey = key.toPrimitive() as number;
+            ([
+              {
+                args: [key],
+              },
+              core,
+            ]) => {
+              const c = core.toPrimitive() as {
+                account: string;
+                metadata: {
+                  name: string;
+                  description: string;
+                  image: string;
+                };
+              };
+              const primitiveKey = key.toPrimitive() as number;
 
-                  return {
-                      key: primitiveKey,
-                      ...c,
-                  };
-              }
+              return {
+                key: primitiveKey,
+                ...c,
+              };
+            }
           );
 
           setStakingCores(stakingCores);
 
-
           // Core era stake subscriptions
           const coreEraStakeInfo: {
-              account: string;
-              total: string;
-              numberOfStakers: number;
-              rewardClaimed: boolean;
-              active: boolean;
+            account: string;
+            total: string;
+            numberOfStakers: number;
+            rewardClaimed: boolean;
+            active: boolean;
           }[] = [];
 
           for (const stakingCore of stakingCores) {
+            api.query.ocifStaking.coreEraStake(
+              stakingCore.key,
+              currentStakingEra,
+              (c: Codec) => {
+                const coreEraStake = c.toPrimitive() as {
+                  total: string;
+                  numberOfStakers: number;
+                  rewardClaimed: boolean;
+                  active: boolean;
+                };
 
-              api.query.ocifStaking.coreEraStake(
-                  stakingCore.key,
-                  currentStakingEra, (c: Codec) => {
-
-                      const coreEraStake = c.toPrimitive() as {
-                          total: string;
-                          numberOfStakers: number;
-                          rewardClaimed: boolean;
-                          active: boolean;
-                      };
-
-                      coreEraStakeInfo.push({
-                          account: stakingCore.account,
-                          ...coreEraStake,
-                     });
-                  }
-              )
+                coreEraStakeInfo.push({
+                  account: stakingCore.account,
+                  ...coreEraStake,
+                });
+              }
+            );
           }
 
           setCoreEraStakeInfo(coreEraStakeInfo);
-
-      });
-
+        }
+      );
     });
-
   };
 
   const getSignAndSendCallback = () => {
@@ -578,18 +570,29 @@ const Staking = () => {
                       {currentInflationEra} /{" "}
                       {chainProperties?.inflationErasPerYear || "0"}
                     </span>
-              </div>
-                      <div>
-                          <div style={{
-                              width: "100%",
-                              backgroundColor: "grey",
-                              }}>
-                                <div style={{
-                                    width: ((currentBlock - (nextEraBlock - 7200)) / (nextEraBlock - (nextEraBlock - 7200))) * 100,
-                                  height: "30px",
-                                    backgroundColor: "green"
-                              }}>{Math.trunc(((currentBlock - (nextEraBlock - 7200)) / (nextEraBlock - (nextEraBlock - 7200))) * 100)}%</div>
-                          </div>
+                  </div>
+                  <div>
+                    <div className="w-100 h-4 rounded-full bg-neutral-800">
+                      <div
+                        className="flex h-4 items-center justify-center rounded-full bg-green-600"
+                        style={{
+                          width: `${
+                            ((currentBlock - (nextEraBlock - 7200)) /
+                              (nextEraBlock - (nextEraBlock - 7200))) *
+                            100
+                          }%`,
+                        }}
+                      >
+                        <span className="text-xs">
+                          {Math.trunc(
+                            ((currentBlock - (nextEraBlock - 7200)) /
+                              (nextEraBlock - (nextEraBlock - 7200))) *
+                              100
+                          )}
+                          %
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
