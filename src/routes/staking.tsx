@@ -145,8 +145,9 @@ const Staking = () => {
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
-      setCurrentStakingEra(era.toPrimitive() as number);
-    });
+        const currentStakingEra = era.toPrimitive() as number;
+      setCurrentStakingEra(currentStakingEra);
+
 
       // Registered cores subscription
       api.query.ocifStaking.registeredCore.entries((cores: [
@@ -179,7 +180,43 @@ const Staking = () => {
           );
 
           setStakingCores(stakingCores);
-      })
+
+
+          // Core era stake subscriptions
+          const coreEraStakeInfo: {
+              account: string;
+              total: string;
+              numberOfStakers: number;
+              rewardClaimed: boolean;
+              active: boolean;
+          }[] = [];
+
+          for (const stakingCore of stakingCores) {
+
+              api.query.ocifStaking.coreEraStake(
+                  stakingCore.key,
+                  currentStakingEra, (c: Codec) => {
+
+                      const coreEraStake = c.toPrimitive() as {
+                          total: string;
+                          numberofStakers: number;
+                          rewardClaimed: boolean;
+                          active: boolean;
+                      };
+
+                      coreEraStakeInfo.push({
+                          account: stakingCore.account,
+                          ...coreEraStake,
+                     });
+                  }
+              )
+          }
+
+          setCoreEraStakeInfo(coreEraStakeInfo);
+
+      });
+
+    });
 
   };
 
@@ -228,15 +265,6 @@ const Staking = () => {
         maxStakersPerCore,
         inflationErasPerYear,
       });
-
-      const results = await Promise.all([
-        // registered cores
-        api.query.ocifStaking.registeredCore.entries(),
-        // current era of inflation
-        api.query.checkedInflation.currentEra(),
-        // current era of staking
-        api.query.ocifStaking.currentEra(),
-      ]);
 
       const coreEraStakeInfo: {
         account: string;
