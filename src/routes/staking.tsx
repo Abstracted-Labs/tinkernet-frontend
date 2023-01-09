@@ -266,6 +266,35 @@ const Staking = () => {
         inflationErasPerYear,
       });
 
+      const coreEraStakeInfo: {
+        account: string;
+        total: string;
+        numberOfStakers: number;
+        rewardClaimed: boolean;
+        active: boolean;
+      }[] = [];
+
+      for (const stakingCore of stakingCores) {
+        const coreEraStake = (
+          await api.query.ocifStaking.coreEraStake(
+            stakingCore.key,
+            currentStakingEra
+          )
+        ).toPrimitive() as {
+          total: string;
+          numberOfStakers: number;
+          rewardClaimed: boolean;
+          active: boolean;
+        };
+
+        coreEraStakeInfo.push({
+          account: stakingCore.account,
+          ...coreEraStake,
+        });
+      }
+
+      setCoreEraStakeInfo(coreEraStakeInfo);
+
       if (selectedAccount) {
         const results = await Promise.all([
           api.query.system.account(selectedAccount.address),
