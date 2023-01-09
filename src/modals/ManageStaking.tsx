@@ -27,6 +27,8 @@ const schema = z.object({
   }),
 });
 
+const UNSTAKE_ENABLED = false;
+
 const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const { setOpenModal, metadata } = useModal(
     (state) => ({
@@ -383,7 +385,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
                       <div>
                         <span className="text-sm text-white">
-                          Funds will be subject to a 7 day unbonding period
+                          As the funds would be subject to a 7 day unbonding
+                          period, we disabled it for the testing phase.
                         </span>
                       </div>
 
@@ -395,7 +398,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
                       <button
                         type="submit"
-                        disabled={!unstakeForm.formState.isValid}
+                        disabled={
+                          !unstakeForm.formState.isValid || !UNSTAKE_ENABLED
+                        }
                         className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
                       >
                         Unstake
