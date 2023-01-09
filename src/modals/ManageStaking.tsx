@@ -123,7 +123,12 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .dividedBy(new BigNumber(10).pow(12))
       .toString();
 
-    if (new BigNumber(amount).isGreaterThan(maxValue)) {
+    const minValue = 10;
+
+    if (
+      new BigNumber(amount).isGreaterThan(maxValue) ||
+      new BigNumber(amount).isLessThan(minValue)
+    ) {
       unstakeForm.setError("amount", {
         type: "manual",
         message: "Amount must be less than or equal to total staked",
