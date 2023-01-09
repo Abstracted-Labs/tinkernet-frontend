@@ -121,18 +121,11 @@ const Staking = () => {
 
       setTotalClaimed(totalClaimed);
 
-      if (!currentEra) return;
-
-      if (!userStakedInfo) return;
-
-      const unclaimedEarliest = userStakedInfo[0].era;
-
-      if (currentEra.era - unclaimedEarliest > unclaimedEras.total) {
-        setUnclaimedEras((unclaimed) => ({
-          ...unclaimed,
-          total: currentEra.era - unclaimedEarliest,
-        }));
-      }
+      // TODO change calculation for this
+      setUnclaimedEras((unclaimed) => ({
+        ...unclaimed,
+        total: 0,
+      }));
     }
   );
 
@@ -187,11 +180,15 @@ const Staking = () => {
     try {
       toast.loading("Loading staking cores...");
 
+      const maxStakersPerCore =
+        api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
+
+      const inflationErasPerYear =
+        api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
+
       setChainProperties({
-        maxStakersPerCore:
-          api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number,
-        inflationErasPerYear:
-          api.consts.checkedInflation.erasPerYear.toPrimitive() as number,
+        maxStakersPerCore,
+        inflationErasPerYear,
       });
 
       const results = await Promise.all([
@@ -656,7 +653,7 @@ const Staking = () => {
                           (chainProperties?.maxStakersPerCore || 0) ? (
                             <LockClosedIcon
                               className="h-5 w-5 cursor-pointer text-white"
-                              onClick={() => {
+                              onMouseEnter={() => {
                                 toast.error(
                                   "This core has reached the staker limit"
                                 );
