@@ -515,6 +515,16 @@ const Staking = () => {
                     <span className="text-2xl font-bold">
                       {currentEra.inflationEra} / {chainProperties?.inflationErasPerYear || "0"}
                     </span>
+                    <div>
+                        <span className="text-sm">
+                            Current block: {currentBlock}
+                        </span>
+                        <div>
+                        <span className="test-sm">
+                            TODO: Implement a progress bar here instead of the current block number.
+                        </span>
+                        </div>
+                    </div>
                   </div>
                 </div>
               </div>
