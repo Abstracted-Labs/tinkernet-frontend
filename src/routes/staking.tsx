@@ -147,6 +147,40 @@ const Staking = () => {
     api.query.ocifStaking.currentEra((era: Codec) => {
       setCurrentStakingEra(era.toPrimitive() as number);
     });
+
+      // Registered cores subscription
+      api.query.ocifStaking.registeredCore.entries((cores: [
+       {args: Codec[]},
+        Codec
+      ][]) => {
+
+          const stakingCores = cores.map(
+              ([
+                  {
+                      args: [key],
+                  },
+                  core,
+              ]) => {
+                  const c = core.toPrimitive() as {
+                      account: string;
+                      metadata: {
+                          name: string;
+                          description: string;
+                          image: string;
+                      };
+                  };
+                  const primitiveKey = key.toPrimitive() as number;
+
+                  return {
+                      key: primitiveKey,
+                      ...c,
+                  };
+              }
+          );
+
+          setStakingCores(stakingCores);
+      })
+
   };
 
   const getSignAndSendCallback = () => {
@@ -203,33 +237,6 @@ const Staking = () => {
         // current era of staking
         api.query.ocifStaking.currentEra(),
       ]);
-
-      const stakingCores = results[0].map(
-        ([
-          {
-            args: [key],
-          },
-          core,
-        ]) => {
-          const c = core.toPrimitive() as {
-            account: string;
-            metadata: {
-              name: string;
-              description: string;
-              image: string;
-            };
-          };
-
-          const primitiveKey = key.toPrimitive() as number;
-
-          return {
-            key: primitiveKey,
-            ...c,
-          };
-        }
-      );
-
-      setStakingCores(stakingCores);
 
       const coreEraStakeInfo: {
         account: string;
