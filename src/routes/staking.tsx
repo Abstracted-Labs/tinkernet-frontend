@@ -97,6 +97,8 @@ const Staking = () => {
 
     const [hoveringMaxStakerIcon, setHoveringMaxStakerIcon] = useState<number | null>(null);
 
+    const [currentBlock, setCurrentBlock] = useState<number>(0);
+
   useSubscription(
     {
       query: TotalRewardsClaimedSubscription,
@@ -162,6 +164,12 @@ const Staking = () => {
         setChainProperties({
             maxStakersPerCore: api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number,
             inflationErasPerYear: api.consts.checkedInflation.erasPerYear.toPrimitive() as number
+        });
+
+        const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
+            console.log(`Chain is at block: #${header.number}`);
+
+            setCurrentBlock(header.number);
         });
 
       const results = await Promise.all([
