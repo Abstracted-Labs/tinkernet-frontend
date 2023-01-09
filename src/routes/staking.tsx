@@ -98,6 +98,7 @@ const Staking = () => {
     const [hoveringMaxStakerIcon, setHoveringMaxStakerIcon] = useState<number | null>(null);
 
     const [currentBlock, setCurrentBlock] = useState<number>(0);
+    const [nextEraBlock, setNextEraBlock] = useState<number>(0);
 
   useSubscription(
     {
@@ -128,6 +129,11 @@ const Staking = () => {
         await api.rpc.chain.subscribeNewHeads((header) => {
             console.log(`Chain is at block: #${header.number}`);
             setCurrentBlock(header.number.toNumber());
+        });
+
+        // Next era starting block subscription
+        await api.query.ocifStaking.nextEraStartingBlock((blockNumber) => {
+            setNextEraBlock(blockNumber.toNumber());
         });
 
     }
@@ -527,6 +533,10 @@ const Staking = () => {
                     <div>
                         <span className="text-sm">
                             Current block: {currentBlock}
+                        </span>
+                        <br/>
+                        <span className="text-sm">
+                            Next era block: {nextEraBlock}
                         </span>
                         <div>
                         <span className="test-sm">
