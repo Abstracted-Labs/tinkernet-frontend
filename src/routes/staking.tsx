@@ -52,8 +52,8 @@ const Staking = () => {
   const { host, setHost } = useRPC();
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
-    const [currentInflationEra, setCurrentInflationEra] = useState<number>(0);
-    const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
+  const [currentInflationEra, setCurrentInflationEra] = useState<number>(0);
+  const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
     {
       account: string;
       total: string;
@@ -129,30 +129,26 @@ const Staking = () => {
 
   const setupSubscriptions = () => {
     // Current block subscription
-    const unsubNewHeads = api.rpc.chain.subscribeNewHeads((header) => {
+    api.rpc.chain.subscribeNewHeads((header) => {
       setCurrentBlock(header.number.toNumber());
     });
 
     // Next era starting block subscription
-    const unsubNewEras = api.query.ocifStaking.nextEraStartingBlock(
-      (blockNumber: Codec) => {
-        setNextEraBlock(blockNumber.toPrimitive() as number);
-      }
-    );
+    api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
+      setNextEraBlock(blockNumber.toPrimitive() as number);
+    });
 
-        // Inflation current era subscription
-        await api.query.checkedInflation.currentEra((era: Codec) => {
-            console.log("inflation era: ", era.toPrimitive() as number);
-            setCurrentInflationEra(era.toPrimitive() as number);
-        });
+    // Inflation current era subscription
+    api.query.checkedInflation.currentEra((era: Codec) => {
+      console.log("inflation era: ", era.toPrimitive() as number);
+      setCurrentInflationEra(era.toPrimitive() as number);
+    });
 
-        // Staking current era subscription
-        await api.query.ocifStaking.currentEra((era: Codec) => {
-            console.log("staking era: ", era.toPrimitive() as number);
-            setCurrentStakingEra(era.toPrimitive() as number);
-        });
-
-    return [unsubNewHeads, unsubNewEras];
+    // Staking current era subscription
+    api.query.ocifStaking.currentEra((era: Codec) => {
+      console.log("staking era: ", era.toPrimitive() as number);
+      setCurrentStakingEra(era.toPrimitive() as number);
+    });
   };
 
   const getSignAndSendCallback = () => {
@@ -210,32 +206,32 @@ const Staking = () => {
         api.query.ocifStaking.currentEra(),
       ]);
 
-        const stakingCores = results[0].map(
-            ([
-                {
-                    args: [key],
-                },
-                core,
-            ]) => {
-                const c = core.toPrimitive() as {
-                    account: string;
-                    metadata: {
-                        name: string;
-                        description: string;
-                        image: string;
-                    };
-                };
+      const stakingCores = results[0].map(
+        ([
+          {
+            args: [key],
+          },
+          core,
+        ]) => {
+          const c = core.toPrimitive() as {
+            account: string;
+            metadata: {
+              name: string;
+              description: string;
+              image: string;
+            };
+          };
 
-                const primitiveKey = key.toPrimitive() as number;
+          const primitiveKey = key.toPrimitive() as number;
 
-                return {
-                    key: primitiveKey,
-                    ...c,
-                };
-            }
-        );
+          return {
+            key: primitiveKey,
+            ...c,
+          };
+        }
+      );
 
-        setStakingCores(stakingCores);
+      setStakingCores(stakingCores);
 
       const coreEraStakeInfo: {
         account: string;
@@ -329,7 +325,8 @@ const Staking = () => {
                 currentStakingEra - parseInt(unclaimedEarliest) >
                 unclaimed.total
               ) {
-                unclaimed.total = currentStakingEra - parseInt(unclaimedEarliest);
+                unclaimed.total =
+                  currentStakingEra - parseInt(unclaimedEarliest);
               }
 
               setUnclaimedEras(unclaimed);
@@ -460,7 +457,7 @@ const Staking = () => {
     if (!api.query.ocifStaking) return;
 
     // TODO unsusbscribe on unmount
-    const unsubs = setupSubscriptions();
+    setupSubscriptions();
   }, [api]);
 
   return (
@@ -473,7 +470,10 @@ const Staking = () => {
 
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
-          {selectedAccount && currentStakingEra && totalStaked && unclaimedEras ? (
+          {selectedAccount &&
+          currentStakingEra &&
+          totalStaked &&
+          unclaimedEras ? (
             <>
               <div className="flex items-center justify-between">
                 <div>
@@ -542,7 +542,8 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                        {currentInflationEra} /{" "} {chainProperties?.inflationErasPerYear || "0"}
+                      {currentInflationEra} /{" "}
+                      {chainProperties?.inflationErasPerYear || "0"}
                     </span>
                     <div>
                       <span className="text-sm">
