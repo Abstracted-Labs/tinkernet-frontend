@@ -71,14 +71,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
         toast.success("Transaction submitted!");
         hasFinished = true;
-
-        if (
-          metadata?.handleCallback &&
-          typeof metadata.handleCallback === "function"
-        ) {
-          metadata.handleCallback();
-        }
-      } else throw new Error("UNKNOWN_RESULT");
+      }
     };
   };
 
