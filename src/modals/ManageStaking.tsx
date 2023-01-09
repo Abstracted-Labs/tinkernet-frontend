@@ -84,6 +84,17 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .dividedBy(new BigNumber(10).pow(12))
       .toString();
 
+    const minValue = new BigNumber(10);
+
+    if (new BigNumber(amount).isLessThan(minValue)) {
+      stakeForm.setError("amount", {
+        type: "manual",
+        message: "Amount must be greater than or equal to 10",
+      });
+
+      return;
+    }
+
     if (new BigNumber(amount).isGreaterThan(maxValue)) {
       stakeForm.setError("amount", {
         type: "manual",
@@ -123,12 +134,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .dividedBy(new BigNumber(10).pow(12))
       .toString();
 
-    const minValue = 10;
-
-    if (
-      new BigNumber(amount).isGreaterThan(maxValue) ||
-      new BigNumber(amount).isLessThan(minValue)
-    ) {
+    if (new BigNumber(amount).isGreaterThan(maxValue)) {
       unstakeForm.setError("amount", {
         type: "manual",
         message: "Amount must be less than or equal to total staked",
