@@ -574,7 +574,7 @@ const Staking = () => {
                   <div>
                     <div className="w-100 h-4 rounded-full bg-neutral-800">
                       <div
-                        className="flex h-4 items-center justify-center rounded-full bg-green-600"
+                        className="flex h-4 animate-pulse items-center justify-center rounded-full bg-green-600"
                         style={{
                           width: `${
                             ((currentBlock - (nextEraBlock - 7200)) /
