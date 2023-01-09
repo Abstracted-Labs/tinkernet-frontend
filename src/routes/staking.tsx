@@ -403,6 +403,12 @@ const Staking = () => {
           new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
         );
 
+        const userStakedInfo: {
+          coreId: number;
+          era: number;
+          staked: BigNumber;
+        }[] = [];
+
         for (const stakingCore of stakingCores) {
           const generalStakerInfo =
             await api.query.ocifStaking.generalStakerInfo(
@@ -446,16 +452,15 @@ const Staking = () => {
               continue;
             }
 
-            setUserStakedInfo((userStakedInfo) => [
-              ...userStakedInfo,
-              {
-                coreId: stakingCore.key,
-                era: parseInt(latestInfo.era),
-                staked: new BigNumber(latestInfo.staked),
-              },
-            ]);
+            userStakedInfo.push({
+              coreId: stakingCore.key,
+              era: parseInt(latestInfo.era),
+              staked: new BigNumber(latestInfo.staked),
+            });
           }
         }
+
+        setUserStakedInfo(userStakedInfo);
 
         const totalStaked = userStakedInfo.reduce(
           (acc, cur) => acc.plus(cur.staked),
