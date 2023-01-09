@@ -140,13 +140,11 @@ const Staking = () => {
 
     // Inflation current era subscription
     api.query.checkedInflation.currentEra((era: Codec) => {
-      console.log("inflation era: ", era.toPrimitive() as number);
       setCurrentInflationEra(era.toPrimitive() as number);
     });
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
-      console.log("staking era: ", era.toPrimitive() as number);
       setCurrentStakingEra(era.toPrimitive() as number);
     });
   };
