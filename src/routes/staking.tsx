@@ -169,7 +169,7 @@ const Staking = () => {
         const unsubscribe = await api.rpc.chain.subscribeNewHeads((header) => {
             console.log(`Chain is at block: #${header.number}`);
 
-            setCurrentBlock(header.number);
+            setCurrentBlock(header.number.toNumber());
         });
 
       const results = await Promise.all([
