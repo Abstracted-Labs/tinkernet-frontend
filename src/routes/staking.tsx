@@ -2,6 +2,7 @@ import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { formatBalance } from "@polkadot/util";
 import { encodeAddress } from "@polkadot/util-crypto";
+import { Codec } from "@polkadot/types-codec/types/codec";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -12,8 +13,7 @@ import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
 import useRPC, { host } from "../stores/rpc";
 import { ISubmittableResult } from "@polkadot/types/types";
-import { UserGroupIcon, NoSymbolIcon } from "@heroicons/react/24/solid";
-import { UserGroupIcon as UserGroupIconMini } from "@heroicons/react/20/solid";
+import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 
 const { REMOTE, BRAINSTORM } = host;
 
@@ -51,12 +51,11 @@ const Staking = () => {
   const api = useApi();
   const { host, setHost } = useRPC();
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
-  const [currentEra, setCurrentEra] = useState<{
-    era: number;
-    inflationEra: number;
-  }>();
+  const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
+  const [currentInflationEra, setCurrentInflationEra] = useState<number>(0);
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
     {
+      coreId: number;
       account: string;
       total: string;
       numberOfStakers: number;
@@ -80,7 +79,7 @@ const Staking = () => {
 
   const [isLoading, setLoading] = useState(false);
 
-  const [rewardsClaimedQuery, executeRewardsClaimedQuery] = useQuery({
+  const [rewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
     variables: {
       accountId: selectedAccount
@@ -93,9 +92,13 @@ const Staking = () => {
 
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
 
-  const [chainProperties, setChainProperties] = useState<{maxStakersPerCore: number; inflationErasPerYear: number}>();
+  const [chainProperties, setChainProperties] = useState<{
+    maxStakersPerCore: number;
+    inflationErasPerYear: number;
+  }>();
 
-    const [hoveringMaxStakerIcon, setHoveringMaxStakerIcon] = useState<number | null>(null);
+  const [currentBlock, setCurrentBlock] = useState<number>(0);
+  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
 
   useSubscription(
     {
@@ -115,11 +118,149 @@ const Staking = () => {
 
       const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
 
-      setUnclaimedEras((unclaimed) => ({ ...unclaimed, total: 0 }));
-
       setTotalClaimed(totalClaimed);
+
+      // TODO change calculation for this
+      setUnclaimedEras((unclaimed) => ({
+        ...unclaimed,
+        total: 0,
+      }));
     }
   );
+
+  const setupSubscriptions = ({
+    selectedAccount,
+  }: {
+    selectedAccount: InjectedAccountWithMeta;
+  }) => {
+    // Current block subscription
+    api.rpc.chain.subscribeNewHeads((header) => {
+      setCurrentBlock(header.number.toNumber());
+    });
+
+    // Next era starting block subscription
+    api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
+      setNextEraBlock(blockNumber.toPrimitive() as number);
+    });
+
+    // Inflation current era subscription
+    api.query.checkedInflation.currentEra((era: Codec) => {
+      setCurrentInflationEra(era.toPrimitive() as number);
+    });
+
+    // Staking current era subscription
+    api.query.ocifStaking.currentEra((era: Codec) => {
+      setCurrentStakingEra(era.toPrimitive() as number);
+    });
+
+      // Core era stake + Use era stake subscriptions
+      const coreEraStakeInfoMap: Map<number, {
+          coreId: number;
+          account: string;
+          total: string;
+          numberOfStakers: number;
+          rewardClaimed: boolean;
+          active: boolean;
+      }> = new Map();
+
+      const userStakedInfoMap: Map<number, {
+          coreId: number;
+          era: number;
+          staked: BigNumber;
+      }> = new Map();
+
+      for (const stakingCore of stakingCores) {
+
+          api.query.ocifStaking.coreEraStake(
+              stakingCore.key,
+              currentStakingEra,
+              (c: Codec) => {
+                  const coreEraStake = c.toPrimitive() as {
+                      total: string;
+                      numberOfStakers: number;
+                      rewardClaimed: boolean;
+                      active: boolean;
+                  };
+
+                  coreEraStakeInfoMap.set(stakingCore.key, {
+                      coreId: stakingCore.key,
+                      account: stakingCore.account,
+                      ...coreEraStake,
+                  });
+
+                  if (Array.from(coreEraStakeInfoMap.values()).length != 0) {
+                      setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
+                  }
+              }
+          );
+
+          api.query.ocifStaking.generalStakerInfo(
+              stakingCore.key,
+              selectedAccount.address,
+              (generalStakerInfo: Codec) => {
+                  const info = generalStakerInfo.toPrimitive() as {
+                      stakes: { era: string; staked: string }[];
+                  };
+
+                  if (info.stakes.length > 0) {
+
+                      console.log("info: ", info)
+
+                      const unclaimedEarliest = info.stakes[0].era;
+
+                      if (parseInt(unclaimedEarliest) < currentStakingEra) {
+                          console.log("unclaimedEras: ", unclaimedEras)
+                          const unclaimed = unclaimedEras;
+
+                          unclaimed.cores.filter((value) => {
+                              return value.coreId != stakingCore.key;
+                          });
+
+                          unclaimed.cores.push({
+                              coreId: stakingCore.key,
+                              earliestEra: parseInt(unclaimedEarliest),
+                          });
+
+                          if (
+                              currentStakingEra - parseInt(unclaimedEarliest) >
+                              unclaimed.total
+                          ) {
+                              unclaimed.total =
+                                  currentStakingEra - parseInt(unclaimedEarliest);
+                          }
+
+                          setUnclaimedEras(unclaimed);
+                      }
+
+                      const latestInfo = info.stakes.at(-1);
+
+                      if (!latestInfo) {
+                          return;
+                      }
+
+                      userStakedInfoMap.set(stakingCore.key, {
+                          coreId: stakingCore.key,
+                          era: parseInt(latestInfo.era),
+                          staked: new BigNumber(latestInfo.staked),
+                      });
+
+                      if (Array.from(userStakedInfoMap.values()).length != 0) {
+                          setUserStakedInfo(Array.from(userStakedInfoMap.values()));
+
+
+                          const newTotalStaked = Array.from(userStakedInfoMap.values()).reduce(
+                              (acc, cur) => acc.plus(cur.staked),
+                              new BigNumber(0)
+                          );
+
+                          setTotalStaked(newTotalStaked);
+
+                      }
+                  }
+              }
+          );
+      }
+  };
 
   const getSignAndSendCallback = () => {
     let hasFinished = false;
@@ -145,9 +286,7 @@ const Staking = () => {
         toast.success("Transaction submitted!");
 
         hasFinished = true;
-
-        loadStakingCores(selectedAccount);
-      } else throw new Error("UNKNOWN_RESULT");
+      }
     };
   };
 
@@ -155,25 +294,43 @@ const Staking = () => {
     selectedAccount: InjectedAccountWithMeta | null
   ) => {
     setLoading(true);
-
     try {
       toast.loading("Loading staking cores...");
 
-        setChainProperties({
-            maxStakersPerCore: api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number,
-            inflationErasPerYear: api.consts.checkedInflation.erasPerYear.toPrimitive() as number
-        });
+      const maxStakersPerCore =
+        api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
 
-      const results = await Promise.all([
-        // registered cores
-        api.query.ocifStaking.registeredCore.entries(),
-        // current era of inflation
-        api.query.checkedInflation.currentEra(),
-        // current era of staking
-        api.query.ocifStaking.currentEra(),
-      ]);
+      const inflationErasPerYear =
+        api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
 
-      const stakingCores = results[0].map(
+      setCurrentBlock(
+        (await api.rpc.chain.getBlock()).block.header.number.toNumber()
+      );
+
+      setNextEraBlock(
+        (
+          await api.query.ocifStaking.nextEraStartingBlock()
+        ).toPrimitive() as number
+      );
+
+      setCurrentInflationEra(
+        (await api.query.checkedInflation.currentEra()).toPrimitive() as number
+      );
+
+      const currentStakingEra = (
+        await api.query.ocifStaking.currentEra()
+      ).toPrimitive() as number;
+
+      setCurrentStakingEra(currentStakingEra);
+
+      setChainProperties({
+        maxStakersPerCore,
+        inflationErasPerYear,
+      });
+
+      const stakingCores = (
+        await api.query.ocifStaking.registeredCore.entries()
+      ).map(
         ([
           {
             args: [key],
@@ -200,14 +357,8 @@ const Staking = () => {
 
       setStakingCores(stakingCores);
 
-      const currentEra = {
-        inflationEra: results[1].toPrimitive() as number,
-        era: results[2].toPrimitive() as number
-      };
-
-      setCurrentEra(currentEra);
-
       const coreEraStakeInfo: {
+        coreId: number;
         account: string;
         total: string;
         numberOfStakers: number;
@@ -219,7 +370,7 @@ const Staking = () => {
         const coreEraStake = (
           await api.query.ocifStaking.coreEraStake(
             stakingCore.key,
-            currentEra.era
+            currentStakingEra
           )
         ).toPrimitive() as {
           total: string;
@@ -229,6 +380,7 @@ const Staking = () => {
         };
 
         coreEraStakeInfo.push({
+          coreId: stakingCore.key,
           account: stakingCore.account,
           ...coreEraStake,
         });
@@ -283,7 +435,7 @@ const Staking = () => {
           if (info.stakes.length > 0) {
             const unclaimedEarliest = info.stakes[0].era;
 
-            if (parseInt(unclaimedEarliest) < currentEra.era) {
+            if (parseInt(unclaimedEarliest) < currentStakingEra) {
               const unclaimed = unclaimedEras;
 
               unclaimed.cores.filter((value) => {
@@ -296,10 +448,11 @@ const Staking = () => {
               });
 
               if (
-                currentEra.era - parseInt(unclaimedEarliest) >
+                currentStakingEra - parseInt(unclaimedEarliest) >
                 unclaimed.total
               ) {
-                unclaimed.total = currentEra.era - parseInt(unclaimedEarliest);
+                unclaimed.total =
+                  currentStakingEra - parseInt(unclaimedEarliest);
               }
 
               setUnclaimedEras(unclaimed);
@@ -329,8 +482,6 @@ const Staking = () => {
         setTotalStaked(totalStaked);
       }
 
-      executeRewardsClaimedQuery({ requestPolicy: "network-only" });
-
       toast.dismiss();
 
       setLoading(false);
@@ -349,16 +500,14 @@ const Staking = () => {
     core,
     totalStaked,
     availableBalance,
-    handleCallback,
   }: {
     core: StakingCore;
     totalStaked: BigNumber;
     availableBalance: BigNumber;
-    handleCallback: () => void;
   }) => {
     setOpenModal({
       name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalStaked, availableBalance, handleCallback },
+      metadata: { ...core, totalStaked, availableBalance },
     });
   };
 
@@ -367,7 +516,7 @@ const Staking = () => {
 
     if (!unclaimedEras) return;
 
-    if (!currentEra) return;
+    if (!currentStakingEra) return;
 
     await web3Enable("Tinkernet");
 
@@ -382,7 +531,7 @@ const Staking = () => {
     for (const core of uniqueCores) {
       if (!core?.earliestEra) continue;
 
-      for (let i = 0; i < currentEra.era - core.earliestEra; i++) {
+      for (let i = 0; i < currentStakingEra - core.earliestEra; i++) {
         batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
       }
     }
@@ -426,6 +575,15 @@ const Staking = () => {
     };
   }, [host]);
 
+  useEffect(() => {
+    if (!selectedAccount) return;
+    if (!api.query.ocifStaking) return;
+    if (stakingCores.length === 0) return;
+
+    // TODO unsusbscribe on unmount
+    setupSubscriptions({ selectedAccount });
+  }, [api, stakingCores]);
+
   return (
     <>
       {isLoading ? (
@@ -436,7 +594,10 @@ const Staking = () => {
 
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
-          {selectedAccount && currentEra && totalStaked && unclaimedEras ? (
+          {selectedAccount &&
+          currentStakingEra &&
+          totalStaked &&
+          unclaimedEras ? (
             <>
               <div className="flex items-center justify-between">
                 <div>
@@ -505,8 +666,32 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {currentEra.inflationEra} / {chainProperties?.inflationErasPerYear || "0"}
+                      {currentInflationEra} /{" "}
+                      {chainProperties?.inflationErasPerYear || "0"}
                     </span>
+                  </div>
+                  <div>
+                    <div className="w-100 h-4 rounded-full bg-neutral-800">
+                      <div
+                        className="flex h-4 animate-pulse items-center justify-center rounded-full bg-green-600"
+                        style={{
+                          width: `${
+                            ((currentBlock - (nextEraBlock - 7200)) /
+                              (nextEraBlock - (nextEraBlock - 7200))) *
+                            100
+                          }%`,
+                        }}
+                      >
+                        <span className="text-xs">
+                          {Math.trunc(
+                            ((currentBlock - (nextEraBlock - 7200)) /
+                              (nextEraBlock - (nextEraBlock - 7200))) *
+                              100
+                          )}
+                          %
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -549,7 +734,7 @@ const Staking = () => {
                         <div className="flex items-center justify-between gap-2">
                           <button
                             type="button"
-                              className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400 disabled:border-neutral-400"
+                            className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-2 py-1 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:border-neutral-400 disabled:bg-neutral-400"
                             onClick={() => {
                               const parsedTotalStaked =
                                 totalStaked || new BigNumber("0");
@@ -559,10 +744,6 @@ const Staking = () => {
                                   new BigNumber(10).pow(12)
                                 ) || new BigNumber("0");
 
-                              const handleCallback = () => {
-                                loadStakingCores(selectedAccount);
-                              };
-
                               handleManageStaking({
                                 core,
                                 totalStaked: parsedTotalStaked,
@@ -570,10 +751,13 @@ const Staking = () => {
                                   parsedAvailableBalance.isNegative()
                                     ? new BigNumber("0")
                                     : parsedAvailableBalance,
-                                handleCallback,
                               });
                             }}
-                            disabled={((coreInfo?.numberOfStakers || 0) >= (chainProperties?.maxStakersPerCore || 0)) && !totalStaked}
+                            disabled={
+                              (coreInfo?.numberOfStakers || 0) >=
+                                (chainProperties?.maxStakersPerCore || 0) &&
+                              !totalStaked
+                            }
                           >
                             {totalStaked ? "Manage Staking" : "Stake"}
                           </button>
@@ -594,54 +778,31 @@ const Staking = () => {
                       ) : null}
 
                       <div className="flex items-center justify-between">
-                        <div className="truncate text-sm flex gap-1">
-                            {(coreInfo?.numberOfStakers || 0) >= (chainProperties?.maxStakersPerCore || 0) ?
-                             (
-                                 <div className="flex justify-center" style={{alignItems: "center"}}
-                                 onMouseEnter={() => setHoveringMaxStakerIcon(core.key)}
-                                 onMouseLeave={() => setHoveringMaxStakerIcon(null)}
-                                 >
-                                     <NoSymbolIcon className="h-5 w-5 text-red-300" style={{position: "absolute"}} />
-                                     <UserGroupIconMini className="h-3 w-3 text-white" />
-                                     <div id="stakerLimitTooltip" style={{
-                                         position: "absolute",
-                                         left: "30px",
-                                         bottom: "1px",
-                                         fontFamily: "Helvetica Neue,Helvetica,Arial,sans-serif",
-                                         fontStyle: "normal",
-                                         fontWeight: "400",
-                                         letterSpacing: "normal",
-                                         lineHeight: "1.42857143",
-                                         textAlign: "start",
-                                         textShadow: "none",
-                                         textTransform: "none",
-                                         whiteSpace: "normal",
-                                         wordBreak: "normal",
-                                         wordSpacing: "normal",
-                                         wordWrap: "normal",
-                                         fontSize: "12px",
-                                         display: hoveringMaxStakerIcon == core.key ? "block" : "none",
-                                         marginTop: "-5px"
-                                         }}>
-        <div style={{
-            maxWidth: "200px",
-            padding: "3px 8px",
-            color: "#fff",
-            textAlign: "center",
-            backgroundColor: "#000",
-            borderRadius: "4px"
-        }}>
-            This core has reached the staker limit
-        </div>
-                                 </div>
-                                 </div>
-                             )
-                            :
-                             (
-                                 <UserGroupIcon className="h-5 w-5 text-white" />
-                             )
-                            }
-                          {coreInfo?.numberOfStakers || "0"} stakers
+                        <div className="flex gap-2 ">
+                          {(coreInfo?.numberOfStakers || 0) >=
+                          (chainProperties?.maxStakersPerCore || 0) ? (
+                            <LockClosedIcon
+                              className="h-5 w-5 cursor-pointer text-white"
+                              onClick={() => {
+                                toast.error(
+                                  "This core has reached the staker limit"
+                                );
+                              }}
+                            />
+                          ) : (
+                            <UserGroupIcon
+                              className="h-5 w-5 cursor-pointer text-white"
+                              onClick={() => {
+                                toast.success(
+                                  "This core can have more stakers"
+                                );
+                              }}
+                            />
+                          )}
+
+                          <span className="truncate text-sm">
+                            {coreInfo?.numberOfStakers || "0"} stakers
+                          </span>
                         </div>
                         <div className="truncate text-sm">
                           {coreInfo?.total

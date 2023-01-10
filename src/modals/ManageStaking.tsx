@@ -27,8 +27,10 @@ const schema = z.object({
   }),
 });
 
+const UNSTAKE_ENABLED = false;
+
 const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
-  const { setOpenModal, metadata } = useModal(
+    const { setOpenModal, metadata } = useModal(
     (state) => ({
       setOpenModal: state.setOpenModal,
       metadata: state.metadata,
@@ -69,14 +71,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
         toast.success("Transaction submitted!");
         hasFinished = true;
-
-        if (
-          metadata?.handleCallback &&
-          typeof metadata.handleCallback === "function"
-        ) {
-          metadata.handleCallback();
-        }
-      } else throw new Error("UNKNOWN_RESULT");
+      }
     };
   };
 
@@ -88,6 +83,17 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     const maxValue = new BigNumber(metadata.availableBalance as string)
       .dividedBy(new BigNumber(10).pow(12))
       .toString();
+
+    const minValue = new BigNumber(10);
+
+      if (new BigNumber(amount).isLessThan(minValue) && (metadata?.totalStaked as BigNumber).toString() == "0") {
+      stakeForm.setError("amount", {
+        type: "manual",
+        message: "Amount must be greater than or equal to 10",
+      });
+
+      return;
+    }
 
     if (new BigNumber(amount).isGreaterThan(maxValue)) {
       stakeForm.setError("amount", {
@@ -289,7 +295,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                   >
                     <form
                       className="flex flex-col gap-4"
-                      onSubmit={handleStake}
+                        onSubmit={handleStake}
                     >
                       <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                         <label
@@ -383,7 +389,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
                       <div>
                         <span className="text-sm text-white">
-                          Funds will be subject to a 7 day unbonding period
+                          As the funds would be subject to a 7 day unbonding
+                          period, we disabled it for the testing phase.
                         </span>
                       </div>
 
@@ -395,7 +402,9 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
                       <button
                         type="submit"
-                        disabled={!unstakeForm.formState.isValid}
+                        disabled={
+                          !unstakeForm.formState.isValid || !UNSTAKE_ENABLED
+                        }
                         className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
                       >
                         Unstake
