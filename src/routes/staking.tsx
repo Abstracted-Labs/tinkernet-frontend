@@ -739,7 +739,7 @@ const Staking = () => {
                   key={core.account}
                   className="relative flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 p-6 pb-28 sm:flex-row"
                 >
-                  <div className="flex w-full flex-col justify-between gap-4">
+                  <div className="flex w-full flex-col gap-4">
                     <div className="flex flex-shrink-0">
                       <img
                         src={core.metadata.image}
@@ -750,9 +750,7 @@ const Staking = () => {
                     <div className="flex flex-col gap-4">
                       <h4 className="font-bold">{core.metadata.name}</h4>
 
-                      <p className="text-sm line-clamp-6">
-                        {core.metadata.description}
-                      </p>
+                      <p className="text-sm">{core.metadata.description}</p>
                     </div>
 
                     <div className="absolute bottom-0 left-0 flex w-full flex-col gap-4 p-6">
