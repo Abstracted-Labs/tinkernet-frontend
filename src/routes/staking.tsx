@@ -127,7 +127,11 @@ const Staking = () => {
     }
   );
 
-  const setupSubscriptions = (selectedAccount: InjectedAccountWithMeta) => {
+  const setupSubscriptions = ({
+    selectedAccount,
+  }: {
+    selectedAccount: InjectedAccountWithMeta;
+  }) => {
     // Current block subscription
     api.rpc.chain.subscribeNewHeads((header) => {
       setCurrentBlock(header.number.toNumber());
@@ -145,8 +149,7 @@ const Staking = () => {
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
-      const currentStakingEra = era.toPrimitive() as number;
-      setCurrentStakingEra(currentStakingEra);
+      setCurrentStakingEra(era.toPrimitive() as number);
     });
 
     // Registered cores subscription
@@ -207,6 +210,8 @@ const Staking = () => {
           );
         }
 
+        if (coreEraStakeInfo.length === 0) return;
+
         setCoreEraStakeInfo(coreEraStakeInfo);
       }
     );
@@ -252,14 +257,33 @@ const Staking = () => {
               return;
             }
 
-            setUserStakedInfo((userStakedInfo) => [
-              ...userStakedInfo,
-              {
-                coreId: stakingCore.key,
-                era: parseInt(latestInfo.era),
-                staked: new BigNumber(latestInfo.staked),
-              },
-            ]);
+            const uniqueUserStakedInfo = userStakedInfo.find(
+              (value) => value.coreId === stakingCore.key
+            );
+
+            if (!uniqueUserStakedInfo) return;
+
+            if (
+              uniqueUserStakedInfo.era === parseInt(latestInfo.era) &&
+              uniqueUserStakedInfo.staked.toString() ===
+                new BigNumber(latestInfo.staked).toString()
+            )
+              return;
+
+            setUserStakedInfo((userStakedInfo) => {
+              const filteredUserStakedInfo = userStakedInfo.filter(
+                (value) => value.coreId != stakingCore.key
+              );
+
+              return [
+                ...filteredUserStakedInfo,
+                {
+                  coreId: stakingCore.key,
+                  era: parseInt(latestInfo.era),
+                  staked: new BigNumber(latestInfo.staked),
+                },
+              ];
+            });
           }
         }
       );
@@ -306,6 +330,20 @@ const Staking = () => {
 
       const inflationErasPerYear =
         api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
+
+      setCurrentBlock(
+        (await api.rpc.chain.getBlock()).block.header.number.toNumber()
+      );
+
+      setNextEraBlock(
+        (
+          await api.query.ocifStaking.nextEraStartingBlock()
+        ).toPrimitive() as number
+      );
+
+      setCurrentInflationEra(
+        (await api.query.checkedInflation.currentEra()).toPrimitive() as number
+      );
 
       const currentStakingEra = (
         await api.query.ocifStaking.currentEra()
@@ -566,10 +604,11 @@ const Staking = () => {
   useEffect(() => {
     if (!selectedAccount) return;
     if (!api.query.ocifStaking) return;
+    if (stakingCores.length === 0) return;
 
     // TODO unsusbscribe on unmount
-    setupSubscriptions(selectedAccount);
-  }, [api]);
+    setupSubscriptions({ selectedAccount });
+  }, [api, stakingCores]);
 
   return (
     <>
