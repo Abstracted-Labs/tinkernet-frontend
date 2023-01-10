@@ -153,7 +153,7 @@ const Staking = () => {
       setCurrentStakingEra(era.toPrimitive() as number);
     });
 
-      // Core era stake subscriptions
+      // Core era stake + Use era stake subscriptions
       const coreEraStakeInfoMap: Map<number, {
           coreId: number;
           account: string;
@@ -161,6 +161,12 @@ const Staking = () => {
           numberOfStakers: number;
           rewardClaimed: boolean;
           active: boolean;
+      }> = new Map();
+
+      const userStakedInfoMap: Map<number, {
+          coreId: number;
+          era: number;
+          staked: BigNumber;
       }> = new Map();
 
       for (const stakingCore of stakingCores) {
@@ -187,80 +193,73 @@ const Staking = () => {
                   }
               }
           );
-      }
 
-    for (const stakingCore of stakingCores) {
-      api.query.ocifStaking.generalStakerInfo(
-        stakingCore.key,
-        selectedAccount.address,
-        (generalStakerInfo: Codec) => {
-          const info = generalStakerInfo.toPrimitive() as {
-            stakes: { era: string; staked: string }[];
-          };
+          api.query.ocifStaking.generalStakerInfo(
+              stakingCore.key,
+              selectedAccount.address,
+              (generalStakerInfo: Codec) => {
+                  const info = generalStakerInfo.toPrimitive() as {
+                      stakes: { era: string; staked: string }[];
+                  };
 
-          if (info.stakes.length > 0) {
-            const unclaimedEarliest = info.stakes[0].era;
+                  if (info.stakes.length > 0) {
 
-            if (parseInt(unclaimedEarliest) < currentStakingEra) {
-              const unclaimed = unclaimedEras;
+                      console.log("info: ", info)
 
-              unclaimed.cores.filter((value) => {
-                return value.coreId != stakingCore.key;
-              });
+                      const unclaimedEarliest = info.stakes[0].era;
 
-              unclaimed.cores.push({
-                coreId: stakingCore.key,
-                earliestEra: parseInt(unclaimedEarliest),
-              });
+                      if (parseInt(unclaimedEarliest) < currentStakingEra) {
+                          console.log("unclaimedEras: ", unclaimedEras)
+                          const unclaimed = unclaimedEras;
 
-              if (
-                currentStakingEra - parseInt(unclaimedEarliest) >
-                unclaimed.total
-              ) {
-                unclaimed.total =
-                  currentStakingEra - parseInt(unclaimedEarliest);
+                          unclaimed.cores.filter((value) => {
+                              return value.coreId != stakingCore.key;
+                          });
+
+                          unclaimed.cores.push({
+                              coreId: stakingCore.key,
+                              earliestEra: parseInt(unclaimedEarliest),
+                          });
+
+                          if (
+                              currentStakingEra - parseInt(unclaimedEarliest) >
+                              unclaimed.total
+                          ) {
+                              unclaimed.total =
+                                  currentStakingEra - parseInt(unclaimedEarliest);
+                          }
+
+                          setUnclaimedEras(unclaimed);
+                      }
+
+                      const latestInfo = info.stakes.at(-1);
+
+                      if (!latestInfo) {
+                          return;
+                      }
+
+                      userStakedInfoMap.set(stakingCore.key, {
+                          coreId: stakingCore.key,
+                          era: parseInt(latestInfo.era),
+                          staked: new BigNumber(latestInfo.staked),
+                      });
+
+                      if (Array.from(userStakedInfoMap.values()).length != 0) {
+                          setUserStakedInfo(Array.from(userStakedInfoMap.values()));
+
+
+                          const newTotalStaked = Array.from(userStakedInfoMap.values()).reduce(
+                              (acc, cur) => acc.plus(cur.staked),
+                              new BigNumber(0)
+                          );
+
+                          setTotalStaked(newTotalStaked);
+
+                      }
+                  }
               }
-
-              setUnclaimedEras(unclaimed);
-            }
-
-            const latestInfo = info.stakes.at(-1);
-
-            if (!latestInfo) {
-              return;
-            }
-
-            const uniqueUserStakedInfo = userStakedInfo.find(
-              (value) => value.coreId === stakingCore.key
-            );
-
-            if (!uniqueUserStakedInfo) return;
-
-            if (
-              uniqueUserStakedInfo.era === parseInt(latestInfo.era) &&
-              uniqueUserStakedInfo.staked.toString() ===
-                new BigNumber(latestInfo.staked).toString()
-            )
-              return;
-
-            setUserStakedInfo((userStakedInfo) => {
-              const filteredUserStakedInfo = userStakedInfo.filter(
-                (value) => value.coreId != stakingCore.key
-              );
-
-              return [
-                ...filteredUserStakedInfo,
-                {
-                  coreId: stakingCore.key,
-                  era: parseInt(latestInfo.era),
-                  staked: new BigNumber(latestInfo.staked),
-                },
-              ];
-            });
-          }
-        }
-      );
-    }
+          );
+      }
   };
 
   const getSignAndSendCallback = () => {
