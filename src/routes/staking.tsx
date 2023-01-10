@@ -55,6 +55,7 @@ const Staking = () => {
   const [currentInflationEra, setCurrentInflationEra] = useState<number>(0);
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
     {
+      coreId: number;
       account: string;
       total: string;
       numberOfStakers: number;
@@ -152,69 +153,41 @@ const Staking = () => {
       setCurrentStakingEra(era.toPrimitive() as number);
     });
 
-    // Registered cores subscription
-    api.query.ocifStaking.registeredCore.entries(
-      (cores: [{ args: Codec[] }, Codec][]) => {
-        const stakingCores = cores.map(
-          ([
-            {
-              args: [key],
-            },
-            core,
-          ]) => {
-            const c = core.toPrimitive() as {
-              account: string;
-              metadata: {
-                name: string;
-                description: string;
-                image: string;
-              };
-            };
-            const primitiveKey = key.toPrimitive() as number;
-
-            return {
-              key: primitiveKey,
-              ...c,
-            };
-          }
-        );
-
-        setStakingCores(stakingCores);
-
-        // Core era stake subscriptions
-        const coreEraStakeInfo: {
+      // Core era stake subscriptions
+      const coreEraStakeInfoMap: Map<number, {
+          coreId: number;
           account: string;
           total: string;
           numberOfStakers: number;
           rewardClaimed: boolean;
           active: boolean;
-        }[] = [];
+      }> = new Map();
 
-        for (const stakingCore of stakingCores) {
+      for (const stakingCore of stakingCores) {
+
           api.query.ocifStaking.coreEraStake(
-            stakingCore.key,
-            currentStakingEra,
-            (c: Codec) => {
-              const coreEraStake = c.toPrimitive() as {
-                total: string;
-                numberOfStakers: number;
-                rewardClaimed: boolean;
-                active: boolean;
-              };
+              stakingCore.key,
+              currentStakingEra,
+              (c: Codec) => {
+                  const coreEraStake = c.toPrimitive() as {
+                      total: string;
+                      numberOfStakers: number;
+                      rewardClaimed: boolean;
+                      active: boolean;
+                  };
 
-              coreEraStakeInfo.push({
-                account: stakingCore.account,
-                ...coreEraStake,
-              });
-            }
+                  coreEraStakeInfoMap.set(stakingCore.key, {
+                      coreId: stakingCore.key,
+                      account: stakingCore.account,
+                      ...coreEraStake,
+                  });
+
+                  if (Array.from(coreEraStakeInfoMap.values()).length != 0) {
+                      setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
+                  }
+              }
           );
-        }
-
-        if (coreEraStakeInfo.length === 0) return;
-
-        setCoreEraStakeInfo(coreEraStakeInfo);
       }
-    );
 
     for (const stakingCore of stakingCores) {
       api.query.ocifStaking.generalStakerInfo(
@@ -386,6 +359,7 @@ const Staking = () => {
       setStakingCores(stakingCores);
 
       const coreEraStakeInfo: {
+        coreId: number;
         account: string;
         total: string;
         numberOfStakers: number;
@@ -407,6 +381,7 @@ const Staking = () => {
         };
 
         coreEraStakeInfo.push({
+          coreId: stakingCore.key,
           account: stakingCore.account,
           ...coreEraStake,
         });
