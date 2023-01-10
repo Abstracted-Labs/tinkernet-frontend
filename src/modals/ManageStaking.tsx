@@ -343,6 +343,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                             className="block cursor-pointer text-white sm:text-sm"
                             id="currency"
                             onClick={handleStakeMax}
+                            tabIndex={0}
                           >
                             MAX
                           </span>
@@ -402,6 +403,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                             className="block cursor-pointer text-white sm:text-sm"
                             id="currency"
                             onClick={handleUnstakeMax}
+                            tabIndex={0}
                           >
                             MAX
                           </span>
