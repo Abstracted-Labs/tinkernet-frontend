@@ -85,6 +85,17 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
 
+    const parsedAmount = parseFloat(amount);
+
+    if (Number.isNaN(parsedAmount)) {
+      stakeForm.setError("amount", {
+        type: "manual",
+        message: "Amount must be a number",
+      });
+
+      return;
+    }
+
     const maxValue = new BigNumber(metadata.availableBalance as string)
       .dividedBy(new BigNumber(10).pow(12))
       .toString();
@@ -92,7 +103,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     const minValue = new BigNumber(10);
 
     if (
-      new BigNumber(amount).isLessThan(minValue) &&
+      new BigNumber(parsedAmount).isLessThan(minValue) &&
       (metadata?.totalStaked as BigNumber).toString() == "0"
     ) {
       stakeForm.setError("amount", {
@@ -103,7 +114,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       return;
     }
 
-    if (new BigNumber(amount).isGreaterThan(maxValue)) {
+    if (new BigNumber(parsedAmount).isGreaterThan(maxValue)) {
       stakeForm.setError("amount", {
         type: "manual",
         message: "Amount must be less than or equal to available balance",
@@ -313,10 +324,11 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                           Stake Amount
                         </label>
                         <input
+                          type="text"
                           {...stakeForm.register("amount", {
                             required: true,
                           })}
-                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          className="block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-transparent sm:text-sm"
                         />
 
                         <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
@@ -371,10 +383,11 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                           Unstake Amount
                         </label>
                         <input
+                          type="text"
                           {...unstakeForm.register("amount", {
                             required: true,
                           })}
-                          className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          className="mt-1 block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
                         />
 
                         <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
