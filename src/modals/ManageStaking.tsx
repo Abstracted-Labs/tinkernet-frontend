@@ -27,7 +27,7 @@ const schema = z.object({
   }),
 });
 
-const UNSTAKE_ENABLED = true;
+const UNSTAKE_ENABLED = false;
 
 const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const { setOpenModal, metadata } = useModal(
@@ -84,16 +84,16 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .dividedBy(new BigNumber(10).pow(12))
       .toString();
 
-    // const minValue = new BigNumber(10);
+    const minValue = new BigNumber(10);
 
-    // if (new BigNumber(amount).isLessThan(minValue)) {
-    //   stakeForm.setError("amount", {
-    //     type: "manual",
-    //     message: "Amount must be greater than or equal to 10",
-    //   });
+    if (new BigNumber(amount).isLessThan(minValue)) {
+      stakeForm.setError("amount", {
+        type: "manual",
+        message: "Amount must be greater than or equal to 10",
+      });
 
-    //   return;
-    // }
+      return;
+    }
 
     if (new BigNumber(amount).isGreaterThan(maxValue)) {
       stakeForm.setError("amount", {
