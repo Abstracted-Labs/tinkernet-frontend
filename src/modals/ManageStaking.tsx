@@ -30,7 +30,7 @@ const schema = z.object({
 const UNSTAKE_ENABLED = false;
 
 const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
-    const { setOpenModal, metadata } = useModal(
+  const { setOpenModal, metadata } = useModal(
     (state) => ({
       setOpenModal: state.setOpenModal,
       metadata: state.metadata,
@@ -57,12 +57,16 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       }
 
       if (status.isInvalid) {
+        toast.dismiss();
+
         toast.error("Transaction is invalid");
 
         hasFinished = true;
       } else if (status.isReady) {
         toast.loading("Submitting transaction...");
       } else if (status.isDropped) {
+        toast.dismiss();
+
         toast.error("Transaction dropped");
 
         hasFinished = true;
@@ -70,6 +74,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         toast.dismiss();
 
         toast.success("Transaction submitted!");
+
         hasFinished = true;
       }
     };
@@ -86,7 +91,10 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const minValue = new BigNumber(10);
 
-      if (new BigNumber(amount).isLessThan(minValue) && (metadata?.totalStaked as BigNumber).toString() == "0") {
+    if (
+      new BigNumber(amount).isLessThan(minValue) &&
+      (metadata?.totalStaked as BigNumber).toString() == "0"
+    ) {
       stakeForm.setError("amount", {
         type: "manual",
         message: "Amount must be greater than or equal to 10",
@@ -295,7 +303,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                   >
                     <form
                       className="flex flex-col gap-4"
-                        onSubmit={handleStake}
+                      onSubmit={handleStake}
                     >
                       <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                         <label

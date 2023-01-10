@@ -125,6 +125,9 @@ const Staking = () => {
         ...unclaimed,
         total: 0,
       }));
+
+      // dismiss toast of claim all
+      toast.dismiss();
     }
   );
 
@@ -231,12 +234,9 @@ const Staking = () => {
           };
 
           if (info.stakes.length > 0) {
-            console.log("info: ", info);
-
             const unclaimedEarliest = info.stakes[0].era;
 
             if (parseInt(unclaimedEarliest) < currentStakingEra) {
-              console.log("unclaimedEras: ", unclaimedEras);
               const unclaimed = unclaimedEras;
 
               unclaimed.cores.filter((value) => {
@@ -295,19 +295,21 @@ const Staking = () => {
       }
 
       if (status.isInvalid) {
+        toast.dismiss();
+
         toast.error("Transaction is invalid");
 
         hasFinished = true;
       } else if (status.isReady) {
         toast.loading("Submitting transaction...");
       } else if (status.isDropped) {
+        toast.dismiss();
+
         toast.error("Transaction dropped");
 
         hasFinished = true;
       } else if (status.isInBlock || status.isFinalized) {
-        toast.dismiss();
-
-        toast.success("Transaction submitted!");
+        // do nothing, because if the transaction is finalized, the squid will be updated and dismiss the toast
 
         hasFinished = true;
       }
