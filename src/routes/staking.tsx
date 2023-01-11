@@ -14,6 +14,7 @@ import { useQuery, useSubscription } from "urql";
 import useRPC, { host } from "../stores/rpc";
 import { ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import PieChart from "../components/PieChart";
 
 const { REMOTE, BRAINSTORM } = host;
 
@@ -610,6 +611,11 @@ const Staking = () => {
     setupSubscriptions({ selectedAccount });
   }, [api, stakingCores]);
 
+  const CURRENT_BLOCK_FILLED_PERCENTAGE =
+    ((currentBlock - (nextEraBlock - 7200)) /
+      (nextEraBlock - (nextEraBlock - 7200))) *
+    100;
+
   return (
     <>
       {isLoading ? (
@@ -686,38 +692,34 @@ const Staking = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 p-6">
-                  <div>
-                    <span className="text-sm">Current Era</span>
-                  </div>
-                  <div>
-                    <span className="text-2xl font-bold">
-                      {currentInflationEra} /{" "}
-                      {chainProperties?.inflationErasPerYear || "0"}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="w-100 h-4 rounded-full bg-neutral-800">
-                      <div
-                        className="flex h-4 animate-pulse items-center justify-center rounded-full bg-green-600"
-                        style={{
-                          width: `${
-                            ((currentBlock - (nextEraBlock - 7200)) /
-                              (nextEraBlock - (nextEraBlock - 7200))) *
-                            100
-                          }%`,
-                        }}
-                      >
-                        <span className="text-xs">
-                          {Math.trunc(
-                            ((currentBlock - (nextEraBlock - 7200)) /
-                              (nextEraBlock - (nextEraBlock - 7200))) *
-                              100
-                          )}
-                          %
-                        </span>
-                      </div>
+                <div className="flex items-center">
+                  <div className="flex flex-col gap-2 p-6 pr-2">
+                    <div>
+                      <span className="text-sm">Current Era</span>
                     </div>
+                    <div>
+                      <span className="text-2xl font-bold">
+                        {currentInflationEra} /{" "}
+                        {chainProperties?.inflationErasPerYear || "0"}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <PieChart
+                      data={[
+                        {
+                          amount: CURRENT_BLOCK_FILLED_PERCENTAGE,
+                          color: "#fcd34d",
+                        },
+                        {
+                          amount: 100 - CURRENT_BLOCK_FILLED_PERCENTAGE,
+                          color: "#262626",
+                        },
+                      ]}
+                      text={`${parseInt(
+                        CURRENT_BLOCK_FILLED_PERCENTAGE.toString()
+                      )}%`}
+                    />
                   </div>
                 </div>
               </div>
