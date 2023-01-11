@@ -102,6 +102,15 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const minValue = new BigNumber(10);
 
+    if (parsedAmount <= 0) {
+      stakeForm.setError("amount", {
+        type: "manual",
+        message: "Amount must be greater than 0",
+      });
+
+      return;
+    }
+
     if (
       new BigNumber(parsedAmount).isLessThan(minValue) &&
       (metadata?.totalStaked as BigNumber).toString() == "0"
@@ -149,11 +158,22 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
 
+    const parsedAmount = parseFloat(amount);
+
     const maxValue = new BigNumber(metadata.totalStaked as string)
       .dividedBy(new BigNumber(10).pow(12))
       .toString();
 
-    if (new BigNumber(amount).isGreaterThan(maxValue)) {
+    if (parsedAmount <= 0) {
+      unstakeForm.setError("amount", {
+        type: "manual",
+        message: "Amount must be greater than 0",
+      });
+
+      return;
+    }
+
+    if (new BigNumber(parsedAmount).isGreaterThan(maxValue)) {
       unstakeForm.setError("amount", {
         type: "manual",
         message: "Amount must be less than or equal to total staked",
@@ -162,7 +182,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       return;
     }
 
-    const parsedUnstakeAmount = new BigNumber(amount).multipliedBy(
+    const parsedUnstakeAmount = new BigNumber(parsedAmount).multipliedBy(
       new BigNumber(10).pow(12)
     );
 
