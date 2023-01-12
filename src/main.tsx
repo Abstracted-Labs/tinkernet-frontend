@@ -54,7 +54,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 
                 <Route path="xtransfer" element={<XTransfer />} />
 
-                <Route path="staking" element={<Staking />} />
+                <Route path="staking" element={<NotFound />} />
 
                 <Route path="404" element={<NotFound />} />
 
