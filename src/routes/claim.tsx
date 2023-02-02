@@ -247,7 +247,8 @@ const Home = () => {
                   type="button"
                   className="mt-8 inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                   onClick={() => handleClaim()}
-                  disabled={vestingData.vestedClaimable === "0"}
+                  // disabled={vestingData.vestedClaimable === "0"}
+                  disabled
                 >
                   Claim Now
                 </button>

@@ -22,7 +22,7 @@ const mode = {
 } as const;
 
 const schema = z.object({
-  amount: z.string().refine((val) => !Number.isNaN(parseFloat(val)), {
+  amount: z.string().refine((val) => !Number.isNaN(parseInt(val)), {
     message: "Amount must be a number",
   }),
 });
