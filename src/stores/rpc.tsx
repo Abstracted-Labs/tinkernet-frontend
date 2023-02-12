@@ -21,15 +21,17 @@ const useRPC = create<RPCState>()((set, get) => ({
   host: host.REMOTE,
   setHost: (host: Host) => set(() => ({ host })),
   error: null,
-  createApi: async () => {
+  createApi: async (options) => {
     const { host } = get();
     const wsProvider = new WsProvider(host);
 
     try {
-      const api = await ApiPromise.create({
-        provider: wsProvider,
-        // throwOnConnect: true,
-      });
+      const api = await ApiPromise.create(
+        options || {
+          provider: wsProvider,
+          throwOnConnect: true,
+        }
+      );
 
       set(() => ({ error: null }));
 

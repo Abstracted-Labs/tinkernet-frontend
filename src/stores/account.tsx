@@ -14,9 +14,8 @@ const useAccount = create<AccountState>()(
     (set) => ({
       accounts: [],
       selectedAccount: null,
-      setAccounts: (accounts: InjectedAccountWithMeta[]) =>
-        set(() => ({ accounts })),
-      setSelectedAccount: (account: InjectedAccountWithMeta | null) =>
+      setAccounts: (accounts) => set(() => ({ accounts })),
+      setSelectedAccount: (account) =>
         set(() => ({ selectedAccount: account })),
     }),
     {
