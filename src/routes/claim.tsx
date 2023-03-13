@@ -10,7 +10,7 @@ import background from "../assets/background.svg";
 import { toast } from "react-hot-toast";
 import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
-import shallow from "zustand/shallow";
+import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 type SystemAccount = Struct & {

@@ -5,18 +5,16 @@ import { encodeAddress } from "@polkadot/util-crypto";
 import { Codec } from "@polkadot/types-codec/types/codec";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
+import pattern from "../assets/pattern.svg";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
-import useRPC, { host } from "../stores/rpc";
 import { ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import PieChart from "../components/PieChart";
-
-const { REMOTE, BRAINSTORM } = host;
 
 const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
@@ -50,7 +48,6 @@ const Staking = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const api = useApi();
-  const { host, setHost } = useRPC();
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
   const [currentInflationEra, setCurrentInflationEra] = useState<number>(0);
@@ -595,19 +592,11 @@ const Staking = () => {
   }, [selectedAccount, rewardsClaimedQuery.fetching, api]);
 
   useEffect(() => {
-    setHost(BRAINSTORM);
-
-    return () => {
-      setHost(REMOTE);
-    };
-  }, [host]);
-
-  useEffect(() => {
     if (!selectedAccount) return;
     if (!api.query.ocifStaking) return;
     if (stakingCores.length === 0) return;
 
-    // TODO unsusbscribe on unmount
+    // TODO unsubscribe on unmount
     setupSubscriptions({ selectedAccount });
   }, [api, stakingCores]);
 
@@ -618,13 +607,22 @@ const Staking = () => {
 
   return (
     <>
+      <div
+        className="pointer-events-none absolute inset-y-0 h-screen overflow-hidden"
+        aria-hidden="true"
+      >
+        {Array.from({ length: 10 }).map(() => {
+          return <img src={pattern} alt="pattern" />;
+        })}
+      </div>
+
       {isLoading ? (
         <div className="flex items-center justify-center">
           <LoadingSpinner />
         </div>
       ) : null}
 
-      {!isLoading && stakingCores.length > 0 ? (
+      {!isLoading /* && stakingCores.length > 0  */ ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
           {selectedAccount &&
           currentStakingEra &&
@@ -661,7 +659,7 @@ const Staking = () => {
                         withUnit: false,
                         forceUnit: "-",
                       }).slice(0, -2) || "0"}{" "}
-                      🧠⛈️
+                      TNKR
                     </span>
                   </div>
                 </div>
@@ -688,7 +686,7 @@ const Staking = () => {
                         withUnit: false,
                         forceUnit: "-",
                       }).slice(0, -2) || "0"}{" "}
-                      🧠⛈️
+                      TNKR
                     </span>
                   </div>
                 </div>
@@ -798,7 +796,7 @@ const Staking = () => {
                                     withUnit: false,
                                     forceUnit: "-",
                                   }
-                                ).slice(0, -2)} 🧠⛈️`
+                                ).slice(0, -2)} TNKR`
                               : null}
                           </span>
                         </div>
@@ -839,7 +837,7 @@ const Staking = () => {
                                 forceUnit: "-",
                               }).slice(0, -2)
                             : "0"}{" "}
-                          🧠⛈️ staked
+                          TNKR staked
                         </div>
                       </div>
                     </div>

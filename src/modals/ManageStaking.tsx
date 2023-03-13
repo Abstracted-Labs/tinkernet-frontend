@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
-import shallow from "zustand/shallow";
+import { shallow } from "zustand/shallow";
 
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
@@ -266,7 +266,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                         forceUnit: "-",
                       }
                     ).slice(0, -2) || "0"}{" "}
-                    🧠⛈️
+                    TNKR
                   </span>
                 </>
               </div>
@@ -282,7 +282,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                         withUnit: false,
                         forceUnit: "-",
                       }).slice(0, -2) || "0"}{" "}
-                      🧠⛈️
+                      TNKR
                     </span>
                   </>
                 </div>
@@ -336,7 +336,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       className="flex flex-col gap-4"
                       onSubmit={handleStake}
                     >
-                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <div className="relative rounded-md  border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                         <label
                           htmlFor="stakeAmount"
                           className="block text-xs font-medium text-white"
@@ -356,7 +356,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                             className="pointer-events-none block text-white sm:text-sm"
                             id="currency"
                           >
-                            🧠⛈️
+                            TNKR
                           </span>
 
                           <span
@@ -416,7 +416,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                             className="pointer-events-none block text-white sm:text-sm"
                             id="currency"
                           >
-                            🧠⛈️
+                            TNKR
                           </span>
 
                           <span

@@ -4,7 +4,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import shallow from "zustand/shallow";
+import { shallow } from "zustand/shallow";
 
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";

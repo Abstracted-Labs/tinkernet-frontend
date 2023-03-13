@@ -24,8 +24,15 @@ type ModalState = {
 const useModal = create<ModalState>()((set) => ({
   openModal: null,
   metadata: undefined,
-  setOpenModal: ({ name, metadata }) =>
-    set(() => ({ openModal: name, metadata })),
+  setOpenModal: (modal) => {
+    if (!modal) {
+      set({}, true);
+
+      return;
+    }
+
+    set(() => ({ openModal: modal.name, metadata: modal.metadata }));
+  },
 }));
 
 export type { ModalName, Metadata };

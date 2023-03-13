@@ -13,7 +13,7 @@ import { ArrowRightIcon, ClipboardIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
-import shallow from "zustand/shallow";
+import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 const RPC_PROVIDER_BSX = "wss://rpc.basilisk.cloud";
@@ -32,7 +32,7 @@ const currency = {
   TINKERNET: "Tinkernet",
 } as const;
 
-type Currency = typeof currency[keyof typeof currency];
+type Currency = (typeof currency)[keyof typeof currency];
 
 const XTransfer = () => {
   const { createApi } = useRPC();

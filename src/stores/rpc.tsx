@@ -1,14 +1,13 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { ApiOptions } from "@polkadot/api/types";
-import create from "zustand";
+import { create } from "zustand";
 
 const host = {
   REMOTE: "wss://invarch-tinkernet.api.onfinality.io/public-ws",
-  BRAINSTORM: "wss://brainstorm.invarch.network",
   LOCAL: "ws://127.0.0.1:9944",
 } as const;
 
-type Host = typeof host[keyof typeof host];
+type Host = (typeof host)[keyof typeof host];
 
 type RPCState = {
   host: Host;
@@ -29,7 +28,7 @@ const useRPC = create<RPCState>()((set, get) => ({
       const api = await ApiPromise.create(
         options || {
           provider: wsProvider,
-          throwOnConnect: true,
+          // throwOnConnect: true,
         }
       );
 

@@ -3,7 +3,7 @@ import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import shallow from "zustand/shallow";
+import { shallow } from "zustand/shallow";
 
 import logoFull from "../../assets/logo-full.svg";
 import logoIcon from "../../assets/logo-icon.svg";
@@ -12,12 +12,7 @@ import useApi from "../../hooks/useApi";
 import useConnect from "../../hooks/useConnect";
 import useAccount from "../../stores/account";
 
-import useRPC, { host } from "../../stores/rpc";
-
-const { BRAINSTORM } = host;
-
 const Header = () => {
-  const { host } = useRPC();
   const { handleConnect } = useConnect();
   const api = useApi();
   const { selectedAccount } = useAccount(
@@ -71,6 +66,9 @@ const Header = () => {
             <Link to="/xtransfer">
               <span className="text-white">X-Transfer</span>
             </Link>
+            <Link to="/staking">
+              <span className="text-white">Staking</span>
+            </Link>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -84,7 +82,7 @@ const Header = () => {
                       {balance
                         ? ` (${formatBalance(balance.toString(), {
                             decimals: 12,
-                            withUnit: host == BRAINSTORM ? "🧠⛈️" : "TNKR",
+                            withUnit: "TNKR",
                             forceUnit: "-",
                           })})`
                         : null}
