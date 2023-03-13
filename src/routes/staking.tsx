@@ -47,55 +47,61 @@ type StakingCore = {
 const FAKE_STAKING_CORES: StakingCore[] = [
   {
     key: 0,
-    account: "5FZ",
+    account: "5FZ0",
     metadata: {
       name: "Core 0",
-      description: "Core 0",
+      description:
+        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes",
       image: "https://picsum.photos/200",
     },
   },
   {
     key: 1,
-    account: "5FZ",
+    account: "5FZ1",
     metadata: {
       name: "Core 1",
-      description: "Core 1",
+      description:
+        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes",
       image: "https://picsum.photos/200",
     },
   },
   {
     key: 2,
-    account: "5FZ",
+    account: "5FZ2",
     metadata: {
       name: "Core 2",
-      description: "Core 2",
+      description:
+        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes",
       image: "https://picsum.photos/200",
     },
   },
   {
     key: 3,
-    account: "5FZ",
+    account: "5FZ3",
     metadata: {
       name: "Core 3",
-      description: "Core 3",
+      description:
+        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes",
       image: "https://picsum.photos/200",
     },
   },
   {
     key: 4,
-    account: "5FZ",
+    account: "5FZ4",
     metadata: {
       name: "Core 4",
-      description: "Core 4",
+      description:
+        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes",
       image: "https://picsum.photos/200",
     },
   },
   {
     key: 5,
-    account: "5FZ",
+    account: "5FZ5",
     metadata: {
       name: "Core 5",
-      description: "Core 5",
+      description:
+        "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes",
       image: "https://picsum.photos/200",
     },
   },
@@ -151,8 +157,8 @@ const FAKE_CORE_ERA_STAKE_INFO = [
     active: true,
   },
 ];
-const FAKE_CURRENT_STAKING_ERA = 0;
-const FAKE_CURRENT_INFLATION_ERA = 0;
+const FAKE_CURRENT_STAKING_ERA = 1;
+const FAKE_CURRENT_INFLATION_ERA = 1;
 const FAKE_TOTAL_STAKED = new BigNumber(1000);
 const FAKE_USER_STAKED_INFO = [
   {
@@ -167,6 +173,7 @@ const FAKE_CHAIN_PROPERTIES = {
   inflationErasPerYear: 100,
 };
 const FAKE_NEXT_ERA_BLOCK = 12;
+const FAKE_AVAILABLE_BALANCE = new BigNumber(1000);
 
 const Staking = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
@@ -511,136 +518,128 @@ const Staking = () => {
 
       setStakingCores(FAKE_STAKING_CORES);
 
-      const coreEraStakeInfo: {
-        coreId: number;
-        account: string;
-        total: string;
-        numberOfStakers: number;
-        rewardClaimed: boolean;
-        active: boolean;
-      }[] = [];
+      // const coreEraStakeInfo: {
+      //   coreId: number;
+      //   account: string;
+      //   total: string;
+      //   numberOfStakers: number;
+      //   rewardClaimed: boolean;
+      //   active: boolean;
+      // }[] = [];
 
-      for (const stakingCore of stakingCores) {
-        const coreEraStake = (
-          await api.query.ocifStaking.coreEraStake(
-            stakingCore.key,
-            currentStakingEra
-          )
-        ).toPrimitive() as {
-          total: string;
-          numberOfStakers: number;
-          rewardClaimed: boolean;
-          active: boolean;
-        };
+      // for (const stakingCore of stakingCores) {
+      //   const coreEraStake = (
+      //     await api.query.ocifStaking.coreEraStake(
+      //       stakingCore.key,
+      //       currentStakingEra
+      //     )
+      //   ).toPrimitive() as {
+      //     total: string;
+      //     numberOfStakers: number;
+      //     rewardClaimed: boolean;
+      //     active: boolean;
+      //   };
 
-        coreEraStakeInfo.push({
-          coreId: stakingCore.key,
-          account: stakingCore.account,
-          ...coreEraStake,
-        });
-      }
+      //   coreEraStakeInfo.push({
+      //     coreId: stakingCore.key,
+      //     account: stakingCore.account,
+      //     ...coreEraStake,
+      //   });
+      // }
 
       // setCoreEraStakeInfo(coreEraStakeInfo);
 
       setCoreEraStakeInfo(FAKE_CORE_ERA_STAKE_INFO);
 
       if (selectedAccount) {
-        const results = await Promise.all([
-          api.query.system.account(selectedAccount.address),
-          api.query.ocifStaking.ledger(selectedAccount.address),
-        ]);
+        // const results = await Promise.all([
+        //   api.query.system.account(selectedAccount.address),
+        //   api.query.ocifStaking.ledger(selectedAccount.address),
+        // ]);
 
-        const balance = results[0].toPrimitive() as {
-          nonce: string;
-          consumers: string;
-          providers: string;
-          sufficients: string;
-          data: {
-            free: string;
-            reserved: string;
-            miscFrozen: string;
-            feeFrozen: string;
-          };
-        };
+        // const balance = results[0].toPrimitive() as {
+        //   nonce: string;
+        //   consumers: string;
+        //   providers: string;
+        //   sufficients: string;
+        //   data: {
+        //     free: string;
+        //     reserved: string;
+        //     miscFrozen: string;
+        //     feeFrozen: string;
+        //   };
+        // };
 
-        const locked = results[1].toPrimitive() as {
-          locked: string;
-        };
+        // const locked = results[1].toPrimitive() as {
+        //   locked: string;
+        // };
 
-        setAvailableBalance(
-          new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
-        );
-
-        const userStakedInfo: {
-          coreId: number;
-          era: number;
-          staked: BigNumber;
-        }[] = [];
-
-        for (const stakingCore of stakingCores) {
-          const generalStakerInfo =
-            await api.query.ocifStaking.generalStakerInfo(
-              stakingCore.key,
-              selectedAccount.address
-            );
-
-          const info = generalStakerInfo.toPrimitive() as {
-            stakes: { era: string; staked: string }[];
-          };
-
-          if (info.stakes.length > 0) {
-            const unclaimedEarliest = info.stakes[0].era;
-
-            if (parseInt(unclaimedEarliest) < currentStakingEra) {
-              const unclaimed = unclaimedEras;
-
-              unclaimed.cores.filter((value) => {
-                return value.coreId != stakingCore.key;
-              });
-
-              unclaimed.cores.push({
-                coreId: stakingCore.key,
-                earliestEra: parseInt(unclaimedEarliest),
-              });
-
-              if (
-                currentStakingEra - parseInt(unclaimedEarliest) >
-                unclaimed.total
-              ) {
-                unclaimed.total =
-                  currentStakingEra - parseInt(unclaimedEarliest);
-              }
-
-              setUnclaimedEras(unclaimed);
-            }
-
-            const latestInfo = info.stakes.at(-1);
-
-            if (!latestInfo) {
-              continue;
-            }
-
-            userStakedInfo.push({
-              coreId: stakingCore.key,
-              era: parseInt(latestInfo.era),
-              staked: new BigNumber(latestInfo.staked),
-            });
-          }
-        }
-
-        // setUserStakedInfo(userStakedInfo);
-
-        // const totalStaked = userStakedInfo.reduce(
-        //   (acc, cur) => acc.plus(cur.staked),
-        //   new BigNumber(0)
+        // setAvailableBalance(
+        //   new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
         // );
 
-        // setTotalStaked(totalStaked);
+        setAvailableBalance(FAKE_AVAILABLE_BALANCE);
 
-        setUserStakedInfo(FAKE_USER_STAKED_INFO);
+        // const userStakedInfo: {
+        //   coreId: number;
+        //   era: number;
+        //   staked: BigNumber;
+        // }[] = [];
 
-        setTotalStaked(FAKE_TOTAL_STAKED);
+        // for (const stakingCore of stakingCores) {
+        // const generalStakerInfo =
+        //   await api.query.ocifStaking.generalStakerInfo(
+        //     stakingCore.key,
+        //     selectedAccount.address
+        //   );
+        // const info = generalStakerInfo.toPrimitive() as {
+        //   stakes: { era: string; staked: string }[];
+        // };
+        // if (info.stakes.length > 0) {
+        //   const unclaimedEarliest = info.stakes[0].era;
+        //   if (parseInt(unclaimedEarliest) < currentStakingEra) {
+        //     const unclaimed = unclaimedEras;
+        //     unclaimed.cores.filter((value) => {
+        //       return value.coreId != stakingCore.key;
+        //     });
+        //     unclaimed.cores.push({
+        //       coreId: stakingCore.key,
+        //       earliestEra: parseInt(unclaimedEarliest),
+        //     });
+        //     if (
+        //       currentStakingEra - parseInt(unclaimedEarliest) >
+        //       unclaimed.total
+        //     ) {
+        //       unclaimed.total =
+        //         currentStakingEra - parseInt(unclaimedEarliest);
+        //     }
+        //     setUnclaimedEras(unclaimed);
+        //   }
+        //   const latestInfo = info.stakes.at(-1);
+        //   if (!latestInfo) {
+        //     continue;
+        //   }
+        //   userStakedInfo.push({
+        //     coreId: stakingCore.key,
+        //     era: parseInt(latestInfo.era),
+        //     staked: new BigNumber(latestInfo.staked),
+        //   });
+        // }
       }
+
+      // setUserStakedInfo(userStakedInfo);
+
+      // const totalStaked = userStakedInfo.reduce(
+      //   (acc, cur) => acc.plus(cur.staked),
+      //   new BigNumber(0)
+      // );
+
+      // setTotalStaked(totalStaked);
+
+      setUserStakedInfo(FAKE_USER_STAKED_INFO);
+
+      setTotalStaked(FAKE_TOTAL_STAKED);
+      // }
 
       toast.dismiss();
 
@@ -744,7 +743,7 @@ const Staking = () => {
   return (
     <>
       <div
-        className="pointer-events-none absolute inset-y-0 h-screen overflow-hidden"
+        className="pointer-events-none absolute inset-y-0 z-0 h-screen overflow-hidden"
         aria-hidden="true"
       >
         {Array.from({ length: 10 }).map(() => {
@@ -757,6 +756,13 @@ const Staking = () => {
           <LoadingSpinner />
         </div>
       ) : null}
+
+      {console.log({
+        selectedAccount,
+        currentStakingEra,
+        totalStaked,
+        unclaimedEras,
+      })}
 
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
