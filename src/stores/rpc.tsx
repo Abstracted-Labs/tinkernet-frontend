@@ -17,7 +17,8 @@ type RPCState = {
 };
 
 const useRPC = create<RPCState>()((set, get) => ({
-  host: host.REMOTE,
+  // host: host.REMOTE,
+  host: host.LOCAL,
   setHost: (host: Host) => set(() => ({ host })),
   error: null,
   createApi: async (options) => {

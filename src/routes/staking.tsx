@@ -704,6 +704,12 @@ const Staking = () => {
       );
   };
 
+  const handleRegisterProject = async () => {
+    setOpenModal({
+      name: modalName.REGISTER_PROJECT,
+    });
+  };
+
   useEffect(() => {
     // if (!api.query.ocifStaking) return;
 
@@ -996,10 +1002,10 @@ const Staking = () => {
               <div>
                 <button
                   type="button"
-                  disabled
+                  onClick={handleRegisterProject}
                   className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-40"
                 >
-                  Register Project (Coming Soon)
+                  Register Project
                 </button>
               </div>
             </div>

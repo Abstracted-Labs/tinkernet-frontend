@@ -1,11 +1,12 @@
-import create from "zustand";
+import { create } from "zustand";
 
 const modalName = {
   SELECT_ACCOUNT: "SELECT_ACCOUNT",
   MANAGE_STAKING: "MANAGE_STAKING",
+  REGISTER_PROJECT: "REGISTER_PROJECT",
 } as const;
 
-type ModalName = typeof modalName[keyof typeof modalName];
+type ModalName = (typeof modalName)[keyof typeof modalName];
 
 type Metadata = Record<string, unknown>;
 

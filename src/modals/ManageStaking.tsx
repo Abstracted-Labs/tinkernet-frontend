@@ -27,8 +27,6 @@ const schema = z.object({
   }),
 });
 
-const UNSTAKE_ENABLED = false;
-
 const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const { setOpenModal, metadata } = useModal(
     (state) => ({
@@ -40,15 +38,17 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const stakeForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
+    mode: "onBlur",
   });
 
   const unstakeForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
+    mode: "onBlur",
   });
 
   const api = useApi();
 
-  const getSignAndSendCallback = () => {
+  const getSignAndSendCallback = (id: string) => {
     let hasFinished = false;
 
     return ({ status }: ISubmittableResult) => {
@@ -65,13 +65,13 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       } else if (status.isReady) {
         toast.loading("Submitting transaction...");
       } else if (status.isDropped) {
-        toast.dismiss();
+        toast.dismiss(id);
 
         toast.error("Transaction dropped");
 
         hasFinished = true;
       } else if (status.isInBlock || status.isFinalized) {
-        toast.dismiss();
+        toast.dismiss(id);
 
         toast.success("Transaction submitted!");
 
@@ -136,7 +136,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       new BigNumber(10).pow(12)
     );
 
-    toast.loading("Staking...");
+    const id = toast.loading("Staking...");
 
     await web3Enable("Tinkernet");
 
@@ -147,7 +147,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback()
+        getSignAndSendCallback(id)
       );
 
     setOpenModal({ name: null });
@@ -186,7 +186,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       new BigNumber(10).pow(12)
     );
 
-    toast.loading("Unstaking...");
+    const id = toast.loading("Unstaking...");
 
     await web3Enable("Tinkernet");
 
@@ -197,7 +197,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback()
+        getSignAndSendCallback(id)
       );
 
     setOpenModal({ name: null });
@@ -251,7 +251,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
           <h2 className="text-xl font-bold text-white">Manage Staking</h2>
 
           <div className="flex flex-col justify-between gap-4">
-            <div className="mt-2 flex flex-col justify-between gap-4 sm:flex-auto">
+            <div className="mt-4 flex flex-col justify-between gap-4 sm:flex-auto">
               <div className="text-sm text-white">
                 <>
                   Available:{" "}
@@ -445,9 +445,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
                       <button
                         type="submit"
-                        disabled={
-                          !unstakeForm.formState.isValid || !UNSTAKE_ENABLED
-                        }
+                        disabled={!unstakeForm.formState.isValid}
                         className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
                       >
                         Unstake

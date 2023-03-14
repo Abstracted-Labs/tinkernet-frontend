@@ -1,5 +1,5 @@
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import create from "zustand";
+import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 type AccountState = {
