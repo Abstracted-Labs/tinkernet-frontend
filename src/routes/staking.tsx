@@ -5,7 +5,6 @@ import { encodeAddress } from "@polkadot/util-crypto";
 import { Codec } from "@polkadot/types-codec/types/codec";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
-import pattern from "../assets/pattern.svg";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
@@ -592,15 +591,6 @@ const Staking = () => {
 
   return (
     <>
-      <div
-        className="pointer-events-none absolute inset-y-0 z-0 h-screen overflow-hidden"
-        aria-hidden="true"
-      >
-        {Array.from({ length: 10 }).map((_, i) => {
-          return <img src={pattern} key={`${pattern}-${i}`} alt="pattern" />;
-        })}
-      </div>
-
       {isLoading ? (
         <div className="flex items-center justify-center">
           <LoadingSpinner />
@@ -624,8 +614,7 @@ const Staking = () => {
                     type="button"
                     className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
                     onClick={handleClaimAll}
-                    // disabled={unclaimedEras.total === 0}
-                    disabled
+                    disabled={unclaimedEras.total === 0}
                   >
                     Claim All
                   </button>

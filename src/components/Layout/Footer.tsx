@@ -39,7 +39,7 @@ const navigation = [
 
 const Footer = () => {
   return (
-    <footer className="bg-neutral-900">
+    <footer>
       <div className="mx-auto max-w-7xl py-12 px-4 md:flex md:items-center md:justify-between lg:px-8">
         <div className="flex justify-center space-x-6 md:order-2">
           {navigation.map((item) => (
@@ -57,8 +57,8 @@ const Footer = () => {
         </div>
         <div className="mt-8 md:order-1 md:mt-0">
           <p className="text-center text-base text-neutral-400">
-    &copy; {new Date().getFullYear()} The InvArch Association. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} The InvArch Association. All
+            rights reserved.
           </p>
         </div>
       </div>
