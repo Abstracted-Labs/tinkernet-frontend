@@ -2,7 +2,6 @@ import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { formatBalance } from "@polkadot/util";
 import { encodeAddress } from "@polkadot/util-crypto";
-import { Codec } from "@polkadot/types-codec/types/codec";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -143,7 +142,7 @@ const Staking = () => {
     // });
 
     // Staking current era subscription
-    api.query.ocifStaking.currentEra((era: Codec) => {
+    api.query.ocifStaking.currentEra((era: any) => {
       setCurrentStakingEra(era.toPrimitive() as number);
     });
 
@@ -196,7 +195,7 @@ const Staking = () => {
       api.query.ocifStaking.coreEraStake(
         stakingCore.key,
         currentStakingEra,
-        (c: Codec) => {
+        (c: any) => {
           const coreEraStake = c.toPrimitive() as {
             total: string;
             numberOfStakers: number;
@@ -219,7 +218,7 @@ const Staking = () => {
       api.query.ocifStaking.generalStakerInfo(
         stakingCore.key,
         selectedAccount.address,
-        (generalStakerInfo: Codec) => {
+        (generalStakerInfo: any) => {
           const info = generalStakerInfo.toPrimitive() as {
             stakes: { era: string; staked: string }[];
           };
