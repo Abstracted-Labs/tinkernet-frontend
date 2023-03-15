@@ -763,13 +763,6 @@ const Staking = () => {
         </div>
       ) : null}
 
-      {console.log({
-        selectedAccount,
-        currentStakingEra,
-        totalStaked,
-        unclaimedEras,
-      })}
-
       {!isLoading && stakingCores.length > 0 ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
           {selectedAccount &&

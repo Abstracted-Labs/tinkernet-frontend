@@ -48,7 +48,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
   const api = useApi();
 
-  const getSignAndSendCallback = (id: string) => {
+  const getSignAndSendCallback = () => {
     let hasFinished = false;
 
     return ({ status }: ISubmittableResult) => {
@@ -63,15 +63,17 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
         hasFinished = true;
       } else if (status.isReady) {
+        toast.dismiss();
+
         toast.loading("Submitting transaction...");
       } else if (status.isDropped) {
-        toast.dismiss(id);
+        toast.dismiss();
 
         toast.error("Transaction dropped");
 
         hasFinished = true;
       } else if (status.isInBlock || status.isFinalized) {
-        toast.dismiss(id);
+        toast.dismiss();
 
         toast.success("Transaction submitted!");
 
@@ -136,7 +138,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       new BigNumber(10).pow(12)
     );
 
-    const id = toast.loading("Staking...");
+    toast.loading("Staking...");
 
     await web3Enable("Tinkernet");
 
@@ -147,7 +149,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback(id)
+        getSignAndSendCallback()
       );
 
     setOpenModal({ name: null });
@@ -186,7 +188,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       new BigNumber(10).pow(12)
     );
 
-    const id = toast.loading("Unstaking...");
+    toast.loading("Unstaking...");
 
     await web3Enable("Tinkernet");
 
@@ -197,7 +199,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback(id)
+        getSignAndSendCallback()
       );
 
     setOpenModal({ name: null });

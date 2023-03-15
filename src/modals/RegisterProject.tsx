@@ -15,6 +15,7 @@ import useModal from "../stores/modals";
 
 const schema = z
   .object({
+    core: z.string(),
     name: z.string().max(20),
     description: z.string().max(300),
     image: z.string().url().max(100),
@@ -36,10 +37,12 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
 
   const api = useApi();
 
-  const getSignAndSendCallback = (id: string) => {
+  const getSignAndSendCallback = () => {
     let hasFinished = false;
 
-    return ({ status }: ISubmittableResult) => {
+    return ({ status, ...result }: ISubmittableResult) => {
+      console.log({ status, ...result });
+
       if (hasFinished) {
         return;
       }
@@ -51,15 +54,17 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
 
         hasFinished = true;
       } else if (status.isReady) {
+        toast.dismiss();
+
         toast.loading("Submitting transaction...");
       } else if (status.isDropped) {
-        toast.dismiss(id);
+        toast.dismiss();
 
         toast.error("Transaction dropped");
 
         hasFinished = true;
       } else if (status.isInBlock || status.isFinalized) {
-        toast.dismiss(id);
+        toast.dismiss();
 
         toast.success("Transaction submitted!");
 
@@ -69,10 +74,16 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
   };
 
   const handleRegister = registerProjectForm.handleSubmit(
-    async ({ name, description, image }) => {
+    async ({ core, name, description, image }) => {
       if (!selectedAccount) return;
 
       if (!api) return;
+
+      if (!core) {
+        toast.error("Core ID is required");
+
+        return;
+      }
 
       if (!name) {
         toast.error("Name is required");
@@ -92,24 +103,26 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
         return;
       }
 
-      const id = toast.loading("Registering...");
+      toast.loading("Registering...");
 
       await web3Enable("Tinkernet");
 
       const injector = await web3FromAddress(selectedAccount.address);
 
-      const CORE_ID = 0;
-
-      await api.tx.ocifStaking
-        .registerCore(CORE_ID, {
+      const calls = [
+        api.tx.ocifStaking.registerCore(core, {
           name,
           description,
           image,
-        })
+        }),
+      ];
+
+      await api.tx.inv4
+        .operateMultisig(false, null, "", api.tx.utility.batchAll(calls))
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallback(id)
+          getSignAndSendCallback()
         );
 
       setOpenModal({ name: null });
@@ -137,6 +150,27 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
               <div className="flex flex-col gap-4">
                 <form className="flex flex-col gap-4" onSubmit={handleRegister}>
                   <>
+                    <div className="relative rounded-md  border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <label
+                        htmlFor="core"
+                        className="block text-xs font-medium text-white"
+                      >
+                        Core ID
+                      </label>
+                      <input
+                        type="text"
+                        {...registerProjectForm.register("core", {
+                          required: true,
+                        })}
+                        className="block w-full border-0 bg-transparent p-0 text-white focus:ring-transparent sm:text-sm"
+                      />
+                      {registerProjectForm.formState.errors.core ? (
+                        <div className="text-red-400">
+                          {registerProjectForm.formState.errors.core.message}
+                        </div>
+                      ) : null}
+                    </div>
+
                     <div className="relative rounded-md  border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                       <label
                         htmlFor="name"
