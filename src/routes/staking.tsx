@@ -13,7 +13,7 @@ import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
 import { ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
-import PieChart from "../components/PieChart";
+// import PieChart from "../components/PieChart";
 
 const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
@@ -49,7 +49,6 @@ const Staking = () => {
   const api = useApi();
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
-  const [currentInflationEra, setCurrentInflationEra] = useState<number>(0);
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
     {
       coreId: number;
@@ -94,8 +93,8 @@ const Staking = () => {
     inflationErasPerYear: number;
   }>();
 
-  const [currentBlock, setCurrentBlock] = useState<number>(0);
-  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
+  // const [currentBlock, setCurrentBlock] = useState<number>(0);
+  // const [nextEraBlock, setNextEraBlock] = useState<number>(0);
 
   useSubscription(
     {
@@ -133,20 +132,15 @@ const Staking = () => {
   }: {
     selectedAccount: InjectedAccountWithMeta;
   }) => {
-    // Current block subscription
-    api.rpc.chain.subscribeNewHeads((header) => {
-      setCurrentBlock(header.number.toNumber());
-    });
+    // // Current block subscription
+    // api.rpc.chain.subscribeNewHeads((header) => {
+    //   setCurrentBlock(header.number.toNumber());
+    // });
 
-    // Next era starting block subscription
-    api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
-      setNextEraBlock(blockNumber.toPrimitive() as number);
-    });
-
-    // Inflation current era subscription
-    api.query.checkedInflation.currentEra((era: Codec) => {
-      setCurrentInflationEra(era.toPrimitive() as number);
-    });
+    // // Next era starting block subscription
+    // api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
+    //   setNextEraBlock(blockNumber.toPrimitive() as number);
+    // });
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
@@ -326,19 +320,21 @@ const Staking = () => {
       const inflationErasPerYear =
         api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
 
-      setCurrentBlock(
-        (await api.rpc.chain.getBlock()).block.header.number.toNumber()
-      );
-
-      setCurrentInflationEra(
-        (await api.query.checkedInflation.currentEra()).toPrimitive() as number
-      );
+      // setCurrentBlock(
+      //   (await api.rpc.chain.getBlock()).block.header.number.toNumber()
+      // );
 
       const currentStakingEra = (
         await api.query.ocifStaking.currentEra()
       ).toPrimitive() as number;
 
       setCurrentStakingEra(currentStakingEra);
+
+      // const eraInfo = (
+      //   await api.query.ocifStaking.generalEraInfo(currentStakingEra)
+      // ).toPrimitive() as {
+      //   activeStake: number;
+      // };
 
       setChainProperties({
         maxStakersPerCore,
@@ -584,10 +580,10 @@ const Staking = () => {
     setupSubscriptions({ selectedAccount });
   }, [api, stakingCores]);
 
-  const CURRENT_BLOCK_FILLED_PERCENTAGE =
-    ((currentBlock - (nextEraBlock - 7200)) /
-      (nextEraBlock - (nextEraBlock - 7200))) *
-    100;
+  // const CURRENT_BLOCK_FILLED_PERCENTAGE =
+  //   ((currentBlock - (nextEraBlock - 7200)) /
+  //     (nextEraBlock - (nextEraBlock - 7200))) *
+  //   100;
 
   return (
     <>
@@ -597,7 +593,7 @@ const Staking = () => {
         </div>
       ) : null}
 
-      {!isLoading && stakingCores.length > 0 ? (
+      {!isLoading ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
           {selectedAccount &&
           currentStakingEra &&
@@ -621,7 +617,7 @@ const Staking = () => {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-4">
+              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-6">
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Your stake</span>
@@ -665,36 +661,55 @@ const Staking = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center">
-                  <div className="flex flex-col gap-2 p-6 pr-2">
-                    <div>
-                      <span className="text-sm">Current Era</span>
-                    </div>
-                    <div>
-                      <span className="text-2xl font-bold">
-                        {currentInflationEra} /{" "}
-                        {chainProperties?.inflationErasPerYear || "0"}
-                      </span>
-                    </div>
+                <div className="flex flex-col gap-2 p-6">
+                  <div>
+                    <span className="text-sm">Total Rewards Claimed</span>
                   </div>
                   <div>
-                    <PieChart
-                      data={[
-                        {
-                          amount: CURRENT_BLOCK_FILLED_PERCENTAGE,
-                          color: "#fcd34d",
-                        },
-                        {
-                          amount: 100 - CURRENT_BLOCK_FILLED_PERCENTAGE,
-                          color: "#262626",
-                        },
-                      ]}
-                      text={`${parseInt(
-                        CURRENT_BLOCK_FILLED_PERCENTAGE.toString()
-                      )}%`}
-                    />
+                    <span className="text-2xl font-bold">
+                      {formatBalance(totalClaimed.toString(), {
+                        decimals: 12,
+                        withUnit: false,
+                        forceUnit: "-",
+                      }).slice(0, -2) || "0"}{" "}
+                      TNKR
+                    </span>
                   </div>
                 </div>
+
+                <div className="flex flex-col gap-2 p-6">
+                  <div>
+                    <span className="text-sm">Total Rewards Claimed</span>
+                  </div>
+                  <div>
+                    <span className="text-2xl font-bold">
+                      {formatBalance(totalClaimed.toString(), {
+                        decimals: 12,
+                        withUnit: false,
+                        forceUnit: "-",
+                      }).slice(0, -2) || "0"}{" "}
+                      TNKR
+                    </span>
+                  </div>
+                </div>
+
+                {/* <div className="flex items-center">
+                  <PieChart
+                    data={[
+                      {
+                        amount: CURRENT_BLOCK_FILLED_PERCENTAGE,
+                        color: "#fcd34d",
+                      },
+                      {
+                        amount: 100 - CURRENT_BLOCK_FILLED_PERCENTAGE,
+                        color: "#262626",
+                      },
+                    ]}
+                    text={`${parseInt(
+                      CURRENT_BLOCK_FILLED_PERCENTAGE.toString()
+                    )}%`}
+                  />
+                </div> */}
               </div>
             </>
           ) : null}
