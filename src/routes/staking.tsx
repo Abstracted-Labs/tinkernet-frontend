@@ -10,7 +10,7 @@ import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
-import { ISubmittableResult } from "@polkadot/types/types";
+import { Codec, ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 // import PieChart from "../components/PieChart";
 
@@ -66,6 +66,7 @@ const Staking = () => {
       staked: BigNumber;
     }[]
   >([]);
+  const [totalSupply, setTotalSupply] = useState<number>();
   const [unclaimedEras, setUnclaimedEras] = useState<{
     cores: { coreId: number; earliestEra: number }[];
     total: number;
@@ -142,7 +143,7 @@ const Staking = () => {
     // });
 
     // Staking current era subscription
-    api.query.ocifStaking.currentEra((era: any) => {
+    api.query.ocifStaking.currentEra((era: Codec) => {
       setCurrentStakingEra(era.toPrimitive() as number);
     });
 
@@ -195,7 +196,7 @@ const Staking = () => {
       api.query.ocifStaking.coreEraStake(
         stakingCore.key,
         currentStakingEra,
-        (c: any) => {
+        (c: Codec) => {
           const coreEraStake = c.toPrimitive() as {
             total: string;
             numberOfStakers: number;
@@ -218,7 +219,7 @@ const Staking = () => {
       api.query.ocifStaking.generalStakerInfo(
         stakingCore.key,
         selectedAccount.address,
-        (generalStakerInfo: any) => {
+        (generalStakerInfo: Codec) => {
           const info = generalStakerInfo.toPrimitive() as {
             stakes: { era: string; staked: string }[];
           };
@@ -329,11 +330,19 @@ const Staking = () => {
 
       setCurrentStakingEra(currentStakingEra);
 
-      // const eraInfo = (
-      //   await api.query.ocifStaking.generalEraInfo(currentStakingEra)
-      // ).toPrimitive() as {
-      //   activeStake: number;
-      // };
+      const eraInfo = (
+        await api.query.ocifStaking.generalEraInfo(currentStakingEra)
+      ).toPrimitive() as {
+        rewards: {
+          stakers: number;
+          core: number;
+        };
+        staked: number;
+        activeStake: number;
+        locked: number;
+      };
+
+      setTotalSupply(eraInfo?.activeStake || 0);
 
       setChainProperties({
         maxStakersPerCore,
@@ -616,7 +625,7 @@ const Staking = () => {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-6">
+              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-5">
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Your stake</span>
@@ -662,53 +671,37 @@ const Staking = () => {
 
                 <div className="flex flex-col gap-2 p-6">
                   <div>
-                    <span className="text-sm">Total Rewards Claimed</span>
+                    <span className="text-sm">Current Staking APY</span>
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {formatBalance(totalClaimed.toString(), {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }).slice(0, -2) || "0"}{" "}
-                      TNKR
+                      {formatBalance(
+                        totalStaked.toNumber()
+                          ? new BigNumber(totalClaimed.times(0.04))
+                              .dividedBy(totalStaked)
+                              .toString()
+                          : 0,
+                        {
+                          decimals: 12,
+                          withUnit: false,
+                          forceUnit: "-",
+                        }
+                      ).slice(0, -2) || "0"}{" "}
+                      %
                     </span>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2 p-6">
                   <div>
-                    <span className="text-sm">Total Rewards Claimed</span>
+                    <span className="text-sm">Annual DAO rewards</span>
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {formatBalance(totalClaimed.toString(), {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }).slice(0, -2) || "0"}{" "}
-                      TNKR
+                      {totalSupply ? totalSupply * 0.06 : 0} TNKR
                     </span>
                   </div>
                 </div>
-
-                {/* <div className="flex items-center">
-                  <PieChart
-                    data={[
-                      {
-                        amount: CURRENT_BLOCK_FILLED_PERCENTAGE,
-                        color: "#fcd34d",
-                      },
-                      {
-                        amount: 100 - CURRENT_BLOCK_FILLED_PERCENTAGE,
-                        color: "#262626",
-                      },
-                    ]}
-                    text={`${parseInt(
-                      CURRENT_BLOCK_FILLED_PERCENTAGE.toString()
-                    )}%`}
-                  />
-                </div> */}
               </div>
             </>
           ) : null}
