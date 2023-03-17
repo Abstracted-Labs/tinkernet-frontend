@@ -40,9 +40,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
   const getSignAndSendCallback = () => {
     let hasFinished = false;
 
-    return ({ status, ...result }: ISubmittableResult) => {
-      console.log({ status, ...result });
-
+    return ({ status }: ISubmittableResult) => {
       if (hasFinished) {
         return;
       }
@@ -56,19 +54,21 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
       } else if (status.isReady) {
         toast.dismiss();
 
-        toast.loading("Submitting transaction...");
+        toast.loading("Submitting registration...");
       } else if (status.isDropped) {
         toast.dismiss();
 
-        toast.error("Transaction dropped");
+        toast.error("Registration dropped");
 
         hasFinished = true;
       } else if (status.isInBlock || status.isFinalized) {
         toast.dismiss();
 
-        toast.success("Transaction submitted!");
+        toast.success("Registration submitted!");
 
         hasFinished = true;
+
+        window.location.reload();
       }
     };
   };
