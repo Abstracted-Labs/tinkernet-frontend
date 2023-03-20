@@ -163,8 +163,9 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
             <button
               onClick={handleUnbond}
               className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+              disabled={!unbondingInfo.find(({ unlockIn }) => unlockIn <= 0)}
             >
-              Unbond All
+              Withdraw Unbonded
             </button>
           </div>
         </div>
