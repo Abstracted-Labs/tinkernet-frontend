@@ -47,6 +47,7 @@ const Staking = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const api = useApi();
+  const [hasUnbondedTokens, setHasUnbondedTokens] = useState(false);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
@@ -479,6 +480,22 @@ const Staking = () => {
         );
 
         setTotalStaked(totalStaked);
+
+        setHasUnbondedTokens(
+          (
+            (
+              await api.query.ocifStaking.ledger(selectedAccount.address)
+            ).toPrimitive() as {
+              locked: number;
+              unbondingInfo: {
+                unlockingChunks: {
+                  amount: number;
+                  unlockEra: number;
+                }[];
+              };
+            }
+          ).unbondingInfo.unlockingChunks.length > 0
+        );
       }
 
       toast.dismiss();
@@ -544,6 +561,12 @@ const Staking = () => {
       );
   };
 
+  const handleUnbondTokens = () => {
+    setOpenModal({
+      name: modalName.UNBOND_TOKENS,
+    });
+  };
+
   const handleRegisterProject = async () => {
     setOpenModal({
       name: modalName.REGISTER_PROJECT,
@@ -606,7 +629,16 @@ const Staking = () => {
                   <span>Dashboard</span>
                 </div>
 
-                <div>
+                <div className="flex gap-8">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                    onClick={handleUnbondTokens}
+                    disabled={!hasUnbondedTokens}
+                  >
+                    Unbond TNKR
+                  </button>
+
                   <button
                     type="button"
                     className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
