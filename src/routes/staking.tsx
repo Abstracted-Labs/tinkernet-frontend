@@ -12,6 +12,7 @@ import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
 import { Codec, ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import LineChart from "../components/LineChart";
 // import PieChart from "../components/PieChart";
 
 const TotalRewardsClaimedQuery = `
@@ -93,8 +94,8 @@ const Staking = () => {
     inflationErasPerYear: number;
   }>();
 
-  // const [currentBlock, setCurrentBlock] = useState<number>(0);
-  // const [nextEraBlock, setNextEraBlock] = useState<number>(0);
+  const [currentBlock, setCurrentBlock] = useState<number>(0);
+  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
 
   useSubscription(
     {
@@ -132,15 +133,15 @@ const Staking = () => {
   }: {
     selectedAccount: InjectedAccountWithMeta;
   }) => {
-    // // Current block subscription
-    // api.rpc.chain.subscribeNewHeads((header) => {
-    //   setCurrentBlock(header.number.toNumber());
-    // });
+    // Current block subscription
+    api.rpc.chain.subscribeNewHeads((header) => {
+      setCurrentBlock(header.number.toNumber());
+    });
 
-    // // Next era starting block subscription
-    // api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
-    //   setNextEraBlock(blockNumber.toPrimitive() as number);
-    // });
+    // Next era starting block subscription
+    api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
+      setNextEraBlock(blockNumber.toPrimitive() as number);
+    });
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
@@ -320,9 +321,9 @@ const Staking = () => {
       const inflationErasPerYear =
         api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
 
-      // setCurrentBlock(
-      //   (await api.rpc.chain.getBlock()).block.header.number.toNumber()
-      // );
+      setCurrentBlock(
+        (await api.rpc.chain.getBlock()).block.header.number.toNumber()
+      );
 
       const currentStakingEra = (
         await api.query.ocifStaking.currentEra()
@@ -330,23 +331,11 @@ const Staking = () => {
 
       setCurrentStakingEra(currentStakingEra);
 
-      const eraInfo = (
-        await api.query.ocifStaking.generalEraInfo(currentStakingEra)
-      ).toPrimitive() as {
-        rewards: {
-          stakers: number;
-          core: number;
-        };
-        staked: number;
-        activeStake: number;
-        locked: number;
-      };
+      const supply = (
+        await api.query.balances.totalIssuance()
+      ).toPrimitive() as string;
 
-        const supply = (
-            await api.query.balances.totalIssuance()
-        ).toPrimitive() as string;
-
-        setTotalSupply(new BigNumber(supply));
+      setTotalSupply(new BigNumber(supply));
 
       setChainProperties({
         maxStakersPerCore,
@@ -592,10 +581,10 @@ const Staking = () => {
     setupSubscriptions({ selectedAccount });
   }, [api, stakingCores]);
 
-  // const CURRENT_BLOCK_FILLED_PERCENTAGE =
-  //   ((currentBlock - (nextEraBlock - 7200)) /
-  //     (nextEraBlock - (nextEraBlock - 7200))) *
-  //   100;
+  const CURRENT_BLOCK_FILLED_PERCENTAGE =
+    ((currentBlock - (nextEraBlock - 7200)) /
+      (nextEraBlock - (nextEraBlock - 7200))) *
+    100;
 
   return (
     <>
@@ -628,6 +617,8 @@ const Staking = () => {
                   </button>
                 </div>
               </div>
+
+              <LineChart fill={CURRENT_BLOCK_FILLED_PERCENTAGE} />
 
               <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-5">
                 <div className="flex flex-col gap-2 p-6">
@@ -679,16 +670,14 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-		            	{
-                        	totalStaked.toNumber()
-                        	? totalSupply
-                        		.times(0.04)
-                        		.dividedBy(totalStaked)
-                        		.decimalPlaces(2)
-                        		.toString()
-                        	: 0
-                        }
-                        %                      
+                      {totalSupply
+                        ? totalSupply
+                            .times(0.04)
+                            .dividedBy(totalStaked)
+                            .decimalPlaces(2)
+                            .toString()
+                        : 0}
+                      %
                     </span>
                   </div>
                 </div>
@@ -699,8 +688,14 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                    {totalSupply.dividedBy(1000000000000).times(0.06).decimalPlaces(2).toString()}{" "}
-                     TNKR
+                      {totalSupply
+                        ? totalSupply
+                            .dividedBy(1000000000000)
+                            .times(0.06)
+                            .decimalPlaces(2)
+                            .toString()
+                        : 0}{" "}
+                      TNKR
                     </span>
                   </div>
                 </div>
