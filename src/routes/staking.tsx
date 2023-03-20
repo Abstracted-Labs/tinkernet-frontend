@@ -699,7 +699,8 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {totalSupply ? totalSupply * 0.06 : 0} TNKR
+                    {totalSupply.dividedBy(1000000000000).times(0.06).decimalPlaces(2).toString()}{" "}
+                     TNKR
                     </span>
                   </div>
                 </div>
