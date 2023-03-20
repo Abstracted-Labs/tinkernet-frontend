@@ -90,6 +90,12 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
         return;
       }
 
+      if (!Number.isInteger(Number(core))) {
+        toast.error("Core ID should be an integer");
+
+        return;
+      }
+
       if (!name) {
         toast.error("Name is required");
 
@@ -114,23 +120,23 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
 
       const injector = await web3FromAddress(selectedAccount.address);
 
-      const calls = [
-        api.tx.ocifStaking.registerCore({
-          name,
-          description,
-          image,
-        }),
-      ];
+      const calls = [api.tx.ocifStaking.registerCore(name, description, image)];
 
-      await api.tx.inv4
-        .operateMultisig(false, core, "", api.tx.utility.batchAll(calls))
-        .signAndSend(
-          selectedAccount.address,
-          { signer: injector.signer },
-          getSignAndSendCallback()
-        );
+      try {
+        await api.tx.inv4
+          .operateMultisig(core, "", api.tx.utility.batchAll(calls))
+          .signAndSend(
+            selectedAccount.address,
+            { signer: injector.signer },
+            getSignAndSendCallback()
+          );
 
-      setOpenModal({ name: null });
+        setOpenModal({ name: null });
+      } catch (e) {
+        toast.dismiss();
+
+        toast.error("Failed to register project");
+      }
     }
   );
 
