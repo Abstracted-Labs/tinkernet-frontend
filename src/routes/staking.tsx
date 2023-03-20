@@ -670,7 +670,7 @@ const Staking = () => {
                     onClick={handleUnbondTokens}
                     disabled={!hasUnbondedTokens}
                   >
-                    Unbond TNKR
+                    Unbonding TNKR
                   </button>
 
                   <button
@@ -679,7 +679,7 @@ const Staking = () => {
                     onClick={handleClaimAll}
                     disabled={unclaimedEras.total === 0}
                   >
-                    Claim All
+                    Claim Rewards
                   </button>
                 </div>
               </div>
