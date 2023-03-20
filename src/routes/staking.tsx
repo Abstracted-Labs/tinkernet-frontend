@@ -773,7 +773,7 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-md font-bold">
-                      {currentEra.inflationEra} |{" "}
+                      {currentEra.era} |{" "}
                       {CURRENT_BLOCK_FILLED_PERCENTAGE.toFixed(0)}% complete
                     </span>
                   </div>
