@@ -12,6 +12,7 @@ import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
 import { Codec, ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+// import PieChart from "../components/PieChart";
 
 const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
@@ -47,7 +48,6 @@ const Staking = () => {
   const api = useApi();
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
-  const [currentInflationEra, setCurrentInflationEra] = useState<number>(0);
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
     {
       coreId: number;
@@ -66,7 +66,7 @@ const Staking = () => {
       staked: BigNumber;
     }[]
   >([]);
-  const [totalSupply, setTotalSupply] = useState<number>();
+  const [totalSupply, setTotalSupply] = useState<BigNumber>();
   const [unclaimedEras, setUnclaimedEras] = useState<{
     cores: { coreId: number; earliestEra: number }[];
     total: number;
@@ -92,6 +92,9 @@ const Staking = () => {
     maxStakersPerCore: number;
     inflationErasPerYear: number;
   }>();
+
+  // const [currentBlock, setCurrentBlock] = useState<number>(0);
+  // const [nextEraBlock, setNextEraBlock] = useState<number>(0);
 
   useSubscription(
     {
@@ -129,10 +132,15 @@ const Staking = () => {
   }: {
     selectedAccount: InjectedAccountWithMeta;
   }) => {
-    // Inflation current era subscription
-    api.query.checkedInflation.currentEra((era: Codec) => {
-      setCurrentInflationEra(era.toPrimitive() as number);
-    });
+    // // Current block subscription
+    // api.rpc.chain.subscribeNewHeads((header) => {
+    //   setCurrentBlock(header.number.toNumber());
+    // });
+
+    // // Next era starting block subscription
+    // api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
+    //   setNextEraBlock(blockNumber.toPrimitive() as number);
+    // });
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
@@ -312,6 +320,10 @@ const Staking = () => {
       const inflationErasPerYear =
         api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
 
+      // setCurrentBlock(
+      //   (await api.rpc.chain.getBlock()).block.header.number.toNumber()
+      // );
+
       const currentStakingEra = (
         await api.query.ocifStaking.currentEra()
       ).toPrimitive() as number;
@@ -330,7 +342,11 @@ const Staking = () => {
         locked: number;
       };
 
-      setTotalSupply(eraInfo?.activeStake || 0);
+        const supply = (
+            await api.query.balances.totalIssuance()
+        ).toPrimitive() as string;
+
+        setTotalSupply(new BigNumber(supply));
 
       setChainProperties({
         maxStakersPerCore,
@@ -402,7 +418,6 @@ const Staking = () => {
           api.query.system.account(selectedAccount.address),
           api.query.ocifStaking.ledger(selectedAccount.address),
         ]);
-
         const balance = results[0].toPrimitive() as {
           nonce: string;
           consumers: string;
@@ -415,21 +430,17 @@ const Staking = () => {
             feeFrozen: string;
           };
         };
-
         const locked = results[1].toPrimitive() as {
           locked: string;
         };
-
         setAvailableBalance(
           new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
         );
-
         const userStakedInfo: {
           coreId: number;
           era: number;
           staked: BigNumber;
         }[] = [];
-
         for (const stakingCore of stakingCores) {
           const generalStakerInfo =
             await api.query.ocifStaking.generalStakerInfo(
@@ -443,16 +454,13 @@ const Staking = () => {
             const unclaimedEarliest = info.stakes[0].era;
             if (parseInt(unclaimedEarliest) < currentStakingEra) {
               const unclaimed = unclaimedEras;
-
               unclaimed.cores.filter((value) => {
                 return value.coreId != stakingCore.key;
               });
-
               unclaimed.cores.push({
                 coreId: stakingCore.key,
                 earliestEra: parseInt(unclaimedEarliest),
               });
-
               if (
                 currentStakingEra - parseInt(unclaimedEarliest) >
                 unclaimed.total
@@ -460,16 +468,12 @@ const Staking = () => {
                 unclaimed.total =
                   currentStakingEra - parseInt(unclaimedEarliest);
               }
-
               setUnclaimedEras(unclaimed);
             }
-
             const latestInfo = info.stakes.at(-1);
-
             if (!latestInfo) {
               continue;
             }
-
             userStakedInfo.push({
               coreId: stakingCore.key,
               era: parseInt(latestInfo.era),
@@ -558,7 +562,7 @@ const Staking = () => {
   };
 
   useEffect(() => {
-    if (!api.query.ocifStaking) return;
+    // if (!api.query.ocifStaking) return;
 
     loadStakingCores(selectedAccount);
   }, [selectedAccount, api]);
@@ -625,7 +629,7 @@ const Staking = () => {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-3 lg:grid-cols-6">
+              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-5">
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Your stake</span>
@@ -675,19 +679,16 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {formatBalance(
-                        totalStaked.toNumber()
-                          ? new BigNumber(totalClaimed.times(0.04))
-                              .dividedBy(totalStaked)
-                              .toString()
-                          : 0,
-                        {
-                          decimals: 12,
-                          withUnit: false,
-                          forceUnit: "-",
+		            	{
+                        	totalStaked.toNumber()
+                        	? totalSupply
+                        		.times(0.04)
+                        		.dividedBy(totalStaked)
+                        		.decimalPlaces(2)
+                        		.toString()
+                        	: 0
                         }
-                      ).slice(0, -2) || "0"}{" "}
-                      %
+                        %                      
                     </span>
                   </div>
                 </div>
@@ -699,18 +700,6 @@ const Staking = () => {
                   <div>
                     <span className="text-2xl font-bold">
                       {totalSupply ? totalSupply * 0.06 : 0} TNKR
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 p-6 pr-2">
-                  <div>
-                    <span className="text-sm">Current Era</span>
-                  </div>
-                  <div>
-                    <span className="text-2xl font-bold">
-                      {currentInflationEra} /{" "}
-                      {chainProperties?.inflationErasPerYear || "0"}
                     </span>
                   </div>
                 </div>
@@ -739,9 +728,6 @@ const Staking = () => {
                         src={core.metadata.image}
                         alt={core.metadata.name}
                         className="h-16 w-16 rounded-full"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://placehold.co/400";
-                        }}
                       />
                     </div>
                     <div className="flex flex-col gap-4">
@@ -806,7 +792,7 @@ const Staking = () => {
                               className="h-5 w-5 cursor-pointer text-white"
                               onClick={() => {
                                 toast.error(
-                                  "https://via.placeholder.com/600x400?text=No+Image"
+                                  "This core has reached the staker limit"
                                 );
                               }}
                             />
