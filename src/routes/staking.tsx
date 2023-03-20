@@ -704,7 +704,7 @@ const Staking = () => {
                     <span className="text-2xl font-bold">
                       {totalSupply
                         ? totalSupply
-                            .times(0.04)
+                            .times(4)
                             .dividedBy(totalStaked)
                             .decimalPlaces(2)
                             .toString()
