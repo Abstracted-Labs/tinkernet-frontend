@@ -71,15 +71,21 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
 
     const injector = await web3FromAddress(selectedAccount.address);
 
-    await api.tx.ocifStaking
-      .withdrawUnstaked()
-      .signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallback()
-      );
+    try {
+      await api.tx.ocifStaking
+        .withdrawUnstaked()
+        .signAndSend(
+          selectedAccount.address,
+          { signer: injector.signer },
+          getSignAndSendCallback()
+        );
 
-    setOpenModal({ name: null });
+      setOpenModal({ name: null });
+    } catch (e) {
+      toast.dismiss();
+
+      toast.error("Failed to unbond tokens");
+    }
   };
 
   const loadUnbondingInfo = async () => {

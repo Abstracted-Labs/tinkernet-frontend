@@ -94,9 +94,14 @@ const Staking = () => {
     maxStakersPerCore: number;
     inflationErasPerYear: number;
   }>();
-
+  const [currentEra, setCurrentEra] = useState<{
+    era: number;
+    inflationEra: number;
+    erasPerYear: number;
+  }>();
   const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [nextEraBlock, setNextEraBlock] = useState<number>(0);
+  const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
 
   useSubscription(
     {
@@ -316,6 +321,11 @@ const Staking = () => {
     try {
       toast.loading("Loading staking cores...");
 
+      const blocksPerEra =
+        api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
+
+      setBlocksPerEra(blocksPerEra);
+
       const maxStakersPerCore =
         api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
 
@@ -326,9 +336,32 @@ const Staking = () => {
         (await api.rpc.chain.getBlock()).block.header.number.toNumber()
       );
 
+      setNextEraBlock(
+        (
+          await api.query.ocifStaking.nextEraStartingBlock()
+        ).toPrimitive() as number
+      );
+
       const currentStakingEra = (
         await api.query.ocifStaking.currentEra()
       ).toPrimitive() as number;
+
+      const checkedInflation = (
+        await api.query.checkedInflation.currentEra()
+      ).toPrimitive() as number;
+
+      console.log({
+        inflationEra: inflationErasPerYear,
+        era: currentStakingEra,
+        erasPerYear: inflationErasPerYear,
+      });
+
+      setCurrentEra({
+        inflationEra: checkedInflation,
+        era: currentStakingEra,
+        erasPerYear:
+          api.consts.checkedInflation.erasPerYear.toPrimitive() as number,
+      });
 
       setCurrentStakingEra(currentStakingEra);
 
@@ -574,7 +607,7 @@ const Staking = () => {
   };
 
   useEffect(() => {
-    // if (!api.query.ocifStaking) return;
+    if (!api.query.ocifStaking) return;
 
     loadStakingCores(selectedAccount);
   }, [selectedAccount, api]);
@@ -605,8 +638,8 @@ const Staking = () => {
   }, [api, stakingCores]);
 
   const CURRENT_BLOCK_FILLED_PERCENTAGE =
-    ((currentBlock - (nextEraBlock - 7200)) /
-      (nextEraBlock - (nextEraBlock - 7200))) *
+    ((currentBlock - (nextEraBlock - blocksPerEra)) /
+      (nextEraBlock - (nextEraBlock - blocksPerEra))) *
     100;
 
   return (
@@ -622,6 +655,7 @@ const Staking = () => {
           {selectedAccount &&
           currentStakingEra &&
           totalStaked &&
+          currentEra &&
           unclaimedEras ? (
             <>
               <div className="flex items-center justify-between">
@@ -650,9 +684,7 @@ const Staking = () => {
                 </div>
               </div>
 
-              <LineChart fill={CURRENT_BLOCK_FILLED_PERCENTAGE} />
-
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-5">
+              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-3">
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Your stake</span>
@@ -702,7 +734,10 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {totalSupply
+                      {totalSupply &&
+                      totalSupply.toNumber() > 0 &&
+                      totalStaked &&
+                      totalStaked.toNumber() > 0
                         ? totalSupply
                             .times(4)
                             .dividedBy(totalStaked)
@@ -720,7 +755,7 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-2xl font-bold">
-                      {totalSupply
+                      {totalSupply && totalSupply.toNumber() > 0
                         ? totalSupply
                             .dividedBy(1000000000000)
                             .times(0.06)
@@ -729,6 +764,21 @@ const Staking = () => {
                         : 0}{" "}
                       TNKR
                     </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 p-6">
+                  <div>
+                    <span className="text-sm">Current Era</span>
+                  </div>
+                  <div>
+                    <span className="text-2xl font-bold">
+                      {currentEra.inflationEra} / {currentEra.erasPerYear}
+                    </span>
+                  </div>
+
+                  <div>
+                    <LineChart fill={CURRENT_BLOCK_FILLED_PERCENTAGE} />
                   </div>
                 </div>
               </div>
