@@ -12,7 +12,7 @@ import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
 import { Codec, ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
-import LineChart from "../components/LineChart";
+// import LineChart from "../components/LineChart";
 // import PieChart from "../components/PieChart";
 
 const TotalRewardsClaimedQuery = `
@@ -684,13 +684,13 @@ const Staking = () => {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-3">
+              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-6">
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Your stake</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
+                    <span className="text-md font-bold">
                       {formatBalance(totalStaked.toString(), {
                         decimals: 12,
                         withUnit: false,
@@ -706,7 +706,7 @@ const Staking = () => {
                     <span className="text-sm">Unclaimed Eras</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
+                    <span className="text-md font-bold">
                       {unclaimedEras.total} eras
                     </span>
                   </div>
@@ -717,7 +717,7 @@ const Staking = () => {
                     <span className="text-sm">Total Rewards Claimed</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
+                    <span className="text-md font-bold">
                       {formatBalance(totalClaimed.toString(), {
                         decimals: 12,
                         withUnit: false,
@@ -733,7 +733,7 @@ const Staking = () => {
                     <span className="text-sm">Current Staking APY</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
+                    <span className="text-md font-bold">
                       {totalSupply &&
                       totalSupply.toNumber() > 0 &&
                       totalStaked &&
@@ -754,7 +754,7 @@ const Staking = () => {
                     <span className="text-sm">Annual DAO rewards</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
+                    <span className="text-md font-bold">
                       {totalSupply && totalSupply.toNumber() > 0
                         ? totalSupply
                             .dividedBy(1000000000000)
@@ -772,14 +772,14 @@ const Staking = () => {
                     <span className="text-sm">Current Era</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
-                      {currentEra.inflationEra} / {currentEra.erasPerYear}
+                    <span className="text-md font-bold">
+                      {currentEra.inflationEra} |{" "}
+                      {CURRENT_BLOCK_FILLED_PERCENTAGE.toFixed(0)}% complete
                     </span>
                   </div>
-
-                  <div>
+                  {/* <div>
                     <LineChart fill={CURRENT_BLOCK_FILLED_PERCENTAGE} />
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </>
