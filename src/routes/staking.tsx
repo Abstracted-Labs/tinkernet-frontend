@@ -739,6 +739,9 @@ const Staking = () => {
                         src={core.metadata.image}
                         alt={core.metadata.name}
                         className="h-16 w-16 rounded-full"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://placehold.co/400";
+                        }}
                       />
                     </div>
                     <div className="flex flex-col gap-4">
@@ -803,7 +806,7 @@ const Staking = () => {
                               className="h-5 w-5 cursor-pointer text-white"
                               onClick={() => {
                                 toast.error(
-                                  "This core has reached the staker limit"
+                                  "https://via.placeholder.com/600x400?text=No+Image"
                                 );
                               }}
                             />
