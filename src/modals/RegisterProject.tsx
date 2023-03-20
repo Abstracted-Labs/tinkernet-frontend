@@ -147,6 +147,12 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
 
   useEffect(() => {
     registerProjectForm.reset();
+
+    setPreviewState({
+      name: "",
+      description: "",
+      image: "",
+    });
   }, [isOpen]);
 
   return (
