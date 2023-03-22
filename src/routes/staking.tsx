@@ -128,9 +128,6 @@ const Staking = () => {
         ...unclaimed,
         total: 0,
       }));
-
-      // dismiss toast of claim all
-      toast.dismiss();
     }
   );
 
@@ -307,9 +304,9 @@ const Staking = () => {
 
         hasFinished = true;
       } else if (status.isInBlock || status.isFinalized) {
-        // do nothing, because if the transaction is finalized, the squid will be updated and dismiss the toast
-
         hasFinished = true;
+
+        toast.dismiss();
       }
     };
   };
