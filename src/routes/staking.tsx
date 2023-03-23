@@ -609,11 +609,6 @@ const Staking = () => {
     setupSubscriptions({ selectedAccount });
   }, [api, stakingCores]);
 
-  const CURRENT_BLOCK_FILLED_PERCENTAGE =
-    ((currentBlock - (nextEraBlock - blocksPerEra)) /
-      (nextEraBlock - (nextEraBlock - blocksPerEra))) *
-    100;
-
   return (
     <>
       {isLoading ? (
@@ -745,7 +740,12 @@ const Staking = () => {
                   <div>
                     <span className="text-md font-bold">
                       {currentStakingEra} |{" "}
-                      {CURRENT_BLOCK_FILLED_PERCENTAGE.toFixed(0)}% complete
+                      {(
+                        ((currentBlock - (nextEraBlock - blocksPerEra)) /
+                          (nextEraBlock - (nextEraBlock - blocksPerEra))) *
+                        100
+                      ).toFixed(0)}
+                      % complete
                     </span>
                   </div>
                   {/* <div>
