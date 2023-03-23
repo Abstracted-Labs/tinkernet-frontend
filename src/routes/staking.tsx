@@ -335,6 +335,10 @@ const Staking = () => {
         ).toPrimitive() as number
       );
 
+      const currentStakingEra = (
+        await api.query.ocifStaking.currentEra()
+      ).toPrimitive() as number;
+
       setCurrentStakingEra(currentStakingEra);
 
       const supply = (
