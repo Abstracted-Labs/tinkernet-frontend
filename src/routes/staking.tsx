@@ -561,13 +561,19 @@ const Staking = () => {
       }
     }
 
-    api.tx.utility
-      .batch(batch)
-      .signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallback()
-      );
+    try {
+      await api.tx.utility
+        .batch(batch)
+        .signAndSend(
+          selectedAccount.address,
+          { signer: injector.signer },
+          getSignAndSendCallback()
+        );
+    } catch (e) {
+      toast.dismiss();
+
+      toast.error("Failed to claim rewards!");
+    }
   };
 
   const handleUnbondTokens = () => {
