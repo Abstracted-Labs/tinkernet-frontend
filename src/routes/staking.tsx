@@ -149,6 +149,27 @@ const Staking = () => {
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
       setCurrentStakingEra(era.toPrimitive() as number);
+
+      setCurrentEra((currentEra) =>
+        currentEra
+          ? {
+              ...currentEra,
+              era: era.toPrimitive() as number,
+            }
+          : undefined
+      );
+    });
+
+    // Inflation era subscription
+    api.query.checkedInflation.currentEra((era: Codec) => {
+      setCurrentEra((currentEra) =>
+        currentEra
+          ? {
+              ...currentEra,
+              inflationEra: era.toPrimitive() as number,
+            }
+          : undefined
+      );
     });
 
     api.query.system.account(selectedAccount.address, async (account) => {
@@ -350,8 +371,7 @@ const Staking = () => {
       setCurrentEra({
         inflationEra: checkedInflation,
         era: currentStakingEra,
-        erasPerYear:
-          api.consts.checkedInflation.erasPerYear.toPrimitive() as number,
+        erasPerYear: inflationErasPerYear,
       });
 
       setCurrentStakingEra(currentStakingEra);
