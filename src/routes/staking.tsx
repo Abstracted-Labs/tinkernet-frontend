@@ -94,11 +94,7 @@ const Staking = () => {
     maxStakersPerCore: number;
     inflationErasPerYear: number;
   }>();
-  const [currentEra, setCurrentEra] = useState<{
-    era: number;
-    inflationEra: number;
-    erasPerYear: number;
-  }>();
+
   const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [nextEraBlock, setNextEraBlock] = useState<number>(0);
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
@@ -149,27 +145,6 @@ const Staking = () => {
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
       setCurrentStakingEra(era.toPrimitive() as number);
-
-      setCurrentEra((currentEra) =>
-        currentEra
-          ? {
-              ...currentEra,
-              era: era.toPrimitive() as number,
-            }
-          : undefined
-      );
-    });
-
-    // Inflation era subscription
-    api.query.checkedInflation.currentEra((era: Codec) => {
-      setCurrentEra((currentEra) =>
-        currentEra
-          ? {
-              ...currentEra,
-              inflationEra: era.toPrimitive() as number,
-            }
-          : undefined
-      );
     });
 
     api.query.system.account(selectedAccount.address, async (account) => {
@@ -359,20 +334,6 @@ const Staking = () => {
           await api.query.ocifStaking.nextEraStartingBlock()
         ).toPrimitive() as number
       );
-
-      const currentStakingEra = (
-        await api.query.ocifStaking.currentEra()
-      ).toPrimitive() as number;
-
-      const checkedInflation = (
-        await api.query.checkedInflation.currentEra()
-      ).toPrimitive() as number;
-
-      setCurrentEra({
-        inflationEra: checkedInflation,
-        era: currentStakingEra,
-        erasPerYear: inflationErasPerYear,
-      });
 
       setCurrentStakingEra(currentStakingEra);
 
@@ -666,7 +627,6 @@ const Staking = () => {
           {selectedAccount &&
           currentStakingEra &&
           totalStaked &&
-          currentEra &&
           unclaimedEras ? (
             <>
               <div className="flex items-center justify-between">
@@ -784,7 +744,7 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-md font-bold">
-                      {currentEra.era} |{" "}
+                      {currentStakingEra} |{" "}
                       {CURRENT_BLOCK_FILLED_PERCENTAGE.toFixed(0)}% complete
                     </span>
                   </div>
