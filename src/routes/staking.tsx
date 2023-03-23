@@ -607,7 +607,6 @@ const Staking = () => {
   useEffect(() => {
     if (!selectedAccount) return;
     if (!api.query.ocifStaking) return;
-    if (stakingCores.length === 0) return;
 
     // TODO unsubscribe on unmount
     setupSubscriptions({ selectedAccount });
