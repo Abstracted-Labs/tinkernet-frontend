@@ -347,12 +347,6 @@ const Staking = () => {
         await api.query.checkedInflation.currentEra()
       ).toPrimitive() as number;
 
-      console.log({
-        inflationEra: inflationErasPerYear,
-        era: currentStakingEra,
-        erasPerYear: inflationErasPerYear,
-      });
-
       setCurrentEra({
         inflationEra: checkedInflation,
         era: currentStakingEra,

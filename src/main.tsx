@@ -55,7 +55,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
                 <Route path="xtransfer" element={<XTransfer />} />
 
                 <Route
-                  path="9ce8094c-c508-4951-b227-6521996ed555"
+                  path="staking"
                   element={<Staking />}
                 />
 
