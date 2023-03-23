@@ -118,12 +118,6 @@ const Staking = () => {
       const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
 
       setTotalClaimed(totalClaimed);
-
-      // TODO change calculation for this
-      setUnclaimedEras((unclaimed) => ({
-        ...unclaimed,
-        total: 0,
-      }));
     }
   );
 
@@ -248,6 +242,11 @@ const Staking = () => {
               }
 
               setUnclaimedEras(unclaimed);
+            } else {
+              setUnclaimedEras((unclaimedEras) => ({
+                ...unclaimedEras,
+                total: 0,
+              }));
             }
 
             const latestInfo = info.stakes.at(-1);
@@ -561,19 +560,13 @@ const Staking = () => {
       }
     }
 
-    try {
-      await api.tx.utility
-        .batch(batch)
-        .signAndSend(
-          selectedAccount.address,
-          { signer: injector.signer },
-          getSignAndSendCallback()
-        );
-    } catch (e) {
-      toast.dismiss();
-
-      toast.error("Failed to claim rewards!");
-    }
+    api.tx.utility
+      .batch(batch)
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback()
+      );
   };
 
   const handleUnbondTokens = () => {
