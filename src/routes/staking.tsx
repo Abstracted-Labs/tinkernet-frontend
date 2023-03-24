@@ -60,6 +60,7 @@ const Staking = () => {
       active: boolean;
     }[]
   >([]);
+  const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>();
   const [totalStaked, setTotalStaked] = useState<BigNumber>();
   const [userStakedInfo, setUserStakedInfo] = useState<
     {
@@ -134,6 +135,14 @@ const Staking = () => {
     // Next era starting block subscription
     api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
       setNextEraBlock(blockNumber.toPrimitive() as number);
+    });
+
+    api.query.ocifStaking.generalEraInfo((c: Codec) => {
+      const stakingInfo = c.toPrimitive() as {
+        staked: string;
+      };
+
+      setTotalStaked(new BigNumber(stakingInfo.staked));
     });
 
     // Staking current era subscription
@@ -282,7 +291,7 @@ const Staking = () => {
                 userStakedInfoMap.values()
               ).reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
 
-              setTotalStaked(newTotalStaked);
+              setTotalUserStaked(newTotalStaked);
             }
           }
         }
@@ -353,6 +362,14 @@ const Staking = () => {
       ).toPrimitive() as number;
 
       setCurrentStakingEra(currentStakingEra);
+
+      const generalEraInfo = (
+        await api.query.ocifStaking.generalEraInfo(currentStakingEra)
+      ).toPrimitive() as {
+        staked: string;
+      };
+
+      setTotalStaked(new BigNumber(generalEraInfo.staked));
 
       const supply = (
         await api.query.balances.totalIssuance()
@@ -496,12 +513,12 @@ const Staking = () => {
 
         setUserStakedInfo(userStakedInfo);
 
-        const totalStaked = userStakedInfo.reduce(
+        const totalUserStaked = userStakedInfo.reduce(
           (acc, cur) => acc.plus(cur.staked),
           new BigNumber(0)
         );
 
-        setTotalStaked(totalStaked);
+        setTotalUserStaked(totalUserStaked);
 
         setHasUnbondedTokens(
           (
@@ -536,16 +553,16 @@ const Staking = () => {
 
   const handleManageStaking = async ({
     core,
-    totalStaked,
+    totalUserStaked,
     availableBalance,
   }: {
     core: StakingCore;
-    totalStaked: BigNumber;
+    totalUserStaked: BigNumber;
     availableBalance: BigNumber;
   }) => {
     setOpenModal({
       name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalStaked, availableBalance },
+      metadata: { ...core, totalUserStaked, availableBalance },
     });
   };
 
@@ -637,7 +654,7 @@ const Staking = () => {
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
           {selectedAccount &&
           currentStakingEra &&
-          totalStaked &&
+          totalUserStaked &&
           unclaimedEras ? (
             <>
               <div className="flex items-center justify-between">
@@ -673,7 +690,7 @@ const Staking = () => {
                   </div>
                   <div>
                     <span className="text-md font-bold">
-                      {formatBalance(totalStaked.toString(), {
+                      {formatBalance(totalUserStaked.toString(), {
                         decimals: 12,
                         withUnit: false,
                         forceUnit: "-",
@@ -774,7 +791,7 @@ const Staking = () => {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {stakingCores.map((core) => {
-              const totalStaked = userStakedInfo.find(
+              const totalUserStaked = userStakedInfo.find(
                 (info) => info.coreId === core.key
               )?.staked;
 
@@ -809,7 +826,7 @@ const Staking = () => {
                             className="inline-flex w-full items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:border-neutral-400 disabled:bg-neutral-400"
                             onClick={() => {
                               const parsedTotalStaked =
-                                totalStaked || new BigNumber("0");
+                                totalUserStaked || new BigNumber("0");
 
                               const parsedAvailableBalance =
                                 availableBalance?.minus(
@@ -818,7 +835,7 @@ const Staking = () => {
 
                               handleManageStaking({
                                 core,
-                                totalStaked: parsedTotalStaked,
+                                totalUserStaked: parsedTotalStaked,
                                 availableBalance:
                                   parsedAvailableBalance.isNegative()
                                     ? new BigNumber("0")
@@ -828,16 +845,16 @@ const Staking = () => {
                             disabled={
                               (coreInfo?.numberOfStakers || 0) >=
                                 (chainProperties?.maxStakersPerCore || 0) &&
-                              !totalStaked
+                              !totalUserStaked
                             }
                           >
                             Manage Staking
                           </button>
 
                           <span className="block text-sm">
-                            {totalStaked
+                            {totalUserStaked
                               ? `Your stake: ${formatBalance(
-                                  totalStaked.toString(),
+                                  totalUserStaked.toString(),
                                   {
                                     decimals: 12,
                                     withUnit: false,
