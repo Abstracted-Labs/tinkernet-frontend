@@ -137,15 +137,15 @@ const Staking = () => {
       setNextEraBlock(blockNumber.toPrimitive() as number);
     });
 
-    console.log("current era: ", currentStakingEra)
-	
-    api.query.ocifStaking.generalEraInfo(currentStakingEra, (c: Codec) => {
-      const stakingInfo = c.toPrimitive() as {
-        staked: string;
-      };
+    if (currentStakingEra > 0) {
+	  api.query.ocifStaking.generalEraInfo(currentStakingEra, (c: Codec) => {
+        const stakingInfo = c.toPrimitive() as {
+          staked: string;
+        };
 
-      setTotalStaked(new BigNumber(stakingInfo.staked));
-    });
+        setTotalStaked(new BigNumber(stakingInfo.staked));
+      });
+    }
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
