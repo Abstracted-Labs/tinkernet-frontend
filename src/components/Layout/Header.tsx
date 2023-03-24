@@ -42,7 +42,7 @@ const Header = () => {
 
   return (
     <nav>
-      <div className="mx-auto flex max-w-7xl justify-between p-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl flex-row flex-wrap justify-between gap-8 p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <div className="flex-shrink-0">
             <Link to="/">
@@ -61,17 +61,18 @@ const Header = () => {
 
           <div className="flex items-center gap-4">
             <Link to="/claim">
-              <span className="text-white">Claim</span>
+              <span className="truncate text-white">Claim</span>
             </Link>
             <Link to="/xtransfer">
-              <span className="text-white">X-Transfer</span>
+              <span className="truncate text-white">X-Transfer</span>
             </Link>
             <Link to="/staking">
-              <span className="text-white">Staking</span>
+              <span className="truncate text-white">Staking</span>
             </Link>
           </div>
         </div>
-        <div className="flex items-center gap-4">
+
+        <div className="mx-auto flex items-center gap-4">
           {selectedAccount ? (
             <Menu as="div" className="relative inline-block text-left">
               <div>
