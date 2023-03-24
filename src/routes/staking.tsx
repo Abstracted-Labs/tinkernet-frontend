@@ -137,7 +137,9 @@ const Staking = () => {
       setNextEraBlock(blockNumber.toPrimitive() as number);
     });
 
-    api.query.ocifStaking.generalEraInfo((c: Codec) => {
+    console.log("current era: ", currentStakingEra)
+	
+    api.query.ocifStaking.generalEraInfo(currentStakingEra, (c: Codec) => {
       const stakingInfo = c.toPrimitive() as {
         staked: string;
       };
