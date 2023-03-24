@@ -210,6 +210,20 @@ const Staking = () => {
         }
       );
 
+      api.query.ocifStaking.ledger(selectedAccount.address, (c: Codec) => {
+        const ledger = c.toPrimitive() as {
+          locked: number;
+          unbondingInfo: {
+            unlockingChunks: {
+              amount: number;
+              unlockEra: number;
+            }[];
+          };
+        };
+
+        setHasUnbondedTokens(ledger.unbondingInfo.unlockingChunks.length > 0);
+      });
+
       api.query.ocifStaking.generalStakerInfo(
         stakingCore.key,
         selectedAccount.address,
