@@ -640,7 +640,7 @@ const Staking = () => {
           totalStaked &&
           unclaimedEras ? (
             <>
-              <div className="flex flex-row flex-wrap items-center justify-between gap-4 md:flex-col">
+              <div className="flex flex-col flex-wrap items-center justify-between gap-4 md:flex-row">
                 <div>
                   <span>Dashboard</span>
                 </div>

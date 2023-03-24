@@ -72,7 +72,7 @@ const Header = () => {
           </div>
         </div>
 
-        <div className="mx-auto flex items-center gap-4">
+        <div className="mx-auto flex items-center gap-4 md:mx-0">
           {selectedAccount ? (
             <Menu as="div" className="relative inline-block text-left">
               <div>
