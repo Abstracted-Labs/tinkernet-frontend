@@ -144,15 +144,21 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const injector = await web3FromAddress(selectedAccount.address);
 
-    await api.tx.ocifStaking
-      .stake(metadata.key, parsedStakeAmount.toString())
-      .signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallback()
-      );
+    try {
+      await api.tx.ocifStaking
+        .stake(metadata.key, parsedStakeAmount.toString())
+        .signAndSend(
+          selectedAccount.address,
+          { signer: injector.signer },
+          getSignAndSendCallback()
+        );
 
-    setOpenModal({ name: null });
+      setOpenModal({ name: null });
+    } catch (e) {
+      toast.dismiss();
+
+      toast.error("Failed to stake");
+    }
   });
 
   const handleUnstake = unstakeForm.handleSubmit(async ({ amount }) => {
@@ -194,15 +200,21 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const injector = await web3FromAddress(selectedAccount.address);
 
-    await api.tx.ocifStaking
-      .unstake(metadata.key, parsedUnstakeAmount.toString())
-      .signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallback()
-      );
+    try {
+      await api.tx.ocifStaking
+        .unstake(metadata.key, parsedUnstakeAmount.toString())
+        .signAndSend(
+          selectedAccount.address,
+          { signer: injector.signer },
+          getSignAndSendCallback()
+        );
 
-    setOpenModal({ name: null });
+      setOpenModal({ name: null });
+    } catch (e) {
+      toast.dismiss();
+
+      toast.error("Failed to unstake");
+    }
   });
 
   const handleStakeMax = () => {
@@ -430,13 +442,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                             MAX
                           </span>
                         </div>
-                      </div>
-
-                      <div>
-                        <span className="text-sm text-white">
-                          As the funds would be subject to a 7 day unbonding
-                          period, we disabled it for the testing phase.
-                        </span>
                       </div>
 
                       {unstakeForm.formState.errors.amount ? (

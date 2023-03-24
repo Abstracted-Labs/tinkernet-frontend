@@ -12,6 +12,7 @@ import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
 import { Codec, ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+// import LineChart from "../components/LineChart";
 // import PieChart from "../components/PieChart";
 
 const TotalRewardsClaimedQuery = `
@@ -46,6 +47,7 @@ const Staking = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const api = useApi();
+  const [hasUnbondedTokens, setHasUnbondedTokens] = useState(false);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
@@ -66,7 +68,7 @@ const Staking = () => {
       staked: BigNumber;
     }[]
   >([]);
-  const [totalSupply, setTotalSupply] = useState<number>();
+  const [totalSupply, setTotalSupply] = useState<BigNumber>();
   const [unclaimedEras, setUnclaimedEras] = useState<{
     cores: { coreId: number; earliestEra: number }[];
     total: number;
@@ -93,8 +95,9 @@ const Staking = () => {
     inflationErasPerYear: number;
   }>();
 
-  // const [currentBlock, setCurrentBlock] = useState<number>(0);
-  // const [nextEraBlock, setNextEraBlock] = useState<number>(0);
+  const [currentBlock, setCurrentBlock] = useState<number>(0);
+  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
+  const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
 
   useSubscription(
     {
@@ -115,15 +118,6 @@ const Staking = () => {
       const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
 
       setTotalClaimed(totalClaimed);
-
-      // TODO change calculation for this
-      setUnclaimedEras((unclaimed) => ({
-        ...unclaimed,
-        total: 0,
-      }));
-
-      // dismiss toast of claim all
-      toast.dismiss();
     }
   );
 
@@ -132,15 +126,15 @@ const Staking = () => {
   }: {
     selectedAccount: InjectedAccountWithMeta;
   }) => {
-    // // Current block subscription
-    // api.rpc.chain.subscribeNewHeads((header) => {
-    //   setCurrentBlock(header.number.toNumber());
-    // });
+    // Current block subscription
+    api.rpc.chain.subscribeNewHeads((header) => {
+      setCurrentBlock(header.number.toNumber());
+    });
 
-    // // Next era starting block subscription
-    // api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
-    //   setNextEraBlock(blockNumber.toPrimitive() as number);
-    // });
+    // Next era starting block subscription
+    api.query.ocifStaking.nextEraStartingBlock((blockNumber: Codec) => {
+      setNextEraBlock(blockNumber.toPrimitive() as number);
+    });
 
     // Staking current era subscription
     api.query.ocifStaking.currentEra((era: Codec) => {
@@ -216,6 +210,20 @@ const Staking = () => {
         }
       );
 
+      api.query.ocifStaking.ledger(selectedAccount.address, (c: Codec) => {
+        const ledger = c.toPrimitive() as {
+          locked: number;
+          unbondingInfo: {
+            unlockingChunks: {
+              amount: number;
+              unlockEra: number;
+            }[];
+          };
+        };
+
+        setHasUnbondedTokens(ledger.unbondingInfo.unlockingChunks.length > 0);
+      });
+
       api.query.ocifStaking.generalStakerInfo(
         stakingCore.key,
         selectedAccount.address,
@@ -248,6 +256,11 @@ const Staking = () => {
               }
 
               setUnclaimedEras(unclaimed);
+            } else {
+              setUnclaimedEras((unclaimedEras) => ({
+                ...unclaimedEras,
+                total: 0,
+              }));
             }
 
             const latestInfo = info.stakes.at(-1);
@@ -300,9 +313,9 @@ const Staking = () => {
 
         hasFinished = true;
       } else if (status.isInBlock || status.isFinalized) {
-        // do nothing, because if the transaction is finalized, the squid will be updated and dismiss the toast
-
         hasFinished = true;
+
+        toast.dismiss();
       }
     };
   };
@@ -314,15 +327,26 @@ const Staking = () => {
     try {
       toast.loading("Loading staking cores...");
 
+      const blocksPerEra =
+        api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
+
+      setBlocksPerEra(blocksPerEra);
+
       const maxStakersPerCore =
         api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
 
       const inflationErasPerYear =
         api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
 
-      // setCurrentBlock(
-      //   (await api.rpc.chain.getBlock()).block.header.number.toNumber()
-      // );
+      setCurrentBlock(
+        (await api.rpc.chain.getBlock()).block.header.number.toNumber()
+      );
+
+      setNextEraBlock(
+        (
+          await api.query.ocifStaking.nextEraStartingBlock()
+        ).toPrimitive() as number
+      );
 
       const currentStakingEra = (
         await api.query.ocifStaking.currentEra()
@@ -330,19 +354,11 @@ const Staking = () => {
 
       setCurrentStakingEra(currentStakingEra);
 
-      const eraInfo = (
-        await api.query.ocifStaking.generalEraInfo(currentStakingEra)
-      ).toPrimitive() as {
-        rewards: {
-          stakers: number;
-          core: number;
-        };
-        staked: number;
-        activeStake: number;
-        locked: number;
-      };
+      const supply = (
+        await api.query.balances.totalIssuance()
+      ).toPrimitive() as string;
 
-      setTotalSupply(eraInfo?.activeStake || 0);
+      setTotalSupply(new BigNumber(supply));
 
       setChainProperties({
         maxStakersPerCore,
@@ -486,6 +502,22 @@ const Staking = () => {
         );
 
         setTotalStaked(totalStaked);
+
+        setHasUnbondedTokens(
+          (
+            (
+              await api.query.ocifStaking.ledger(selectedAccount.address)
+            ).toPrimitive() as {
+              locked: number;
+              unbondingInfo: {
+                unlockingChunks: {
+                  amount: number;
+                  unlockEra: number;
+                }[];
+              };
+            }
+          ).unbondingInfo.unlockingChunks.length > 0
+        );
       }
 
       toast.dismiss();
@@ -551,6 +583,12 @@ const Staking = () => {
       );
   };
 
+  const handleUnbondTokens = () => {
+    setOpenModal({
+      name: modalName.UNBOND_TOKENS,
+    });
+  };
+
   const handleRegisterProject = async () => {
     setOpenModal({
       name: modalName.REGISTER_PROJECT,
@@ -558,7 +596,7 @@ const Staking = () => {
   };
 
   useEffect(() => {
-    // if (!api.query.ocifStaking) return;
+    if (!api.query.ocifStaking) return;
 
     loadStakingCores(selectedAccount);
   }, [selectedAccount, api]);
@@ -582,16 +620,10 @@ const Staking = () => {
   useEffect(() => {
     if (!selectedAccount) return;
     if (!api.query.ocifStaking) return;
-    if (stakingCores.length === 0) return;
 
     // TODO unsubscribe on unmount
     setupSubscriptions({ selectedAccount });
   }, [api, stakingCores]);
-
-  // const CURRENT_BLOCK_FILLED_PERCENTAGE =
-  //   ((currentBlock - (nextEraBlock - 7200)) /
-  //     (nextEraBlock - (nextEraBlock - 7200))) *
-  //   100;
 
   return (
     <>
@@ -613,25 +645,34 @@ const Staking = () => {
                   <span>Dashboard</span>
                 </div>
 
-                <div>
+                <div className="flex gap-8">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                    onClick={handleUnbondTokens}
+                    disabled={!hasUnbondedTokens}
+                  >
+                    Unbonding TNKR
+                  </button>
+
                   <button
                     type="button"
                     className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
                     onClick={handleClaimAll}
                     disabled={unclaimedEras.total === 0}
                   >
-                    Claim All
+                    Claim Rewards
                   </button>
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-5">
+              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-6">
                 <div className="flex flex-col gap-2 p-6">
                   <div>
                     <span className="text-sm">Your stake</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
+                    <span className="text-md font-bold">
                       {formatBalance(totalStaked.toString(), {
                         decimals: 12,
                         withUnit: false,
@@ -647,7 +688,7 @@ const Staking = () => {
                     <span className="text-sm">Unclaimed Eras</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
+                    <span className="text-md font-bold">
                       {unclaimedEras.total} eras
                     </span>
                   </div>
@@ -658,7 +699,7 @@ const Staking = () => {
                     <span className="text-sm">Total Rewards Claimed</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
+                    <span className="text-md font-bold">
                       {formatBalance(totalClaimed.toString(), {
                         decimals: 12,
                         withUnit: false,
@@ -674,19 +715,17 @@ const Staking = () => {
                     <span className="text-sm">Current Staking APY</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
-                      {formatBalance(
-                        totalStaked.toNumber()
-                          ? new BigNumber(totalClaimed.times(0.04))
-                              .dividedBy(totalStaked)
-                              .toString()
-                          : 0,
-                        {
-                          decimals: 12,
-                          withUnit: false,
-                          forceUnit: "-",
-                        }
-                      ).slice(0, -2) || "0"}{" "}
+                    <span className="text-md font-bold">
+                      {totalSupply &&
+                      totalSupply.toNumber() > 0 &&
+                      totalStaked &&
+                      totalStaked.toNumber() > 0
+                        ? totalSupply
+                            .times(4)
+                            .dividedBy(totalStaked)
+                            .decimalPlaces(2)
+                            .toString()
+                        : 0}
                       %
                     </span>
                   </div>
@@ -697,10 +736,37 @@ const Staking = () => {
                     <span className="text-sm">Annual DAO rewards</span>
                   </div>
                   <div>
-                    <span className="text-2xl font-bold">
-                      {totalSupply ? totalSupply * 0.06 : 0} TNKR
+                    <span className="text-md font-bold">
+                      {totalSupply && totalSupply.toNumber() > 0
+                        ? totalSupply
+                            .dividedBy(1000000000000)
+                            .times(0.06)
+                            .decimalPlaces(2)
+                            .toString()
+                        : 0}{" "}
+                      TNKR
                     </span>
                   </div>
+                </div>
+
+                <div className="flex flex-col gap-2 p-6">
+                  <div>
+                    <span className="text-sm">Current Era</span>
+                  </div>
+                  <div>
+                    <span className="text-md font-bold">
+                      {currentStakingEra} |{" "}
+                      {(
+                        ((currentBlock - (nextEraBlock - blocksPerEra)) /
+                          (nextEraBlock - (nextEraBlock - blocksPerEra))) *
+                        100
+                      ).toFixed(0)}
+                      % complete
+                    </span>
+                  </div>
+                  {/* <div>
+                    <LineChart fill={CURRENT_BLOCK_FILLED_PERCENTAGE} />
+                  </div> */}
                 </div>
               </div>
             </>

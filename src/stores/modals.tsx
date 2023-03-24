@@ -4,6 +4,7 @@ const modalName = {
   SELECT_ACCOUNT: "SELECT_ACCOUNT",
   MANAGE_STAKING: "MANAGE_STAKING",
   REGISTER_PROJECT: "REGISTER_PROJECT",
+  UNBOND_TOKENS: "UNBOND_TOKENS",
 } as const;
 
 type ModalName = (typeof modalName)[keyof typeof modalName];
