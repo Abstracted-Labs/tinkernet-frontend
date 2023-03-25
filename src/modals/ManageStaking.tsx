@@ -115,7 +115,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     if (
       new BigNumber(parsedAmount).isLessThan(minValue) &&
-      (metadata?.totalStaked as BigNumber).toString() == "0"
+      (metadata?.totalUserStaked as BigNumber).toString() == "0"
     ) {
       stakeForm.setError("amount", {
         type: "manual",
@@ -168,7 +168,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     const parsedAmount = parseFloat(amount);
 
-    const maxValue = new BigNumber(metadata.totalStaked as string)
+    const maxValue = new BigNumber(metadata.totalUserStaked as string)
       .dividedBy(new BigNumber(10).pow(12))
       .toString();
 
@@ -237,7 +237,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     unstakeForm.setValue(
       "amount",
-      new BigNumber(metadata.totalStaked as string)
+      new BigNumber(metadata.totalUserStaked as string)
         .dividedBy(new BigNumber(10).pow(12))
         .toString()
     );
@@ -285,13 +285,13 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                 </>
               </div>
 
-              {metadata?.totalStaked &&
-              metadata?.totalStaked.toString() !== "0" ? (
+              {metadata?.totalUserStaked &&
+              metadata?.totalUserStaked.toString() !== "0" ? (
                 <div className="text-sm text-white">
                   <>
                     Staked:{" "}
                     <span className="font-bold">
-                      {formatBalance(metadata?.totalStaked.toString(), {
+                      {formatBalance(metadata?.totalUserStaked.toString(), {
                         decimals: 12,
                         withUnit: false,
                         forceUnit: "-",
@@ -305,8 +305,8 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
             <div className="flex flex-col gap-4">
               <Tab.Group>
-                {metadata?.totalStaked &&
-                metadata?.totalStaked.toString() !== "0" ? (
+                {metadata?.totalUserStaked &&
+                metadata?.totalUserStaked.toString() !== "0" ? (
                   <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
                     <Tab
                       key={mode.STAKE}
@@ -350,7 +350,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                       className="flex flex-col gap-4"
                       onSubmit={handleStake}
                     >
-                      <div className="relative rounded-md  border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                         <label
                           htmlFor="stakeAmount"
                           className="block text-xs font-medium text-white"
@@ -362,7 +362,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                           {...stakeForm.register("amount", {
                             required: true,
                           })}
-                          className="block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-transparent sm:text-sm"
+                          className="mt-2 block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-transparent sm:text-sm"
                         />
 
                         <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
@@ -422,7 +422,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                           {...unstakeForm.register("amount", {
                             required: true,
                           })}
-                          className="mt-1 block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
+                          className="mt-2 block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
                         />
 
                         <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">

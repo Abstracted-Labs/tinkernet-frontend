@@ -138,7 +138,7 @@ const Staking = () => {
     });
 
     if (currentStakingEra > 0) {
-	  api.query.ocifStaking.generalEraInfo(currentStakingEra, (c: Codec) => {
+      api.query.ocifStaking.generalEraInfo(currentStakingEra, (c: Codec) => {
         const stakingInfo = c.toPrimitive() as {
           staked: string;
         };
