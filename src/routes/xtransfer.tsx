@@ -173,7 +173,7 @@ const XTransfer = () => {
             },
           },
         },
-        "5000000000"
+        'Unlimited'
       )
       .signAndSend(selectedAccount.address, { signer: injector.signer });
   };
