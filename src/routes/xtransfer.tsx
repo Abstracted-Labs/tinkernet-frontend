@@ -84,8 +84,10 @@ const XTransfer = () => {
       );
 
       const total = new BigNumber(results[1].data.free.toString());
+      const miscFrozen = new BigNumber(results[1].data.miscFrozen.toString());
+      const reserved = new BigNumber(results[1].data.reserved.toString());
 
-      const transferable = total.minus(vestedLocked);
+      const transferable = total.minus(miscFrozen).minus(reserved);
 
       setBalanceInTinkernet(transferable);
 
@@ -448,7 +450,7 @@ const XTransfer = () => {
             <div className="border-t border-neutral-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="px-6">
                 <span className="text-sm font-normal leading-6 text-white">
-                  Balance on Tinkernet:
+                  Free balance on Tinkernet:
                 </span>
 
                 <br />
@@ -464,7 +466,7 @@ const XTransfer = () => {
 
               <div className="px-6">
                 <span className="text-sm font-normal leading-6 text-white">
-                  Balance on Basilisk:
+                  Free balance on Basilisk:
                 </span>
 
                 <br />
