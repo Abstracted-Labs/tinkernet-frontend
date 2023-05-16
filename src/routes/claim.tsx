@@ -13,8 +13,10 @@ import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 
+import type { Account, BaseWallet } from '@polkadot-onboard/core';
+
 type SystemAccount = Struct & {
-  data: {
+    data: {
     free: BN;
     reserved: BN;
     miscFrozen: BN;
@@ -32,14 +34,17 @@ type VestingData = {
 
 const Home = () => {
   const { createApi } = useRPC();
-  const { selectedAccount } = useAccount(
-    (state) => ({ selectedAccount: state.selectedAccount }),
+  const { selectedAccount, wallet } = useAccount(
+    (state) => ({
+        selectedAccount: state.selectedAccount,
+        wallet: state.wallet,
+    }),
     shallow
   );
   const [vestingData, setVestingData] = useState<VestingData | null>(null);
   const [isLoading, setLoading] = useState(false);
 
-  const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
+  const loadBalances = async ({ address }: Account) => {
     setLoading(true);
 
     try {
@@ -156,14 +161,12 @@ const Home = () => {
   };
 
   const handleClaim = async () => {
-    if (!selectedAccount) return;
+    if (!selectedAccount || !wallet) return;
 
     try {
       const api = await createApi();
 
-      web3Enable("Tinkernet");
-
-      const injector = await web3FromAddress(selectedAccount.address);
+        const signer = wallet.signer;
 
       toast.loading("Claiming vesting...");
 
@@ -171,7 +174,7 @@ const Home = () => {
         .claim()
         .signAndSend(
           selectedAccount.address,
-          { signer: injector.signer },
+          { signer },
           () => {
             loadBalances(selectedAccount);
           }

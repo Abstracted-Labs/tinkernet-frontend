@@ -19,9 +19,13 @@ import { Toaster } from "react-hot-toast";
 import ApiProvider from "./providers/api";
 import Layout from "./components/Layout";
 import Modals from "./modals";
+import { PolkadotWalletsContextProvider, useWallets } from '@polkadot-onboard/react';
+import { WalletAggregator } from '@polkadot-onboard/core';
+import { InjectedWalletProvider } from '@polkadot-onboard/injected-wallets';
+import { WalletConnectProvider } from "./stores/account";
 
 const wsClient = createWSClient({
-  url: "wss://squid.subsquid.io/ocif-squid/v/v1/graphql",
+    url: "wss://squid.subsquid.io/ocif-squid/v/v1/graphql",
 });
 
 const client = createClient({
@@ -38,38 +42,56 @@ const client = createClient({
   ],
 });
 
+const walletConnectParams = {
+    projectId: '3e4e3c1e8ad4ac731c399248e20d69fd',
+    relayUrl: 'wss://relay.walletconnect.com',
+    metadata: {
+        name: 'Tinkernet',
+        description: 'Tinkernet Dashboard App',
+        url: 'https://tinker.network',
+        icons: ['https://www.tinker.network/apple-touch-icon.png'],
+    },
+};
+
+const walletAggregator = new WalletAggregator([
+    new InjectedWalletProvider({}, "Tinkernet"),
+    new WalletConnectProvider(walletConnectParams, "Tinkernet")
+]);
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <>
-      <Toaster position="bottom-right" />
-      <BrowserRouter>
-        <ApiProvider>
-          <URQLProvider value={client}>
-            <Modals />
+    <React.StrictMode>
+        <>
+            <Toaster position="bottom-right" />
+            <BrowserRouter>
+                <ApiProvider>
+                    <URQLProvider value={client}>
+                        <PolkadotWalletsContextProvider walletAggregator={walletAggregator}>
+                            <Modals />
 
-            <Routes>
-              <Route index element={<Navigate to="claim" replace={true} />} />
-              <Route path="/" element={<Layout />}>
-                <Route path="claim" element={<Claim />} />
+                            <Routes>
+                                <Route index element={<Navigate to="claim" replace={true} />} />
+                                <Route path="/" element={<Layout />}>
+                                    <Route path="claim" element={<Claim />} />
 
-                <Route path="xtransfer" element={<XTransfer />} />
+                                    <Route path="xtransfer" element={<XTransfer />} />
 
-                <Route
-                  path="staking"
-                  element={<Staking />}
-                />
+                                    <Route
+                                        path="staking"
+                                        element={<Staking />}
+                                    />
 
-                <Route path="404" element={<NotFound />} />
+                                    <Route path="404" element={<NotFound />} />
 
-                <Route
-                  path="*"
-                  element={<Navigate to="/404" replace={true} />}
-                />
-              </Route>
-            </Routes>
-          </URQLProvider>
-        </ApiProvider>
-      </BrowserRouter>
-    </>
-  </React.StrictMode>
+                                    <Route
+                                        path="*"
+                                        element={<Navigate to="/404" replace={true} />}
+                                    />
+                                </Route>
+                            </Routes>
+                        </PolkadotWalletsContextProvider>
+                    </URQLProvider>
+                </ApiProvider>
+            </BrowserRouter>
+        </>
+    </React.StrictMode>
 );

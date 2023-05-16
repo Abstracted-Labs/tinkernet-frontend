@@ -13,6 +13,9 @@
     "@headlessui/react": "^1.7.7",
     "@heroicons/react": "^2.0.13",
     "@hookform/resolvers": "^2.9.10",
+    "@polkadot-onboard/core": "^0.0.9",
+    "@polkadot-onboard/injected-wallets": "^0.0.9",
+    "@polkadot-onboard/react": "^0.0.9",
     "@polkadot/api": "^9.10.5",
     "@polkadot/api-augment": "^9.13.2",
     "@polkadot/extension-dapp": "^0.44.7",
@@ -24,6 +27,8 @@
     "@visx/group": "^3.0.0",
     "@visx/shape": "^3.0.0",
     "@visx/text": "^3.0.0",
+    "@walletconnect/sign-client": "^2.7.4",
+    "@web3modal/standalone": "^2.4.1",
     "bignumber.js": "^9.1.1",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.11.2",
@@ -34,7 +39,7 @@
     "react-router-dom": "^6.6.1",
     "urql": "^3.0.3",
     "zod": "^3.20.2",
-    "zustand": "^4.1.5"
+    "zustand": "^4.3.8"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.3",

@@ -16,6 +16,7 @@ import useAccount from "../stores/account";
 import useModal from "../stores/modals";
 import classNames from "../utils/classNames";
 
+
 const mode = {
   STAKE: "STAKE",
   UNSTAKE: "UNSTAKE",
@@ -36,10 +37,11 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     shallow
   );
   const selectedAccount = useAccount((state) => state.selectedAccount);
-  const stakeForm = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
-    mode: "onBlur",
-  });
+    const wallet = useAccount((state) => state.wallet);
+    const stakeForm = useForm<z.infer<typeof schema>>({
+        resolver: zodResolver(schema),
+        mode: "onBlur",
+    });
 
   const unstakeForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -140,16 +142,16 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     toast.loading("Staking...");
 
-    await web3Enable("Tinkernet");
+      if (!wallet) return;
 
-    const injector = await web3FromAddress(selectedAccount.address);
+    const signer = wallet.signer;
 
     try {
       await api.tx.ocifStaking
         .stake(metadata.key, parsedStakeAmount.toString())
         .signAndSend(
           selectedAccount.address,
-          { signer: injector.signer },
+          { signer },
           getSignAndSendCallback()
         );
 
@@ -196,16 +198,16 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
 
     toast.loading("Unstaking...");
 
-    await web3Enable("Tinkernet");
+      if (!wallet) return;
 
-    const injector = await web3FromAddress(selectedAccount.address);
+    const signer = wallet.signer;
 
     try {
       await api.tx.ocifStaking
         .unstake(metadata.key, parsedUnstakeAmount.toString())
         .signAndSend(
           selectedAccount.address,
-          { signer: injector.signer },
+          { signer },
           getSignAndSendCallback()
         );
 

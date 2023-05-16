@@ -16,25 +16,25 @@ const useConnect = () => {
   );
 
   const handleConnect = async () => {
-    const extensions = await web3Enable("GitArch");
+  //  const extensions = await web3Enable("Tinkernet");
 
-    if (extensions.length === 0) {
-      return;
-    }
+  //  if (extensions.length === 0) {
+  //    return;
+  //  }
 
-    const accounts = await web3Accounts();
+  //  const accounts = await web3Accounts();
 
-    setAccounts(accounts);
+  //  setAccounts(accounts);
 
-    if (accounts.length === 0) {
-      return;
-    }
+  //  if (accounts.length === 0) {
+  //    return;
+  //  }
 
-    if (accounts.length === 1) {
-      setSelectedAccount(accounts[0]);
+    // if (accounts.length === 1) {
+    //  setSelectedAccount(accounts[0]);
 
-      return;
-    }
+    //  return;
+    // }
 
     setOpenModal({ name: modalName.SELECT_ACCOUNT });
   };

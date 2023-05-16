@@ -12,8 +12,7 @@ import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
 import { Codec, ISubmittableResult } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
-// import LineChart from "../components/LineChart";
-// import PieChart from "../components/PieChart";
+import type { Account } from '@polkadot-onboard/core';
 
 const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
@@ -46,8 +45,9 @@ type StakingCore = {
 const Staking = () => {
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
-  const api = useApi();
-  const [hasUnbondedTokens, setHasUnbondedTokens] = useState(false);
+    const wallet = useAccount((state) => state.wallet);
+    const api = useApi();
+    const [hasUnbondedTokens, setHasUnbondedTokens] = useState(false);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
@@ -125,7 +125,7 @@ const Staking = () => {
   const setupSubscriptions = ({
     selectedAccount,
   }: {
-    selectedAccount: InjectedAccountWithMeta;
+    selectedAccount: Account;
   }) => {
     // Current block subscription
     api.rpc.chain.subscribeNewHeads((header) => {
@@ -332,7 +332,7 @@ const Staking = () => {
   };
 
   const loadStakingCores = async (
-    selectedAccount: InjectedAccountWithMeta | null
+    selectedAccount: Account | null
   ) => {
     setLoading(true);
     try {
@@ -575,9 +575,11 @@ const Staking = () => {
 
     if (!currentStakingEra) return;
 
+      if (!wallet) return;
+
     await web3Enable("Tinkernet");
 
-    const injector = await web3FromAddress(selectedAccount.address);
+    const signer = wallet.signer;
 
     const batch = [];
 
@@ -597,7 +599,7 @@ const Staking = () => {
       .batch(batch)
       .signAndSend(
         selectedAccount.address,
-        { signer: injector.signer },
+        { signer },
         getSignAndSendCallback()
       );
   };
