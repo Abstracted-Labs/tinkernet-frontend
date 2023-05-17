@@ -86,14 +86,14 @@ export class WalletConnectSigner implements Signer {
   // ref: https://polkadot.js.org/docs/extension/cookbook#sign-a-message
   signRaw = async (raw: SignerPayloadRaw): Promise<SignerResult> => {
     const request = {
-      topic: this.session.topic,
-      chainId: 'polkadot:91b171bb158e2d3848fa23a9f1c25182',
-      request: {
-        id: 1,
-        jsonrpc: '2.0',
-        method: 'polkadot_signMessage',
-        params: { address: raw.address, message: raw.data },
-      },
+        topic: this.session.topic,
+        chainId: 'polkadot:d42e9606a995dfe433dc7955dc2a70f4',
+        request: {
+            id: 1,
+            jsonrpc: '2.0',
+            method: 'polkadot_signMessage',
+            params: { address: raw.address, message: raw.data },
+        },
     };
     const { signature } = await this.client.request<Signature>(request);
     return { id: ++this.id, signature };
