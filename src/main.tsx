@@ -46,8 +46,8 @@ const walletConnectParams = {
     projectId: '3e4e3c1e8ad4ac731c399248e20d69fd',
     relayUrl: 'wss://relay.walletconnect.com',
     metadata: {
-        name: 'Tinkernet',
-        description: 'Tinkernet Dashboard App',
+        name: 'Tinkernet Dashboard',
+        description: 'Tinkernet Dashboard dApp',
         url: 'https://tinker.network',
         icons: ['https://www.tinker.network/apple-touch-icon.png'],
     },
