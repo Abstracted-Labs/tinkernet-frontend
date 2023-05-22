@@ -832,7 +832,7 @@ const Staking = () => {
 
                               const parsedAvailableBalance =
                                 availableBalance?.minus(
-                                  new BigNumber(10).pow(12)
+                                  new BigNumber(20).pow(12).times(2)
                                 ) || new BigNumber("0");
 
                               handleManageStaking({
