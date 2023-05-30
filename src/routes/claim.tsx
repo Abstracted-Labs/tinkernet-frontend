@@ -26,7 +26,9 @@ type VestingData = {
   vestedLocked: string;
   vestedClaimable: string;
   total: string;
-  transferable: string;
+  frozen: string;
+  available: string;
+  claimed: string;
   remainingVestingPeriod: string;
 };
 
@@ -53,7 +55,7 @@ const Home = () => {
         api.query.vesting.vestingSchedules(address),
         // current block
         api.query.system.number(),
-        // total
+        // available
         api.query.system.account<SystemAccount>(address),
       ]);
 
@@ -112,7 +114,11 @@ const Home = () => {
 
       const total = new BigNumber(results[3].data.free.toString());
 
-      const transferable = total.minus(vestedLocked);
+      const claimed = total.minus(vestedLocked);
+
+      const frozen = new BigNumber(results[3].data.feeFrozen.toString());
+
+      const available = total.minus(frozen);
 
       setVestingData({
         vestedLocked: formatBalance(vestedLocked.toString(), {
@@ -130,7 +136,17 @@ const Home = () => {
           withUnit: "TNKR",
           forceUnit: "-",
         }),
-        transferable: formatBalance(transferable.toString(), {
+        claimed: formatBalance(claimed.toString(), {
+          decimals: 12,
+          withUnit: "TNKR",
+          forceUnit: "-",
+        }),
+        frozen: formatBalance(frozen.toString(), {
+          decimals: 12,
+          withUnit: "TNKR",
+          forceUnit: "-",
+        }),
+        available: formatBalance(available.toString(), {
           decimals: 12,
           withUnit: "TNKR",
           forceUnit: "-",
@@ -183,7 +199,7 @@ const Home = () => {
     } catch (error) {
       toast.dismiss();
 
-      toast.error("Failed to claim vesting!");
+      toast.error(`${error}`);
 
       console.error(error);
     }
@@ -268,16 +284,34 @@ const Home = () => {
             </div>
 
             <div className="border-t border-gray-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-              <div className="px-6">
+              <div className="px-6 py-2">
                 <span className="text-sm font-bold leading-6 text-white">
                   Vesting Claimed:
                 </span>{" "}
                 <span className="text-lg font-bold leading-6 text-white">
-                  {vestingData.transferable}
+                  {vestingData.claimed}
                 </span>
               </div>
 
-              <div className="px-6">
+              <div className="px-6 py-2">
+                <span className="text-sm font-bold leading-6 text-white">
+                  Available:
+                </span>{" "}
+                <span className="text-lg font-bold leading-6 text-white">
+                  {vestingData.available}
+                </span>
+              </div>
+
+              <div className="px-6 py-2">
+                <span className="text-sm font-bold leading-6 text-white">
+                  Staked:
+                </span>{" "}
+                <span className="text-lg font-bold leading-6 text-white">
+                  {vestingData.frozen}
+                </span>
+              </div>
+
+              <div className="px-6 py-2">
                 <span className="text-sm font-bold leading-6 text-white">
                   Total:
                 </span>{" "}

@@ -81,10 +81,10 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
         );
 
       setOpenModal({ name: null });
-    } catch (e) {
+    } catch (error) {
       toast.dismiss();
 
-      toast.error("Failed to unbond tokens");
+      toast.error(`${error}`);
     }
   };
 
