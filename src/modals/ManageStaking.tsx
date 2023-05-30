@@ -154,10 +154,10 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         );
 
       setOpenModal({ name: null });
-    } catch (e) {
+    } catch (error) {
       toast.dismiss();
 
-      toast.error("Failed to stake");
+      toast.error(`${error}`);
     }
   });
 
@@ -210,7 +210,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
         );
 
       setOpenModal({ name: null });
-    } catch (e) {
+    } catch (error) {
       toast.dismiss();
 
       toast.error("Failed to unstake");

@@ -542,14 +542,13 @@ const Staking = () => {
       toast.dismiss();
 
       setLoading(false);
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
 
       toast.dismiss();
 
       setLoading(false);
 
-      toast.error("Failed to load staking cores!");
+      toast.error(`${error}`);
     }
   };
 

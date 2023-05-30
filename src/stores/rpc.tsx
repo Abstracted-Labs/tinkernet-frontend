@@ -36,10 +36,12 @@ const useRPC = create<RPCState>()((set, get) => ({
       set(() => ({ error: null }));
 
       return api;
-    } catch (e) {
-      set(() => ({ error: e }));
+    } catch (error) {
+      set(() => ({ error}));
 
-      throw new Error("Unable to connect to RPC");
+      console.error(error);
+
+      throw new Error(`Failed to connect to ${host}`);
     }
   },
 }));
