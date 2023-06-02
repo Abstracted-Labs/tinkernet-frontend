@@ -25,10 +25,8 @@ type SystemAccount = Struct & {
 type VestingData = {
   vestedLocked: string;
   vestedClaimable: string;
-  total: string;
   frozen: string;
   available: string;
-  claimed: string;
   remainingVestingPeriod: string;
 };
 
@@ -114,8 +112,6 @@ const Home = () => {
 
       const total = new BigNumber(results[3].data.free.toString());
 
-      const claimed = total.minus(vestedLocked);
-
       const frozen = new BigNumber(results[3].data.feeFrozen.toString());
 
       const available = total.minus(frozen);
@@ -127,16 +123,6 @@ const Home = () => {
           forceUnit: "-",
         }),
         vestedClaimable: formatBalance(vestedClaimable.toString(), {
-          decimals: 12,
-          withUnit: "TNKR",
-          forceUnit: "-",
-        }),
-        total: formatBalance(total.toString(), {
-          decimals: 12,
-          withUnit: "TNKR",
-          forceUnit: "-",
-        }),
-        claimed: formatBalance(claimed.toString(), {
           decimals: 12,
           withUnit: "TNKR",
           forceUnit: "-",
@@ -286,15 +272,6 @@ const Home = () => {
             <div className="border-t border-gray-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="px-6 py-2">
                 <span className="text-sm font-bold leading-6 text-white">
-                  Vesting Claimed:
-                </span>{" "}
-                <span className="text-lg font-bold leading-6 text-white">
-                  {vestingData.claimed}
-                </span>
-              </div>
-
-              <div className="px-6 py-2">
-                <span className="text-sm font-bold leading-6 text-white">
                   Available:
                 </span>{" "}
                 <span className="text-lg font-bold leading-6 text-white">
@@ -308,15 +285,6 @@ const Home = () => {
                 </span>{" "}
                 <span className="text-lg font-bold leading-6 text-white">
                   {vestingData.frozen}
-                </span>
-              </div>
-
-              <div className="px-6 py-2">
-                <span className="text-sm font-bold leading-6 text-white">
-                  Total:
-                </span>{" "}
-                <span className="text-lg font-bold leading-6 text-white">
-                  {vestingData.total}
                 </span>
               </div>
             </div>
