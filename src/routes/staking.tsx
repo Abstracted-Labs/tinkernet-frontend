@@ -10,8 +10,9 @@ import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
-import { Codec, ISubmittableResult } from "@polkadot/types/types";
+import { Codec } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 // import LineChart from "../components/LineChart";
 // import PieChart from "../components/PieChart";
 
@@ -249,24 +250,25 @@ const Staking = () => {
             if (parseInt(unclaimedEarliest) < currentStakingEra) {
               const unclaimed = unclaimedEras;
 
-              unclaimed.cores.filter((value) => {
+              const cores = unclaimed.cores.filter((value) => {
                 return value.coreId != stakingCore.key;
               });
 
-              unclaimed.cores.push({
+              cores.push({
                 coreId: stakingCore.key,
                 earliestEra: parseInt(unclaimedEarliest),
               });
 
-              if (
-                currentStakingEra - parseInt(unclaimedEarliest) >
-                unclaimed.total
-              ) {
-                unclaimed.total =
-                  currentStakingEra - parseInt(unclaimedEarliest);
+              let total = unclaimed.total;
+
+              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
+                total = currentStakingEra - parseInt(unclaimedEarliest);
               }
 
-              setUnclaimedEras(unclaimed);
+              setUnclaimedEras({
+                cores,
+                total: unclaimed.total,
+              });
             } else {
               setUnclaimedEras((unclaimedEras) => ({
                 ...unclaimedEras,
@@ -299,36 +301,6 @@ const Staking = () => {
         }
       );
     }
-  };
-
-  const getSignAndSendCallback = () => {
-    let hasFinished = false;
-
-    return ({ status }: ISubmittableResult) => {
-      if (hasFinished) {
-        return;
-      }
-
-      if (status.isInvalid) {
-        toast.dismiss();
-
-        toast.error("Transaction is invalid");
-
-        hasFinished = true;
-      } else if (status.isReady) {
-        toast.loading("Submitting transaction...");
-      } else if (status.isDropped) {
-        toast.dismiss();
-
-        toast.error("Transaction dropped");
-
-        hasFinished = true;
-      } else if (status.isInBlock || status.isFinalized) {
-        hasFinished = true;
-
-        toast.dismiss();
-      }
-    };
   };
 
   const loadStakingCores = async (
@@ -485,21 +457,25 @@ const Staking = () => {
             const unclaimedEarliest = info.stakes[0].era;
             if (parseInt(unclaimedEarliest) < currentStakingEra) {
               const unclaimed = unclaimedEras;
-              unclaimed.cores.filter((value) => {
+
+              const cores = unclaimed.cores.filter((value) => {
                 return value.coreId != stakingCore.key;
               });
-              unclaimed.cores.push({
+
+              cores.push({
                 coreId: stakingCore.key,
                 earliestEra: parseInt(unclaimedEarliest),
               });
-              if (
-                currentStakingEra - parseInt(unclaimedEarliest) >
-                unclaimed.total
-              ) {
-                unclaimed.total =
-                  currentStakingEra - parseInt(unclaimedEarliest);
+
+              let total = unclaimed.total;
+
+              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
+                total = currentStakingEra - parseInt(unclaimedEarliest);
               }
-              setUnclaimedEras(unclaimed);
+              setUnclaimedEras({
+                cores,
+                total,
+              });
             }
             const latestInfo = info.stakes.at(-1);
             if (!latestInfo) {
@@ -543,7 +519,6 @@ const Staking = () => {
 
       setLoading(false);
     } catch (error) {
-
       toast.dismiss();
 
       setLoading(false);

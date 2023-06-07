@@ -2,7 +2,6 @@ import { Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
-import { ISubmittableResult } from "@polkadot/types/types";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
@@ -12,6 +11,7 @@ import { shallow } from "zustand/shallow";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
+import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 
 const schema = z
   .object({
@@ -41,42 +41,6 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
   });
 
   const api = useApi();
-
-  const getSignAndSendCallback = () => {
-    let hasFinished = false;
-
-    return ({ status }: ISubmittableResult) => {
-      if (hasFinished) {
-        return;
-      }
-
-      if (status.isInvalid) {
-        toast.dismiss();
-
-        toast.error("Transaction is invalid");
-
-        hasFinished = true;
-      } else if (status.isReady) {
-        toast.dismiss();
-
-        toast.loading("Submitting registration...");
-      } else if (status.isDropped) {
-        toast.dismiss();
-
-        toast.error("Registration dropped");
-
-        hasFinished = true;
-      } else if (status.isInBlock || status.isFinalized) {
-        toast.dismiss();
-
-        toast.success("Registration submitted!");
-
-        hasFinished = true;
-
-        window.location.reload();
-      }
-    };
-  };
 
   const handleRegister = registerProjectForm.handleSubmit(
     async ({ core, name, description, image }) => {
@@ -135,7 +99,8 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
       } catch (error) {
         toast.dismiss();
 
-        toast.error(`${error}`);      }
+        toast.error(`${error}`);
+      }
     }
   );
 

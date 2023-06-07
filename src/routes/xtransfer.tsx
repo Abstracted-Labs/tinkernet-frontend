@@ -15,6 +15,7 @@ import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
+import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 
 const RPC_PROVIDER_BSX = "wss://rpc.basilisk.cloud";
 
@@ -77,12 +78,6 @@ const XTransfer = () => {
         api.query.system.account<SystemAccount>(address),
       ]);
 
-      const vestedLocked = new BigNumber(
-        results[0]
-          .find((lock) => lock.id.toHuman() === "ormlvest")
-          ?.amount.toString() || "0"
-      );
-
       const total = new BigNumber(results[1].data.free.toString());
       const miscFrozen = new BigNumber(results[1].data.miscFrozen.toString());
       const reserved = new BigNumber(results[1].data.reserved.toString());
@@ -124,13 +119,14 @@ const XTransfer = () => {
   }, [selectedAccount]);
 
   const handleChangedAmount = (e: string) => {
-    setAmount(parseFloat(e).toFixed(12).replace(".", ""));
+    setAmount(parseFloat(e).toFixed(12).replace(/\./g, ""));
   };
 
   const handleChangedDestination = (e: string) => {
     setDestinationField(e);
     try {
       const des = u8aToHex(decodeAddress(e));
+
       setDestination(des);
     } catch {
       setDestination(null);
@@ -173,9 +169,13 @@ const XTransfer = () => {
             },
           },
         },
-        'Unlimited'
+        "Unlimited"
       )
-      .signAndSend(selectedAccount.address, { signer: injector.signer });
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback()
+      );
   };
 
   const handleXTransferToTinkernet = async () => {
@@ -211,7 +211,11 @@ const XTransfer = () => {
         },
         "5000000000"
       )
-      .signAndSend(selectedAccount.address, { signer: injector.signer });
+      .signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback()
+      );
   };
 
   const encode = (destination: string | null, prefix: number): string => {
@@ -369,8 +373,11 @@ const XTransfer = () => {
                     type="button"
                     className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                     disabled={
-                      (new BigNumber(amount).div(1000000000000).toNumber() >=
-                        balanceInTinkernet.minus(100000000000).div(1000000000000).toNumber()) || !destination
+                      new BigNumber(amount).div(1000000000000).toNumber() >=
+                        balanceInTinkernet
+                          .minus(100000000000)
+                          .div(1000000000000)
+                          .toNumber() || !destination
                     }
                     onClick={() => handleXTransferToBasilisk()}
                   >
@@ -437,7 +444,10 @@ const XTransfer = () => {
                     className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                     disabled={
                       new BigNumber(amount).div(1000000000000).toNumber() >=
-                        balanceInBasilisk.minus(100000000000).div(1000000000000).toNumber() || !destination
+                        balanceInBasilisk
+                          .minus(100000000000)
+                          .div(1000000000000)
+                          .toNumber() || !destination
                     }
                     onClick={() => handleXTransferToTinkernet()}
                   >

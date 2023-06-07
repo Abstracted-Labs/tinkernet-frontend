@@ -12,6 +12,7 @@ import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
+import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 
 type SystemAccount = Struct & {
   data: {
@@ -174,9 +175,7 @@ const Home = () => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          () => {
-            loadBalances(selectedAccount);
-          }
+          getSignAndSendCallback()
         );
 
       toast.dismiss();
