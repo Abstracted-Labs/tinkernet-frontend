@@ -549,31 +549,45 @@ const Staking = () => {
 
     if (!currentStakingEra) return;
 
-    await web3Enable("Tinkernet");
+    try {
+      toast.loading("Claiming...");
 
-    const injector = await web3FromAddress(selectedAccount.address);
+      await web3Enable("Tinkernet");
 
-    const batch = [];
+      const injector = await web3FromAddress(selectedAccount.address);
 
-    const uniqueCores = [
-      ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
-    ];
+      const batch = [];
 
-    for (const core of uniqueCores) {
-      if (!core?.earliestEra) continue;
+      const uniqueCores = [
+        ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
+      ];
 
-      for (let i = 0; i < currentStakingEra - core.earliestEra; i++) {
-        batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+      for (const core of uniqueCores) {
+        if (!core?.earliestEra) continue;
+
+        for (let i = 0; i < currentStakingEra - core.earliestEra; i++) {
+          batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+        }
       }
-    }
 
-    api.tx.utility
-      .batch(batch)
-      .signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallback()
-      );
+      await api.tx.utility
+        .batch(batch)
+        .signAndSend(
+          selectedAccount.address,
+          { signer: injector.signer },
+          getSignAndSendCallback()
+        );
+
+      toast.dismiss();
+
+      toast.success("Claimed!");
+    } catch (error) {
+      toast.dismiss();
+
+      toast.error(`${error}`);
+
+      console.error(error);
+    }
   };
 
   const handleUnbondTokens = () => {
