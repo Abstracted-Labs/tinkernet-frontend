@@ -468,7 +468,9 @@ const Staking = () => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallback()
+          getSignAndSendCallback({
+            onSuccess: () => loadStakingCores(selectedAccount),
+          })
         );
 
       toast.dismiss();

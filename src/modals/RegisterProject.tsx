@@ -92,7 +92,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
           .signAndSend(
             selectedAccount.address,
             { signer: injector.signer },
-            getSignAndSendCallback()
+            getSignAndSendCallback({})
           );
 
         setOpenModal({ name: null });

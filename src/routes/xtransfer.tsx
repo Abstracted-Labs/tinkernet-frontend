@@ -174,7 +174,11 @@ const XTransfer = () => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback()
+        getSignAndSendCallback({
+          onSuccess: () => {
+            loadBalances(selectedAccount);
+          },
+        })
       );
   };
 
@@ -214,7 +218,11 @@ const XTransfer = () => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback()
+        getSignAndSendCallback({
+          onSuccess: () => {
+            loadBalances(selectedAccount);
+          },
+        })
       );
   };
 

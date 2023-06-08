@@ -40,10 +40,7 @@ const Home = () => {
   const [isLoading, setLoading] = useState(false);
   const api = useApi();
 
-  const loadBalances = async (
-    { address }: InjectedAccountWithMeta,
-    available?: string
-  ) => {
+  const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
     setLoading(true);
 
     try {
@@ -117,7 +114,7 @@ const Home = () => {
 
       const frozen = new BigNumber(results[3].data.feeFrozen.toString());
 
-      const oldAvailable = total.minus(frozen);
+      const available = total.minus(frozen);
 
       setVestingData({
         vestedLocked: formatBalance(vestedLocked.toString(), {
@@ -135,13 +132,11 @@ const Home = () => {
           withUnit: "TNKR",
           forceUnit: "-",
         }),
-        available: available
-          ? available
-          : formatBalance(oldAvailable.toString(), {
-              decimals: 12,
-              withUnit: "TNKR",
-              forceUnit: "-",
-            }),
+        available: formatBalance(available.toString(), {
+          decimals: 12,
+          withUnit: "TNKR",
+          forceUnit: "-",
+        }),
         remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(
           remainingVestingPeriod
         ),
@@ -162,40 +157,6 @@ const Home = () => {
     }
   };
 
-  const setupSubscriptions = ({
-    selectedAccount,
-  }: {
-    selectedAccount: InjectedAccountWithMeta;
-  }) => {
-    const account = api.query.system.account(
-      selectedAccount.address,
-      (account) => {
-        const data =
-          account.data.toPrimitive() as unknown as SystemAccount["data"];
-
-        if (!data) return;
-
-        const free = new BigNumber(data.free.toString());
-
-        const feeFrozen = new BigNumber(data.feeFrozen.toString());
-
-        const available = formatBalance(free.minus(feeFrozen).toString(), {
-          decimals: 12,
-          withUnit: "TNKR",
-          forceUnit: "-",
-        });
-
-        if (!vestingData) return;
-
-        if (available === vestingData.available) return;
-
-        loadBalances(selectedAccount, available);
-      }
-    );
-
-    return [account];
-  };
-
   const handleClaim = async () => {
     if (!selectedAccount) return;
 
@@ -206,17 +167,15 @@ const Home = () => {
 
       toast.loading("Claiming vesting...");
 
-      await api.tx.vesting
-        .claim()
-        .signAndSend(
-          selectedAccount.address,
-          { signer: injector.signer },
-          getSignAndSendCallback()
-        );
+      await api.tx.vesting.claim().signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback({
+          onSuccess: () => loadBalances(selectedAccount),
+        })
+      );
 
       toast.dismiss();
-
-      toast.success("Claimed vesting!");
     } catch (error) {
       toast.dismiss();
 
@@ -231,16 +190,6 @@ const Home = () => {
 
     loadBalances(selectedAccount);
   }, [selectedAccount]);
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-
-    const unsubs = setupSubscriptions({ selectedAccount });
-
-    return () => {
-      unsubs.forEach(async (unsub) => (await unsub)());
-    };
-  });
 
   return (
     <div className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">

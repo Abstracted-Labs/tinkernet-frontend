@@ -43,7 +43,7 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallback()
+          getSignAndSendCallback({ onSuccess: () => loadUnbondingInfo() })
         );
 
       setOpenModal({ name: null });

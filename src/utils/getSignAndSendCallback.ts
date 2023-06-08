@@ -1,7 +1,7 @@
 import { ISubmittableResult } from "@polkadot/types/types";
 import toast from "react-hot-toast";
 
-const getSignAndSendCallback = () => {
+const getSignAndSendCallback = ({ onSuccess }: { onSuccess?: () => void }) => {
   let hasFinished = false;
 
   return ({ status }: ISubmittableResult) => {
@@ -25,6 +25,8 @@ const getSignAndSendCallback = () => {
       hasFinished = true;
     } else if (status.isInBlock || status.isFinalized) {
       hasFinished = true;
+
+      if (onSuccess) onSuccess();
 
       toast.dismiss();
     }
