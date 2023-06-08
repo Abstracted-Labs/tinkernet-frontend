@@ -2,10 +2,11 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import {
-  createClient,
   Provider as URQLProvider,
-  defaultExchanges,
+  cacheExchange,
+  fetchExchange,
   subscriptionExchange,
+  Client,
 } from "urql";
 import { createClient as createWSClient } from "graphql-ws";
 
@@ -24,52 +25,51 @@ const wsClient = createWSClient({
   url: "wss://squid.subsquid.io/ocif-squid/v/v1/graphql",
 });
 
-const client = createClient({
+const client = new Client({
   url: "https://squid.subsquid.io/ocif-squid/v/v1/graphql",
   exchanges: [
-    ...defaultExchanges,
+    cacheExchange,
+    fetchExchange,
     subscriptionExchange({
-      forwardSubscription: (operation) => ({
-        subscribe: (sink) => ({
-          unsubscribe: wsClient.subscribe(operation, sink),
-        }),
-      }),
+      forwardSubscription(request) {
+        const input = { ...request, query: request.query || "" };
+        return {
+          subscribe(sink) {
+            const unsubscribe = wsClient.subscribe(input, sink);
+            return { unsubscribe };
+          },
+        };
+      },
     }),
   ],
 });
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <>
-      <Toaster position="bottom-right" />
-      <BrowserRouter>
-        <ApiProvider>
-          <URQLProvider value={client}>
-            <Modals />
+  // <React.StrictMode>
+  <>
+    <Toaster position="bottom-right" />
+    <BrowserRouter>
+      <ApiProvider>
+        <URQLProvider value={client}>
+          <Modals />
 
-            <Routes>
-              <Route index element={<Navigate to="claim" replace={true} />} />
-              <Route path="/" element={<Layout />}>
-                <Route path="claim" element={<Claim />} />
+          <Routes>
+            <Route index element={<Navigate to="claim" replace={true} />} />
+            <Route path="/" element={<Layout />}>
+              <Route path="claim" element={<Claim />} />
 
-                <Route path="xtransfer" element={<XTransfer />} />
+              <Route path="xtransfer" element={<XTransfer />} />
 
-                <Route
-                  path="staking"
-                  element={<Staking />}
-                />
+              <Route path="staking" element={<Staking />} />
 
-                <Route path="404" element={<NotFound />} />
+              <Route path="404" element={<NotFound />} />
 
-                <Route
-                  path="*"
-                  element={<Navigate to="/404" replace={true} />}
-                />
-              </Route>
-            </Routes>
-          </URQLProvider>
-        </ApiProvider>
-      </BrowserRouter>
-    </>
-  </React.StrictMode>
+              <Route path="*" element={<Navigate to="/404" replace={true} />} />
+            </Route>
+          </Routes>
+        </URQLProvider>
+      </ApiProvider>
+    </BrowserRouter>
+  </>
+  // </React.StrictMode>
 );
