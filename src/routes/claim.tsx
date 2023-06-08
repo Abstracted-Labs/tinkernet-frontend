@@ -8,11 +8,11 @@ import BigNumber from "bignumber.js";
 
 import background from "../assets/background.svg";
 import { toast } from "react-hot-toast";
-import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import useApi from "../hooks/useApi";
 
 type SystemAccount = Struct & {
   data: {
@@ -32,20 +32,22 @@ type VestingData = {
 };
 
 const Home = () => {
-  const { createApi } = useRPC();
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
   );
   const [vestingData, setVestingData] = useState<VestingData | null>(null);
   const [isLoading, setLoading] = useState(false);
+  const api = useApi();
 
-  const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
+  const loadBalances = async (
+    { address }: InjectedAccountWithMeta,
+    available?: string
+  ) => {
     setLoading(true);
 
     try {
       toast.loading("Loading balances...");
-      const api = await createApi();
 
       const results = await Promise.all([
         // vested locked
@@ -115,7 +117,7 @@ const Home = () => {
 
       const frozen = new BigNumber(results[3].data.feeFrozen.toString());
 
-      const available = total.minus(frozen);
+      const oldAvailable = total.minus(frozen);
 
       setVestingData({
         vestedLocked: formatBalance(vestedLocked.toString(), {
@@ -133,11 +135,13 @@ const Home = () => {
           withUnit: "TNKR",
           forceUnit: "-",
         }),
-        available: formatBalance(available.toString(), {
-          decimals: 12,
-          withUnit: "TNKR",
-          forceUnit: "-",
-        }),
+        available: available
+          ? available
+          : formatBalance(oldAvailable.toString(), {
+              decimals: 12,
+              withUnit: "TNKR",
+              forceUnit: "-",
+            }),
         remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(
           remainingVestingPeriod
         ),
@@ -158,12 +162,44 @@ const Home = () => {
     }
   };
 
+  const setupSubscriptions = ({
+    selectedAccount,
+  }: {
+    selectedAccount: InjectedAccountWithMeta;
+  }) => {
+    const account = api.query.system.account(
+      selectedAccount.address,
+      (account) => {
+        const data =
+          account.data.toPrimitive() as unknown as SystemAccount["data"];
+
+        if (!data) return;
+
+        const free = new BigNumber(data.free.toString());
+
+        const feeFrozen = new BigNumber(data.feeFrozen.toString());
+
+        const available = formatBalance(free.minus(feeFrozen).toString(), {
+          decimals: 12,
+          withUnit: "TNKR",
+          forceUnit: "-",
+        });
+
+        if (!vestingData) return;
+
+        if (available === vestingData.available) return;
+
+        loadBalances(selectedAccount, available);
+      }
+    );
+
+    return [account];
+  };
+
   const handleClaim = async () => {
     if (!selectedAccount) return;
 
     try {
-      const api = await createApi();
-
       web3Enable("Tinkernet");
 
       const injector = await web3FromAddress(selectedAccount.address);
@@ -195,6 +231,16 @@ const Home = () => {
 
     loadBalances(selectedAccount);
   }, [selectedAccount]);
+
+  useEffect(() => {
+    if (!selectedAccount) return;
+
+    const unsubs = setupSubscriptions({ selectedAccount });
+
+    return () => {
+      unsubs.forEach(async (unsub) => (await unsub)());
+    };
+  });
 
   return (
     <div className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
