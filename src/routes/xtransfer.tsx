@@ -235,6 +235,12 @@ const XTransfer = () => {
     }
   };
 
+  useEffect(() => {
+    if (!selectedAccount) return;
+
+    handleChangedDestination(selectedAccount.address);
+  }, [selectedAccount]);
+
   return (
     <div className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
       <div
