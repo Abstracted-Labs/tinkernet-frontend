@@ -8,10 +8,11 @@ import BigNumber from "bignumber.js";
 
 import background from "../assets/background.svg";
 import { toast } from "react-hot-toast";
-import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
+import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import useApi from "../hooks/useApi";
 
 type SystemAccount = Struct & {
   data: {
@@ -31,20 +32,19 @@ type VestingData = {
 };
 
 const Home = () => {
-  const { createApi } = useRPC();
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
   );
   const [vestingData, setVestingData] = useState<VestingData | null>(null);
   const [isLoading, setLoading] = useState(false);
+  const api = useApi();
 
   const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
     setLoading(true);
 
     try {
       toast.loading("Loading balances...");
-      const api = await createApi();
 
       const results = await Promise.all([
         // vested locked
@@ -161,27 +161,21 @@ const Home = () => {
     if (!selectedAccount) return;
 
     try {
-      const api = await createApi();
-
       web3Enable("Tinkernet");
 
       const injector = await web3FromAddress(selectedAccount.address);
 
       toast.loading("Claiming vesting...");
 
-      await api.tx.vesting
-        .claim()
-        .signAndSend(
-          selectedAccount.address,
-          { signer: injector.signer },
-          () => {
-            loadBalances(selectedAccount);
-          }
-        );
+      await api.tx.vesting.claim().signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback({
+          onSuccess: () => loadBalances(selectedAccount),
+        })
+      );
 
       toast.dismiss();
-
-      toast.success("Claimed vesting!");
     } catch (error) {
       toast.dismiss();
 

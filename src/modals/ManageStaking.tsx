@@ -272,7 +272,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                   <span className="font-bold">
                     {formatBalance(
                       metadata?.availableBalance
-                        ? metadata?.availableBalance.toString()
+                        ? metadata.availableBalance.toString()
                         : "0",
                       {
                         decimals: 12,
@@ -291,7 +291,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                   <>
                     Staked:{" "}
                     <span className="font-bold">
-                      {formatBalance(metadata?.totalUserStaked.toString(), {
+                      {formatBalance(metadata.totalUserStaked.toString(), {
                         decimals: 12,
                         withUnit: false,
                         forceUnit: "-",

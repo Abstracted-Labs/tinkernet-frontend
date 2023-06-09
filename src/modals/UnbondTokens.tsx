@@ -1,7 +1,6 @@
 import { Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
-import { ISubmittableResult } from "@polkadot/types/types";
 import { formatBalance } from "@polkadot/util";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -10,6 +9,7 @@ import { shallow } from "zustand/shallow";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
+import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 
 const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
   const { setOpenModal } = useModal(
@@ -28,40 +28,6 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
 
   const api = useApi();
 
-  const getSignAndSendCallback = () => {
-    let hasFinished = false;
-
-    return ({ status }: ISubmittableResult) => {
-      if (hasFinished) {
-        return;
-      }
-
-      if (status.isInvalid) {
-        toast.dismiss();
-
-        toast.error("Transaction is invalid");
-
-        hasFinished = true;
-      } else if (status.isReady) {
-        toast.dismiss();
-
-        toast.loading("Submitting transaction...");
-      } else if (status.isDropped) {
-        toast.dismiss();
-
-        toast.error("Transaction dropped");
-
-        hasFinished = true;
-      } else if (status.isInBlock || status.isFinalized) {
-        toast.dismiss();
-
-        toast.success("Transaction submitted!");
-
-        hasFinished = true;
-      }
-    };
-  };
-
   const handleUnbond = async () => {
     if (!selectedAccount) return;
 
@@ -77,7 +43,7 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallback()
+          getSignAndSendCallback({ onSuccess: () => loadUnbondingInfo() })
         );
 
       setOpenModal({ name: null });
@@ -146,14 +112,14 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
             {unbondingInfo.map(({ amount, unlockIn }) => {
               if (unlockIn <= 0) {
                 return (
-                  <div className="text-white">
+                  <div className="text-white" key={`${amount}-${unlockIn}`}>
                     <span className="font-bold">{amount}</span> was unlocked
                   </div>
                 );
               }
 
               return (
-                <div className="text-white">
+                <div className="text-white" key={`${amount}-${unlockIn}`}>
                   <span className="font-bold">{amount}</span> will unlock in{" "}
                   {unlockIn} eras
                 </div>
