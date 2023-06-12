@@ -468,16 +468,12 @@ const Staking = () => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallback({
-            onSuccess: () => loadStakingCores(selectedAccount),
-          })
+          getSignAndSendCallback({})
         );
 
       toast.dismiss();
 
       toast.success("Claimed!");
-
-      toast.loading("Loading staking information...");
     } catch (error) {
       toast.dismiss();
 
