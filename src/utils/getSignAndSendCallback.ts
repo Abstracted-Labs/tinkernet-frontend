@@ -1,34 +1,37 @@
 import { ISubmittableResult } from "@polkadot/types/types";
-import toast from "react-hot-toast";
 
-const getSignAndSendCallback = ({ onSuccess }: { onSuccess?: () => void }) => {
+const getSignAndSendCallback = ({
+  onInvalid,
+  onExecuted,
+  onSuccess,
+  onDropped,
+}: {
+  onInvalid?: (payload: ISubmittableResult) => void;
+  onExecuted?: (payload: ISubmittableResult) => void;
+  onSuccess?: (payload: ISubmittableResult) => void;
+  onDropped?: (payload: ISubmittableResult) => void;
+}) => {
   let hasFinished = false;
 
-  return ({ status }: ISubmittableResult) => {
+  return (result: ISubmittableResult) => {
     if (hasFinished) {
       return;
     }
 
-    if (status.isInvalid) {
-      toast.dismiss();
-
-      toast.error("Transaction is invalid");
+    if (result.status.isInvalid) {
+      if (onInvalid) onInvalid(result);
 
       hasFinished = true;
-    } else if (status.isReady) {
-      toast.loading("Submitting transaction...");
-    } else if (status.isDropped) {
-      toast.dismiss();
-
-      toast.error("Transaction dropped");
+    } else if (result.status.isReady) {
+      if (onExecuted) onExecuted(result);
+    } else if (result.status.isDropped) {
+      if (onDropped) onDropped(result);
 
       hasFinished = true;
-    } else if (status.isInBlock || status.isFinalized) {
+    } else if (result.status.isInBlock || result.status.isFinalized) {
+      if (onSuccess) onSuccess(result);
+
       hasFinished = true;
-
-      if (onSuccess) onSuccess();
-
-      toast.dismiss();
     }
   };
 };

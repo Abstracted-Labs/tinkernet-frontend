@@ -92,7 +92,28 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
           .signAndSend(
             selectedAccount.address,
             { signer: injector.signer },
-            getSignAndSendCallback({})
+            getSignAndSendCallback({
+              onInvalid: () => {
+                toast.dismiss();
+
+                toast.error("Invalid registration");
+              },
+              onExecuted: () => {
+                toast.dismiss();
+
+                toast.loading("Waiting for confirmation...");
+              },
+              onSuccess: () => {
+                toast.dismiss();
+
+                toast.success("Registered successfully");
+              },
+              onDropped: () => {
+                toast.dismiss();
+
+                toast.error("Registration dropped");
+              },
+            })
           );
 
         setOpenModal({ name: null });
