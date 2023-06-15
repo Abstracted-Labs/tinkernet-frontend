@@ -77,6 +77,7 @@ const Staking = () => {
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
 
   const [isLoading, setLoading] = useState(false);
+  const [isWaiting, setWaiting] = useState(false);
 
   const [rewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -469,28 +470,34 @@ const Staking = () => {
             toast.dismiss();
 
             toast.error("Invalid transaction");
+
+            setWaiting(false);
           },
           onExecuted: () => {
             toast.dismiss();
 
             toast.loading("Waiting for confirmation...");
+
+            setWaiting(true);
           },
           onSuccess: () => {
             toast.dismiss();
 
             toast.success("Claimed successfully");
+
+            setWaiting(false);
           },
           onDropped: () => {
             toast.dismiss();
 
             toast.error("Transaction dropped");
+
+            setWaiting(false);
           },
         })
       );
 
       toast.dismiss();
-
-      toast.success("Claimed!");
     } catch (error) {
       toast.dismiss();
 
@@ -711,7 +718,7 @@ const Staking = () => {
                     type="button"
                     className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
                     onClick={handleClaimAll}
-                    disabled={unclaimedEras.total === 0}
+                    disabled={unclaimedEras.total === 0 || isWaiting}
                   >
                     Claim Rewards
                   </button>

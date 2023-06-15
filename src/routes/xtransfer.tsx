@@ -54,7 +54,10 @@ const XTransfer = () => {
     from: currency.BASILISK,
     to: currency.TINKERNET,
   });
+
   const [isLoading, setLoading] = useState(true);
+  const [isWaiting, setWaiting] = useState(false);
+
   const api = useApi();
   const [apiBasilisk, setApiBasilisk] = useState<ApiPromise>();
 
@@ -164,8 +167,6 @@ const XTransfer = () => {
       toast.dismiss();
 
       setLoading(false);
-
-      toast.success("Balances loaded");
     } catch (error) {
       toast.dismiss();
 
@@ -249,21 +250,29 @@ const XTransfer = () => {
             toast.dismiss();
 
             toast.error("Invalid transaction");
+
+            setWaiting(false);
           },
           onExecuted: () => {
             toast.dismiss();
 
             toast.loading("Waiting for confirmation...");
+
+            setWaiting(true);
           },
           onSuccess: () => {
             toast.dismiss();
 
             toast.success("Claimed successfully");
+
+            setWaiting(false);
           },
           onDropped: () => {
             toast.dismiss();
 
             toast.error("Transaction dropped");
+
+            setWaiting(false);
           },
         })
       );
@@ -287,7 +296,7 @@ const XTransfer = () => {
         6,
         amount,
         {
-          V1: {
+          V2: {
             parents: 1,
             interior: {
               X2: [
@@ -302,7 +311,7 @@ const XTransfer = () => {
             },
           },
         },
-        "5000000000"
+        "Unlimited"
       )
       .signAndSend(
         selectedAccount.address,
@@ -312,23 +321,29 @@ const XTransfer = () => {
             toast.dismiss();
 
             toast.error("Invalid transaction");
+
+            setWaiting(false);
           },
           onExecuted: () => {
             toast.dismiss();
 
             toast.loading("Waiting for confirmation...");
+
+            setWaiting(true);
           },
           onSuccess: () => {
             toast.dismiss();
 
             toast.success("Claimed successfully");
 
-            loadBalances(selectedAccount);
+            setWaiting(false);
           },
           onDropped: () => {
             toast.dismiss();
 
             toast.error("Transaction dropped");
+
+            setWaiting(false);
           },
         })
       );
@@ -506,7 +521,7 @@ const XTransfer = () => {
                     type="button"
                     className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                     disabled={
-                      pair.from === "Tinkernet"
+                      (pair.from === "Tinkernet"
                         ? new BigNumber(amount).div(1000000000000).toNumber() >=
                             balanceInTinkernet
                               .minus(100000000000)
@@ -516,7 +531,7 @@ const XTransfer = () => {
                             balanceInBasilisk
                               .minus(100000000000)
                               .div(1000000000000)
-                              .toNumber() || !destination
+                              .toNumber() || !destination) || isWaiting
                     }
                     onClick={() => handleXTransferToBasilisk()}
                   >
@@ -586,7 +601,9 @@ const XTransfer = () => {
                         balanceInBasilisk
                           .minus(100000000000)
                           .div(1000000000000)
-                          .toNumber() || !destination
+                          .toNumber() ||
+                      !destination ||
+                      isWaiting
                     }
                     onClick={() => handleXTransferToTinkernet()}
                   >
