@@ -38,6 +38,7 @@ const Home = () => {
   );
   const [vestingData, setVestingData] = useState<VestingData | null>(null);
   const [isLoading, setLoading] = useState(false);
+  const [isWaiting, setWaiting] = useState(false);
   const api = useApi();
 
   const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
@@ -173,11 +174,15 @@ const Home = () => {
             toast.dismiss();
 
             toast.error("Invalid transaction");
+
+            setWaiting(false);
           },
           onExecuted: () => {
             toast.dismiss();
 
             toast.loading("Waiting for confirmation...");
+
+            setWaiting(true);
           },
           onSuccess: () => {
             toast.dismiss();
@@ -185,11 +190,15 @@ const Home = () => {
             toast.success("Unstaked successfully");
 
             loadBalances(selectedAccount);
+
+            setWaiting(false);
           },
           onDropped: () => {
             toast.dismiss();
 
             toast.error("Transaction dropped");
+
+            setWaiting(false);
           },
         })
       );
@@ -262,7 +271,7 @@ const Home = () => {
                   type="button"
                   className="mt-8 inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                   onClick={() => handleClaim()}
-                  disabled={vestingData.vestedClaimable === "0"}
+                  disabled={vestingData.vestedClaimable === "0" || isWaiting}
                 >
                   Claim Now
                 </button>
