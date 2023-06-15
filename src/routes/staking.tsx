@@ -14,8 +14,6 @@ import { Codec } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import { UnsubscribePromise } from "@polkadot/api/types";
-// import LineChart from "../components/LineChart";
-// import PieChart from "../components/PieChart";
 
 const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
@@ -463,13 +461,32 @@ const Staking = () => {
         }
       }
 
-      await api.tx.utility
-        .batch(batch)
-        .signAndSend(
-          selectedAccount.address,
-          { signer: injector.signer },
-          getSignAndSendCallback({})
-        );
+      await api.tx.utility.batch(batch).signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback({
+          onInvalid: () => {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          },
+          onExecuted: () => {
+            toast.dismiss();
+
+            toast.loading("Waiting for confirmation...");
+          },
+          onSuccess: () => {
+            toast.dismiss();
+
+            toast.success("Claimed successfully");
+          },
+          onDropped: () => {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+          },
+        })
+      );
 
       toast.dismiss();
 

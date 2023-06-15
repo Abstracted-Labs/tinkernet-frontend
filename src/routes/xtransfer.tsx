@@ -16,8 +16,11 @@ import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import useApi from "../hooks/useApi";
+import { UnsubscribePromise } from "@polkadot/api/types";
+import { FrameSystemAccountInfo } from "@polkadot/types/lookup";
 
-const RPC_PROVIDER_BSX = "wss://rpc.basilisk.cloud";
+const RPC_PROVIDER_BASILISK = "wss://rpc.basilisk.cloud";
 
 type SystemAccount = Struct & {
   data: {
@@ -51,7 +54,9 @@ const XTransfer = () => {
     from: currency.BASILISK,
     to: currency.TINKERNET,
   });
-  const [isLoading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(true);
+  const api = useApi();
+  const [apiBasilisk, setApiBasilisk] = useState<ApiPromise>();
 
   const [balanceInTinkernet, setBalanceInTinkernet] = useState<BigNumber>(
     new BigNumber(0)
@@ -60,41 +65,101 @@ const XTransfer = () => {
     new BigNumber(0)
   );
 
+  const setupSubscriptions = ({
+    selectedAccount,
+  }: {
+    selectedAccount: InjectedAccountWithMeta;
+  }) => {
+    if (!apiBasilisk) return [];
+
+    const balanceTinkernet = api.query.system.account(
+      selectedAccount.address,
+      async (account) => {
+        const balance = account.toPrimitive() as {
+          nonce: string;
+          consumers: string;
+          providers: string;
+          sufficients: string;
+          data: {
+            free: string;
+            reserved: string;
+            miscFrozen: string;
+            feeFrozen: string;
+          };
+        };
+
+        const total = new BigNumber(balance.data.free.toString());
+        const miscFrozen = new BigNumber(balance.data.miscFrozen.toString());
+        const reserved = new BigNumber(balance.data.reserved.toString());
+
+        const transferable = total.minus(miscFrozen).minus(reserved);
+
+        setBalanceInTinkernet(transferable);
+      }
+    );
+
+    const balanceBasilisk = apiBasilisk.query.tokens.accounts(
+      selectedAccount.address,
+      6,
+      async (account: FrameSystemAccountInfo) => {
+        const balance = account.toPrimitive() as {
+          free: string;
+        };
+
+        const transferable = new BigNumber(balance.free.toString());
+
+        setBalanceInBasilisk(transferable);
+      }
+    );
+
+    const unsubs = [balanceTinkernet, balanceBasilisk];
+
+    return unsubs as UnsubscribePromise[];
+  };
+
+  const setupApiBasilisk = async () => {
+    const wsProviderBasilisk = new WsProvider(RPC_PROVIDER_BASILISK);
+
+    const apiBasilisk = await ApiPromise.create({
+      provider: wsProviderBasilisk,
+    });
+
+    setApiBasilisk(apiBasilisk);
+
+    setLoading(false);
+  };
+
   const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
+    if (!apiBasilisk) {
+      return;
+    }
+
     setLoading(true);
 
     try {
       toast.loading("Loading balances...");
-      const api = await createApi();
 
-      const wsProviderBsx = new WsProvider(RPC_PROVIDER_BSX);
+      const balance = await api.query.system.account<SystemAccount>(address);
 
-      const apiBsx = await ApiPromise.create({ provider: wsProviderBsx });
-
-      const results = await Promise.all([
-        // vested locked
-        api.query.balances.locks(address),
-        // total
-        api.query.system.account<SystemAccount>(address),
-      ]);
-
-      const total = new BigNumber(results[1].data.free.toString());
-      const miscFrozen = new BigNumber(results[1].data.miscFrozen.toString());
-      const reserved = new BigNumber(results[1].data.reserved.toString());
+      const total = new BigNumber(balance.data.free.toString());
+      const miscFrozen = new BigNumber(balance.data.miscFrozen.toString());
+      const reserved = new BigNumber(balance.data.reserved.toString());
 
       const transferable = total.minus(miscFrozen).minus(reserved);
 
       setBalanceInTinkernet(transferable);
 
-      const balanceInBas = new BigNumber(
+      const balanceInBasilisk = new BigNumber(
         (
-          (await apiBsx.query.tokens.accounts(address, 6)).toPrimitive() as {
+          (
+            await apiBasilisk.query.tokens.accounts(address, 6)
+          ).toPrimitive() as {
             free: number;
           }
         ).free
       );
 
-      setBalanceInBasilisk(balanceInBas);
+      setBalanceInBasilisk(balanceInBasilisk);
 
       toast.dismiss();
 
@@ -113,10 +178,15 @@ const XTransfer = () => {
   };
 
   useEffect(() => {
+    setupApiBasilisk();
+  }, []);
+
+  useEffect(() => {
     if (!selectedAccount) return;
+    if (!apiBasilisk) return;
 
     loadBalances(selectedAccount);
-  }, [selectedAccount]);
+  }, [selectedAccount, apiBasilisk]);
 
   const handleChangedAmount = (e: string) => {
     setAmount(parseFloat(e).toFixed(12).replace(/\./g, ""));
@@ -175,8 +245,25 @@ const XTransfer = () => {
         selectedAccount.address,
         { signer: injector.signer },
         getSignAndSendCallback({
+          onInvalid: () => {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          },
+          onExecuted: () => {
+            toast.dismiss();
+
+            toast.loading("Waiting for confirmation...");
+          },
           onSuccess: () => {
-            loadBalances(selectedAccount);
+            toast.dismiss();
+
+            toast.success("Claimed successfully");
+          },
+          onDropped: () => {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
           },
         })
       );
@@ -189,11 +276,13 @@ const XTransfer = () => {
 
     const injector = await web3FromAddress(selectedAccount.address);
 
-    const wsProviderBSX = new WsProvider(RPC_PROVIDER_BSX);
+    const wsProviderBasilisk = new WsProvider(RPC_PROVIDER_BASILISK);
 
-    const apiBSX = await ApiPromise.create({ provider: wsProviderBSX });
+    const apiBasilisk = await ApiPromise.create({
+      provider: wsProviderBasilisk,
+    });
 
-    apiBSX.tx.xTokens
+    apiBasilisk.tx.xTokens
       .transfer(
         6,
         amount,
@@ -219,8 +308,27 @@ const XTransfer = () => {
         selectedAccount.address,
         { signer: injector.signer },
         getSignAndSendCallback({
+          onInvalid: () => {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          },
+          onExecuted: () => {
+            toast.dismiss();
+
+            toast.loading("Waiting for confirmation...");
+          },
           onSuccess: () => {
+            toast.dismiss();
+
+            toast.success("Claimed successfully");
+
             loadBalances(selectedAccount);
+          },
+          onDropped: () => {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
           },
         })
       );
@@ -240,6 +348,17 @@ const XTransfer = () => {
 
     handleChangedDestination(selectedAccount.address);
   }, [selectedAccount]);
+
+  useEffect(() => {
+    if (!selectedAccount) return;
+    if (!apiBasilisk) return;
+
+    const unsubs = setupSubscriptions({ selectedAccount });
+
+    return () => {
+      unsubs.forEach(async (unsub) => (await unsub)());
+    };
+  }, [api, apiBasilisk]);
 
   return (
     <div className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">

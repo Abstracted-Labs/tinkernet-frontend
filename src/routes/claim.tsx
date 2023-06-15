@@ -44,8 +44,6 @@ const Home = () => {
     setLoading(true);
 
     try {
-      toast.loading("Loading balances...");
-
       const results = await Promise.all([
         // vested locked
         api.query.balances.locks(address),
@@ -171,7 +169,28 @@ const Home = () => {
         selectedAccount.address,
         { signer: injector.signer },
         getSignAndSendCallback({
-          onSuccess: () => loadBalances(selectedAccount),
+          onInvalid: () => {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          },
+          onExecuted: () => {
+            toast.dismiss();
+
+            toast.loading("Waiting for confirmation...");
+          },
+          onSuccess: () => {
+            toast.dismiss();
+
+            toast.success("Unstaked successfully");
+
+            loadBalances(selectedAccount);
+          },
+          onDropped: () => {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+          },
         })
       );
 

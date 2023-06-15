@@ -38,13 +38,34 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean }) => {
     const injector = await web3FromAddress(selectedAccount.address);
 
     try {
-      await api.tx.ocifStaking
-        .withdrawUnstaked()
-        .signAndSend(
-          selectedAccount.address,
-          { signer: injector.signer },
-          getSignAndSendCallback({ onSuccess: () => loadUnbondingInfo() })
-        );
+      await api.tx.ocifStaking.withdrawUnstaked().signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback({
+          onInvalid: () => {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+          },
+          onExecuted: () => {
+            toast.dismiss();
+
+            toast.loading("Waiting for confirmation...");
+          },
+          onSuccess: () => {
+            toast.dismiss();
+
+            toast.success("Unbonded successfully");
+
+            loadUnbondingInfo();
+          },
+          onDropped: () => {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+          },
+        })
+      );
 
       setOpenModal({ name: null });
     } catch (error) {
