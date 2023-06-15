@@ -296,7 +296,7 @@ const XTransfer = () => {
         6,
         amount,
         {
-          V1: {
+          V2: {
             parents: 1,
             interior: {
               X2: [
@@ -311,7 +311,7 @@ const XTransfer = () => {
             },
           },
         },
-        "5000000000"
+        "Unlimited"
       )
       .signAndSend(
         selectedAccount.address,
