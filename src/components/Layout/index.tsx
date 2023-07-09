@@ -13,7 +13,14 @@ const Layout = () => {
         aria-hidden="true"
       >
         {Array.from({ length: 10 }).map((_, i) => {
-          return <img src={pattern} key={`${pattern}-${i}`} alt="pattern" />;
+          return (
+            <img
+              src={pattern}
+              key={`${pattern}-${i}`}
+              alt="pattern"
+              className="pointer-events-none"
+            />
+          );
         })}
       </div>
 

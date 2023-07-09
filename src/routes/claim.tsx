@@ -41,19 +41,19 @@ const Home = () => {
   const [isWaiting, setWaiting] = useState(false);
   const api = useApi();
 
-  const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
+  const loadBalances = async (selectedAccount: InjectedAccountWithMeta) => {
     setLoading(true);
 
     try {
       const results = await Promise.all([
         // vested locked
-        api.query.balances.locks(address),
+        api.query.balances.locks(selectedAccount.address),
         // vesting schedules
-        api.query.vesting.vestingSchedules(address),
+        api.query.vesting.vestingSchedules(selectedAccount.address),
         // current block
         api.query.system.number(),
         // available
-        api.query.system.account<SystemAccount>(address),
+        api.query.system.account<SystemAccount>(selectedAccount.address),
       ]);
 
       const vestedLocked = new BigNumber(
@@ -156,9 +156,7 @@ const Home = () => {
     }
   };
 
-  const handleClaim = async () => {
-    if (!selectedAccount) return;
-
+  const handleClaim = async (selectedAccount: InjectedAccountWithMeta) => {
     try {
       web3Enable("Tinkernet");
 
@@ -229,12 +227,12 @@ const Home = () => {
           <img
             src={background}
             alt="background"
-            className="absolute right-full translate-y-0 translate-x-1/3 transform "
+            className="pointer-events-none absolute right-full translate-y-0 translate-x-1/3 transform"
           />
           <img
             src={background}
             alt="background"
-            className="absolute left-full translate-y-0 -translate-x-1/3 transform"
+            className="pointer-events-none absolute left-full translate-y-0 -translate-x-1/3 transform"
           />
         </div>
       </div>
@@ -270,7 +268,7 @@ const Home = () => {
                 <button
                   type="button"
                   className="mt-8 inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
-                  onClick={() => handleClaim()}
+                  onClick={() => handleClaim(selectedAccount)}
                   disabled={vestingData.vestedClaimable === "0" || isWaiting}
                 >
                   Claim Now
