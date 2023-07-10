@@ -117,6 +117,8 @@ const Staking = () => {
     ) => {
       if (result.stakers.length === 0) return;
 
+      if (!result.stakers[0].totalRewards) return;
+
       const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
 
       setTotalClaimed(totalClaimed);
@@ -191,371 +193,6 @@ const Staking = () => {
     if (generalEraInfo) {
       unsubs.push(generalEraInfo);
     }
-
-    return unsubs as UnsubscribePromise[];
-  };
-
-  const loadStakingCores = async (
-    selectedAccount: InjectedAccountWithMeta | null
-  ) => {
-    setLoading(true);
-    try {
-      toast.loading("Loading staking cores...");
-
-      const blocksPerEra =
-        api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
-
-      setBlocksPerEra(blocksPerEra);
-
-      const maxStakersPerCore =
-        api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
-
-      const inflationErasPerYear =
-        api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
-
-      setCurrentBlock(
-        (await api.rpc.chain.getBlock()).block.header.number.toNumber()
-      );
-
-      setNextEraBlock(
-        (
-          await api.query.ocifStaking.nextEraStartingBlock()
-        ).toPrimitive() as number
-      );
-
-      const currentStakingEra = (
-        await api.query.ocifStaking.currentEra()
-      ).toPrimitive() as number;
-
-      setCurrentStakingEra(currentStakingEra);
-
-      const generalEraInfo = (
-        await api.query.ocifStaking.generalEraInfo(currentStakingEra)
-      ).toPrimitive() as {
-        staked: string;
-      };
-
-      setTotalStaked(new BigNumber(generalEraInfo.staked));
-
-      const supply = (
-        await api.query.balances.totalIssuance()
-      ).toPrimitive() as string;
-
-      setTotalSupply(new BigNumber(supply));
-
-      setChainProperties({
-        maxStakersPerCore,
-        inflationErasPerYear,
-      });
-
-      const stakingCores = (
-        await api.query.ocifStaking.registeredCore.entries()
-      ).map(
-        ([
-          {
-            args: [key],
-          },
-          core,
-        ]) => {
-          const c = core.toPrimitive() as {
-            account: string;
-            metadata: {
-              name: string;
-              description: string;
-              image: string;
-            };
-          };
-
-          const primitiveKey = key.toPrimitive() as number;
-
-          return {
-            key: primitiveKey,
-            ...c,
-          };
-        }
-      );
-
-      setStakingCores(stakingCores);
-
-      const coreEraStakeInfo: {
-        coreId: number;
-        account: string;
-        total: string;
-        numberOfStakers: number;
-        rewardClaimed: boolean;
-        active: boolean;
-      }[] = [];
-
-      for (const stakingCore of stakingCores) {
-        const coreEraStake = (
-          await api.query.ocifStaking.coreEraStake(
-            stakingCore.key,
-            currentStakingEra
-          )
-        ).toPrimitive() as {
-          total: string;
-          numberOfStakers: number;
-          rewardClaimed: boolean;
-          active: boolean;
-        };
-
-        coreEraStakeInfo.push({
-          coreId: stakingCore.key,
-          account: stakingCore.account,
-          ...coreEraStake,
-        });
-      }
-
-      setCoreEraStakeInfo(coreEraStakeInfo);
-
-      if (selectedAccount) {
-        const results = await Promise.all([
-          api.query.system.account(selectedAccount.address),
-          api.query.ocifStaking.ledger(selectedAccount.address),
-        ]);
-        const balance = results[0].toPrimitive() as {
-          nonce: string;
-          consumers: string;
-          providers: string;
-          sufficients: string;
-          data: {
-            free: string;
-            reserved: string;
-            miscFrozen: string;
-            feeFrozen: string;
-          };
-        };
-        const locked = results[1].toPrimitive() as {
-          locked: string;
-        };
-        setAvailableBalance(
-          new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
-        );
-        const userStakedInfo: {
-          coreId: number;
-          era: number;
-          staked: BigNumber;
-        }[] = [];
-        for (const stakingCore of stakingCores) {
-          const generalStakerInfo =
-            await api.query.ocifStaking.generalStakerInfo(
-              stakingCore.key,
-              selectedAccount.address
-            );
-          const info = generalStakerInfo.toPrimitive() as {
-            stakes: { era: string; staked: string }[];
-          };
-          if (info.stakes.length > 0) {
-            const unclaimedEarliest = info.stakes[0].era;
-            if (parseInt(unclaimedEarliest) < currentStakingEra) {
-              const unclaimed = unclaimedEras;
-
-              const cores = unclaimed.cores.filter((value) => {
-                return value.coreId != stakingCore.key;
-              });
-
-              cores.push({
-                coreId: stakingCore.key,
-                earliestEra: parseInt(unclaimedEarliest),
-              });
-
-              let total = unclaimed.total;
-
-              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
-                total = currentStakingEra - parseInt(unclaimedEarliest);
-              }
-              setUnclaimedEras({
-                cores,
-                total,
-              });
-            }
-            const latestInfo = info.stakes.at(-1);
-            if (!latestInfo) {
-              continue;
-            }
-            userStakedInfo.push({
-              coreId: stakingCore.key,
-              era: parseInt(latestInfo.era),
-              staked: new BigNumber(latestInfo.staked),
-            });
-          }
-        }
-
-        setUserStakedInfo(userStakedInfo);
-
-        const totalUserStaked = userStakedInfo.reduce(
-          (acc, cur) => acc.plus(cur.staked),
-          new BigNumber(0)
-        );
-
-        setTotalUserStaked(totalUserStaked);
-
-        setHasUnbondedTokens(
-          (
-            (
-              await api.query.ocifStaking.ledger(selectedAccount.address)
-            ).toPrimitive() as {
-              locked: number;
-              unbondingInfo: {
-                unlockingChunks: {
-                  amount: number;
-                  unlockEra: number;
-                }[];
-              };
-            }
-          ).unbondingInfo.unlockingChunks.length > 0
-        );
-      }
-
-      toast.dismiss();
-
-      setLoading(false);
-    } catch (error) {
-      toast.dismiss();
-
-      setLoading(false);
-
-      toast.error(`${error}`);
-    }
-  };
-
-  const handleManageStaking = async ({
-    core,
-    totalUserStaked,
-    availableBalance,
-  }: {
-    core: StakingCore;
-    totalUserStaked: BigNumber;
-    availableBalance: BigNumber;
-  }) => {
-    setOpenModal({
-      name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalUserStaked, availableBalance },
-    });
-  };
-
-  const handleClaimAll = async () => {
-    if (!selectedAccount) return;
-
-    if (!unclaimedEras) return;
-
-    if (!currentStakingEra) return;
-
-    try {
-      toast.loading("Claiming...");
-
-      await web3Enable("Tinkernet");
-
-      const injector = await web3FromAddress(selectedAccount.address);
-
-      const batch = [];
-
-      const uniqueCores = [
-        ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
-      ];
-
-      for (const core of uniqueCores) {
-        if (!core?.earliestEra) continue;
-
-        for (let i = 0; i < currentStakingEra - core.earliestEra; i++) {
-          batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
-        }
-      }
-
-      await api.tx.utility.batch(batch).signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallback({
-          onInvalid: () => {
-            toast.dismiss();
-
-            toast.error("Invalid transaction");
-
-            setWaiting(false);
-          },
-          onExecuted: () => {
-            toast.dismiss();
-
-            toast.loading("Waiting for confirmation...");
-
-            setWaiting(true);
-          },
-          onSuccess: () => {
-            toast.dismiss();
-
-            toast.success("Claimed successfully");
-
-            setWaiting(false);
-          },
-          onDropped: () => {
-            toast.dismiss();
-
-            toast.error("Transaction dropped");
-
-            setWaiting(false);
-          },
-        })
-      );
-
-      toast.dismiss();
-    } catch (error) {
-      toast.dismiss();
-
-      toast.error(`${error}`);
-
-      console.error(error);
-    }
-  };
-
-  const handleUnbondTokens = () => {
-    setOpenModal({
-      name: modalName.UNBOND_TOKENS,
-    });
-  };
-
-  const handleRegisterProject = async () => {
-    setOpenModal({
-      name: modalName.REGISTER_PROJECT,
-    });
-  };
-
-  useEffect(() => {
-    if (!api.query.ocifStaking) return;
-
-    loadStakingCores(selectedAccount);
-  }, [selectedAccount, api]);
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-
-    if (rewardsClaimedQuery.fetching) return;
-
-    if (!rewardsClaimedQuery.data) return;
-
-    if (rewardsClaimedQuery.data.stakers.length === 0) return;
-
-    const totalClaimed = new BigNumber(
-      rewardsClaimedQuery.data.stakers[0].totalRewards
-    );
-
-    setTotalClaimed(totalClaimed);
-  }, [selectedAccount, rewardsClaimedQuery.fetching, api]);
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-    if (!api.query.ocifStaking) return;
-
-    const unsubs = setupSubscriptions({ selectedAccount });
-
-    return () => {
-      unsubs.forEach(async (unsub) => (await unsub)());
-    };
-  }, [api, stakingCores]);
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-
-    if (!api.query.ocifStaking) return;
 
     // Core era stake + Use era stake subscriptions
     const coreEraStakeInfoMap: Map<
@@ -682,7 +319,370 @@ const Staking = () => {
         }
       );
     }
-  }, [stakingCores, currentStakingEra, selectedAccount, api]);
+
+    return unsubs as UnsubscribePromise[];
+  };
+
+  const loadStakingCores = async (
+    selectedAccount: InjectedAccountWithMeta | null
+  ) => {
+    setLoading(true);
+    try {
+      toast.loading("Loading staking cores...");
+
+      const blocksPerEra =
+        api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
+
+      setBlocksPerEra(blocksPerEra);
+
+      const maxStakersPerCore =
+        api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
+
+      const inflationErasPerYear =
+        api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
+
+      setCurrentBlock(
+        (await api.rpc.chain.getBlock()).block.header.number.toNumber()
+      );
+
+      setNextEraBlock(
+        (
+          await api.query.ocifStaking.nextEraStartingBlock()
+        ).toPrimitive() as number
+      );
+
+      const currentStakingEra = (
+        await api.query.ocifStaking.currentEra()
+      ).toPrimitive() as number;
+
+      setCurrentStakingEra(currentStakingEra);
+
+      const generalEraInfo = (
+        await api.query.ocifStaking.generalEraInfo(currentStakingEra)
+      ).toPrimitive() as {
+        staked: string;
+      };
+
+      setTotalStaked(new BigNumber(generalEraInfo.staked));
+
+      const supply = (
+        await api.query.balances.totalIssuance()
+      ).toPrimitive() as string;
+
+      setTotalSupply(new BigNumber(supply));
+
+      setChainProperties({
+        maxStakersPerCore,
+        inflationErasPerYear,
+      });
+
+      const stakingCores = (
+        await api.query.ocifStaking.registeredCore.entries()
+      ).map(
+        ([
+          {
+            args: [key],
+          },
+          core,
+        ]) => {
+          const c = core.toPrimitive() as {
+            account: string;
+            metadata: {
+              name: string;
+              description: string;
+              image: string;
+            };
+          };
+
+          const primitiveKey = key.toPrimitive() as number;
+
+          return {
+            key: primitiveKey,
+            ...c,
+          };
+        }
+      );
+
+      setStakingCores(stakingCores);
+
+      const coreEraStakeInfo: {
+        coreId: number;
+        account: string;
+        total: string;
+        numberOfStakers: number;
+        rewardClaimed: boolean;
+        active: boolean;
+      }[] = [];
+
+      for (const stakingCore of stakingCores) {
+        const coreEraStake = (
+          await api.query.ocifStaking.coreEraStake(
+            stakingCore.key,
+            currentStakingEra
+          )
+        ).toPrimitive() as {
+          total: string;
+          numberOfStakers: number;
+          rewardClaimed: boolean;
+          active: boolean;
+        };
+
+        coreEraStakeInfo.push({
+          coreId: stakingCore.key,
+          account: stakingCore.account,
+          ...coreEraStake,
+        });
+      }
+
+      setCoreEraStakeInfo(coreEraStakeInfo);
+
+      if (selectedAccount) {
+        const results = await Promise.all([
+          api.query.system.account(selectedAccount.address),
+          api.query.ocifStaking.ledger(selectedAccount.address),
+        ]);
+
+        const balance = results[0].toPrimitive() as {
+          nonce: string;
+          consumers: string;
+          providers: string;
+          sufficients: string;
+          data: {
+            free: string;
+            reserved: string;
+            miscFrozen: string;
+            feeFrozen: string;
+          };
+        };
+
+        const locked = results[1].toPrimitive() as {
+          locked: string;
+        };
+
+        setAvailableBalance(
+          new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
+        );
+
+        const userStakedInfo: {
+          coreId: number;
+          era: number;
+          staked: BigNumber;
+        }[] = [];
+
+        for (const stakingCore of stakingCores) {
+          const generalStakerInfo =
+            await api.query.ocifStaking.generalStakerInfo(
+              stakingCore.key,
+              selectedAccount.address
+            );
+
+          const info = generalStakerInfo.toPrimitive() as {
+            stakes: { era: string; staked: string }[];
+          };
+
+          if (info.stakes.length > 0) {
+            const unclaimedEarliest = info.stakes[0].era;
+
+            if (parseInt(unclaimedEarliest) < currentStakingEra) {
+              const unclaimed = unclaimedEras;
+
+              const cores = unclaimed.cores.filter((value) => {
+                return value.coreId != stakingCore.key;
+              });
+
+              cores.push({
+                coreId: stakingCore.key,
+                earliestEra: parseInt(unclaimedEarliest),
+              });
+
+              let total = unclaimed.total;
+
+              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
+                total = currentStakingEra - parseInt(unclaimedEarliest);
+              }
+              setUnclaimedEras({
+                cores,
+                total,
+              });
+            }
+
+            const latestInfo = info.stakes.at(-1);
+
+            if (!latestInfo) {
+              continue;
+            }
+
+            userStakedInfo.push({
+              coreId: stakingCore.key,
+              era: parseInt(latestInfo.era),
+              staked: new BigNumber(latestInfo.staked),
+            });
+          }
+        }
+
+        setUserStakedInfo(userStakedInfo);
+
+        const totalUserStaked = userStakedInfo.reduce(
+          (acc, cur) => acc.plus(cur.staked),
+          new BigNumber(0)
+        );
+
+        setTotalUserStaked(totalUserStaked);
+
+        setHasUnbondedTokens(
+          (
+            (
+              await api.query.ocifStaking.ledger(selectedAccount.address)
+            ).toPrimitive() as {
+              locked: number;
+              unbondingInfo: {
+                unlockingChunks: {
+                  amount: number;
+                  unlockEra: number;
+                }[];
+              };
+            }
+          ).unbondingInfo.unlockingChunks.length > 0
+        );
+      }
+
+      toast.dismiss();
+
+      setLoading(false);
+    } catch (error) {
+      toast.dismiss();
+
+      setLoading(false);
+
+      toast.error(`${error}`);
+    }
+  };
+
+  const handleManageStaking = async ({
+    core,
+    totalUserStaked,
+    availableBalance,
+  }: {
+    core: StakingCore;
+    totalUserStaked: BigNumber;
+    availableBalance: BigNumber;
+  }) => {
+    setOpenModal({
+      name: modalName.MANAGE_STAKING,
+      metadata: { ...core, totalUserStaked, availableBalance },
+    });
+  };
+
+  const handleClaimAll = async () => {
+    if (!selectedAccount) return;
+
+    if (!unclaimedEras) return;
+
+    if (!currentStakingEra) return;
+
+    try {
+      toast.loading("Claiming...");
+
+      await web3Enable("Tinkernet");
+
+      const injector = await web3FromAddress(selectedAccount.address);
+
+      const batch = [];
+
+      const uniqueCores = [
+        ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
+      ];
+
+      for (const core of uniqueCores) {
+        if (!core?.earliestEra) continue;
+
+        for (let i = 0; i < currentStakingEra - core.earliestEra; i += 1) {
+          batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+        }
+      }
+
+      await api.tx.utility.batch(batch).signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback({
+          onInvalid: () => {
+            toast.dismiss();
+
+            toast.error("Invalid transaction");
+
+            setWaiting(false);
+          },
+          onExecuted: () => {
+            toast.dismiss();
+
+            toast.loading("Waiting for confirmation...");
+
+            setWaiting(true);
+          },
+          onSuccess: () => {
+            toast.dismiss();
+
+            toast.success("Claimed successfully");
+
+            setWaiting(false);
+          },
+          onDropped: () => {
+            toast.dismiss();
+
+            toast.error("Transaction dropped");
+
+            setWaiting(false);
+          },
+        })
+      );
+
+      toast.dismiss();
+    } catch (error) {
+      toast.dismiss();
+
+      toast.error(`${error}`);
+
+      console.error(error);
+    }
+  };
+
+  const handleUnbondTokens = () => {
+    setOpenModal({
+      name: modalName.UNBOND_TOKENS,
+    });
+  };
+
+  const handleRegisterProject = async () => {
+    setOpenModal({
+      name: modalName.REGISTER_PROJECT,
+    });
+  };
+
+  useEffect(() => {
+    loadStakingCores(selectedAccount);
+  }, [selectedAccount, api]);
+
+  useEffect(() => {
+    if (!selectedAccount) return;
+
+    if (!rewardsClaimedQuery.data?.stakers?.length) return;
+
+    const totalClaimed = new BigNumber(
+      rewardsClaimedQuery.data.stakers[0].totalRewards
+    );
+
+    setTotalClaimed(totalClaimed);
+  }, [selectedAccount, rewardsClaimedQuery, api]);
+
+  useEffect(() => {
+    if (!selectedAccount) return;
+
+    const unsubs = setupSubscriptions({ selectedAccount });
+
+    return () => {
+      unsubs.forEach(async (unsub) => (await unsub)());
+    };
+  }, [selectedAccount, api]);
 
   return (
     <>

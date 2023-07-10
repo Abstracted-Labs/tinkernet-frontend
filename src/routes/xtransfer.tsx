@@ -385,12 +385,12 @@ const XTransfer = () => {
           <img
             src={background}
             alt="background"
-            className="absolute right-full translate-y-0 translate-x-1/3 transform "
+            className="pointer-events-none absolute right-full translate-y-0 translate-x-1/3 transform"
           />
           <img
             src={background}
             alt="background"
-            className="absolute left-full translate-y-0 -translate-x-1/3 transform"
+            className="pointer-events-none absolute left-full translate-y-0 -translate-x-1/3 transform"
           />
         </div>
       </div>
