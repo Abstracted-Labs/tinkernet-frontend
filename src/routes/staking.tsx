@@ -263,9 +263,9 @@ const Staking = () => {
           };
 
           if (info.stakes.length > 0) {
-            const unclaimedEarliest = info.stakes[0].era;
+              const unclaimedEarliest = info.stakes.reduce((p, v) => p.era < v.era ? p : v).era;
 
-            if (parseInt(unclaimedEarliest) < currentStakingEra) {
+              if (parseInt(unclaimedEarliest) < currentStakingEra) {
               const unclaimed = unclaimedEras;
 
               const cores = unclaimed.cores.filter((value) => {
@@ -294,7 +294,7 @@ const Staking = () => {
               }));
             }
 
-            const latestInfo = info.stakes.at(-1);
+              const latestInfo = info.stakes.at(-1);
 
             if (!latestInfo) {
               return;
@@ -469,7 +469,12 @@ const Staking = () => {
           staked: BigNumber;
         }[] = [];
 
-        for (const stakingCore of stakingCores) {
+          let newUnclaimedCores: {
+              cores: { coreId: number; earliestEra: number }[];
+              total: number;
+          } = { cores: [], total: 0 };
+
+          for (const stakingCore of stakingCores) {
           const generalStakerInfo =
             await api.query.ocifStaking.generalStakerInfo(
               stakingCore.key,
@@ -484,9 +489,7 @@ const Staking = () => {
             const unclaimedEarliest = info.stakes[0].era;
 
             if (parseInt(unclaimedEarliest) < currentStakingEra) {
-              const unclaimed = unclaimedEras;
-
-              const cores = unclaimed.cores.filter((value) => {
+              const cores = newUnclaimedCores.cores.filter((value) => {
                 return value.coreId != stakingCore.key;
               });
 
@@ -495,15 +498,13 @@ const Staking = () => {
                 earliestEra: parseInt(unclaimedEarliest),
               });
 
-              let total = unclaimed.total;
+                let total = newUnclaimedCores.total;
 
-              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
+                if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
                 total = currentStakingEra - parseInt(unclaimedEarliest);
               }
-              setUnclaimedEras({
-                cores,
-                total,
-              });
+
+                newUnclaimedCores = { cores, total };
             }
 
             const latestInfo = info.stakes.at(-1);
@@ -520,7 +521,9 @@ const Staking = () => {
           }
         }
 
-        setUserStakedInfo(userStakedInfo);
+          setUnclaimedEras(newUnclaimedCores);
+
+          setUserStakedInfo(userStakedInfo);
 
         const totalUserStaked = userStakedInfo.reduce(
           (acc, cur) => acc.plus(cur.staked),
@@ -598,14 +601,19 @@ const Staking = () => {
 
         for (let i = 0; i < currentStakingEra - core.earliestEra; i += 1) {
           batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+            console.log("pushed core: ", core.coreId);
         }
       }
 
-      await api.tx.utility.batch(batch).signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallback({
-          onInvalid: () => {
+        console.log("batch: ", batch);
+        console.log("uniqueCores: ", uniqueCores);
+        console.log("unclaimedEras: ", unclaimedEras)
+
+        await api.tx.utility.batch(batch).signAndSend(
+            selectedAccount.address,
+            { signer: injector.signer },
+            getSignAndSendCallback({
+                onInvalid: () => {
             toast.dismiss();
 
             toast.error("Invalid transaction");
