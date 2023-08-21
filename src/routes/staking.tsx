@@ -173,8 +173,7 @@ const Staking = () => {
           data: {
             free: string;
             reserved: string;
-            miscFrozen: string;
-            feeFrozen: string;
+            frozen: string;
           };
         };
 
@@ -450,8 +449,7 @@ const Staking = () => {
           data: {
             free: string;
             reserved: string;
-            miscFrozen: string;
-            feeFrozen: string;
+            frozen: string;
           };
         };
 
