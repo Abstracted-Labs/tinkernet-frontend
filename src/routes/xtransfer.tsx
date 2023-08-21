@@ -26,8 +26,7 @@ type SystemAccount = Struct & {
   data: {
     free: BN;
     reserved: BN;
-    miscFrozen: BN;
-    feeFrozen: BN;
+    frozen: BN;
   };
 };
 
@@ -86,16 +85,15 @@ const XTransfer = () => {
           data: {
             free: string;
             reserved: string;
-            miscFrozen: string;
-            feeFrozen: string;
+            frozen: string;
           };
         };
 
         const total = new BigNumber(balance.data.free.toString());
-        const miscFrozen = new BigNumber(balance.data.miscFrozen.toString());
+        const frozen = new BigNumber(balance.data.frozen.toString());
         const reserved = new BigNumber(balance.data.reserved.toString());
 
-        const transferable = total.minus(miscFrozen).minus(reserved);
+        const transferable = total.minus(frozen).minus(reserved);
 
         setBalanceInTinkernet(transferable);
       }
@@ -145,10 +143,10 @@ const XTransfer = () => {
       const balance = await api.query.system.account<SystemAccount>(address);
 
       const total = new BigNumber(balance.data.free.toString());
-      const miscFrozen = new BigNumber(balance.data.miscFrozen.toString());
+      const frozen = new BigNumber(balance.data.frozen.toString());
       const reserved = new BigNumber(balance.data.reserved.toString());
 
-      const transferable = total.minus(miscFrozen).minus(reserved);
+      const transferable = total.minus(frozen).minus(reserved);
 
       setBalanceInTinkernet(transferable);
 

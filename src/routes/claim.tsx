@@ -18,8 +18,7 @@ type SystemAccount = Struct & {
   data: {
     free: BN;
     reserved: BN;
-    miscFrozen: BN;
-    feeFrozen: BN;
+    frozen: BN;
   };
 };
 
@@ -111,7 +110,7 @@ const Home = () => {
 
       const total = new BigNumber(results[3].data.free.toString());
 
-      const frozen = new BigNumber(results[3].data.feeFrozen.toString());
+      const frozen = new BigNumber(results[3].data.frozen.toString());
 
       const available = total.minus(frozen);
 
