@@ -20,7 +20,7 @@ import useApi from "../hooks/useApi";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { FrameSystemAccountInfo } from "@polkadot/types/lookup";
 
-const RPC_PROVIDER_BASILISK = "wss://rpc.basilisk.cloud";
+const RPC_PROVIDER_BASILISK = "wss://basilisk-rpc.dwellir.com";
 
 type SystemAccount = Struct & {
   data: {
@@ -223,14 +223,13 @@ const XTransfer = () => {
         0,
         amount,
         {
-          V1: {
+          V3: {
             parents: 1,
             interior: {
               X2: [
                 { Parachain: 2090 },
                 {
                   AccountId32: {
-                    network: "Any",
                     id: destination,
                   },
                 },
@@ -261,7 +260,7 @@ const XTransfer = () => {
           onSuccess: () => {
             toast.dismiss();
 
-            toast.success("Claimed successfully");
+            toast.success("Transferred successfully");
 
             setWaiting(false);
           },
@@ -294,14 +293,13 @@ const XTransfer = () => {
         6,
         amount,
         {
-          V2: {
+          V3: {
             parents: 1,
             interior: {
               X2: [
                 { Parachain: 2125 },
                 {
                   AccountId32: {
-                    network: "Any",
                     id: destination,
                   },
                 },
@@ -332,7 +330,7 @@ const XTransfer = () => {
           onSuccess: () => {
             toast.dismiss();
 
-            toast.success("Claimed successfully");
+            toast.success("Transferred successfully");
 
             setWaiting(false);
           },
