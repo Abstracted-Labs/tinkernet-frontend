@@ -3,7 +3,7 @@ import { ApiOptions } from "@polkadot/api/types";
 import { create } from "zustand";
 
 const host = {
-  REMOTE: "wss://invarch-tinkernet.api.onfinality.io/public-ws",
+  REMOTE: "wss://tinkernet-rpc.dwellir.com",
   LOCAL: "ws://127.0.0.1:9944",
 } as const;
 
