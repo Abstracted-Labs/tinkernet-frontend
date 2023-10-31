@@ -76,38 +76,38 @@ const Home = () => {
 
       const unclaimedVested = vestingSchedules.reduce((acc) => acc, new BigNumber("0"));
 
-      const sumFutureLock = vestingSchedules.reduce((acc, vestingSchedule) => {
-        const startPeriod = new BigNumber(vestingSchedule.start);
+      // const sumFutureLock = vestingSchedules.reduce((acc, vestingSchedule) => {
+      //   const startPeriod = new BigNumber(vestingSchedule.start);
 
-        const period = new BigNumber(vestingSchedule.period);
+      //   const period = new BigNumber(vestingSchedule.period);
 
-        // if the vesting has not started, number of periods is 0
-        let numberOfPeriods = new BigNumber(currentBlock.toString())
-          .minus(startPeriod)
-          .dividedBy(period);
+      //   // if the vesting has not started, number of periods is 0
+      //   let numberOfPeriods = new BigNumber(currentBlock.toString())
+      //     .minus(startPeriod)
+      //     .dividedBy(period);
 
-        numberOfPeriods = numberOfPeriods.isNegative()
-          ? new BigNumber("0")
-          : numberOfPeriods;
+      //   numberOfPeriods = numberOfPeriods.isNegative()
+      //     ? new BigNumber("0")
+      //     : numberOfPeriods;
 
-        const perPeriod = new BigNumber(vestingSchedule.perPeriod);
+      //   const perPeriod = new BigNumber(vestingSchedule.perPeriod);
 
-        const vestedOverPeriods = numberOfPeriods.multipliedBy(perPeriod);
+      //   const vestedOverPeriods = numberOfPeriods.multipliedBy(perPeriod);
 
-        const periodCount = new BigNumber(vestingSchedule.periodCount);
+      //   const periodCount = new BigNumber(vestingSchedule.periodCount);
 
-        const originalLock = periodCount.multipliedBy(perPeriod);
+      //   const originalLock = periodCount.multipliedBy(perPeriod);
 
-        const unlocked = vestedOverPeriods.gte(originalLock)
-          ? originalLock
-          : vestedOverPeriods;
+      //   const unlocked = vestedOverPeriods.gte(originalLock)
+      //     ? originalLock
+      //     : vestedOverPeriods;
 
-        const futureLock = originalLock.minus(unlocked);
+      //   const futureLock = originalLock.minus(unlocked);
 
-        return acc.plus(futureLock);
-      }, new BigNumber("0"));
+      //   return acc.plus(futureLock);
+      // }, new BigNumber("0"));
 
-      const vestedClaimable = vestedLocked.minus(sumFutureLock);
+      // const vestedClaimable = vestedLocked.minus(sumFutureLock);
 
       const claimableTNKR = vestedLocked.minus(unclaimedVested);
 
