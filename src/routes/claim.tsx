@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
-
 import background from "../assets/background.svg";
 import { toast } from "react-hot-toast";
 import useAccount from "../stores/account";
@@ -72,8 +71,10 @@ const Home = () => {
 
       const remainingVestingPeriod = vestingSchedules.length
         ? vestingSchedules[0].periodCount -
-          (currentBlock.toNumber() - vestingSchedules[0].start)
+        (currentBlock.toNumber() - vestingSchedules[0].start)
         : 0;
+
+      const unclaimedVested = vestingSchedules.reduce((acc) => acc, new BigNumber("0"));
 
       const sumFutureLock = vestingSchedules.reduce((acc, vestingSchedule) => {
         const startPeriod = new BigNumber(vestingSchedule.start);
@@ -108,6 +109,8 @@ const Home = () => {
 
       const vestedClaimable = vestedLocked.minus(sumFutureLock);
 
+      const claimableTNKR = vestedLocked.minus(unclaimedVested);
+
       const total = new BigNumber(results[3].data.free.toString());
 
       const frozen = new BigNumber(results[3].data.frozen.toString());
@@ -120,7 +123,7 @@ const Home = () => {
           withUnit: "TNKR",
           forceUnit: "-",
         }),
-        vestedClaimable: formatBalance(vestedClaimable.toString(), {
+        vestedClaimable: formatBalance(claimableTNKR.toString(), {
           decimals: 12,
           withUnit: "TNKR",
           forceUnit: "-",
@@ -184,7 +187,7 @@ const Home = () => {
           onSuccess: () => {
             toast.dismiss();
 
-            toast.success("Unstaked successfully");
+            toast.success("Claimed successfully");
 
             loadBalances(selectedAccount);
 
@@ -204,7 +207,7 @@ const Home = () => {
     } catch (error) {
       toast.dismiss();
 
-      toast.error(`${error}`);
+      toast.error(`${ error }`);
 
       console.error(error);
     }

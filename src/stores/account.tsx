@@ -1,5 +1,5 @@
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 import { persist } from "zustand/middleware";
 
 type AccountState = {
@@ -9,7 +9,7 @@ type AccountState = {
   setSelectedAccount: (account: InjectedAccountWithMeta | null) => void;
 };
 
-const useAccount = create<AccountState>()(
+const useAccount = createWithEqualityFn<AccountState>()(
   persist(
     (set) => ({
       accounts: [],

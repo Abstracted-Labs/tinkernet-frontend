@@ -1,10 +1,11 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { ApiOptions } from "@polkadot/api/types";
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 const host = {
   REMOTE: "wss://tinkernet-rpc.dwellir.com",
-  LOCAL: "ws://127.0.0.1:9944",
+  // LOCAL: "ws://127.0.0.1:9944",
+  LOCAL: 'ws://localhost:8000'
 } as const;
 
 type Host = (typeof host)[keyof typeof host];
@@ -16,9 +17,9 @@ type RPCState = {
   error: unknown | null;
 };
 
-const useRPC = create<RPCState>()((set, get) => ({
-  host: host.REMOTE,
-  // host: host.LOCAL,
+const useRPC = createWithEqualityFn<RPCState>()((set, get) => ({
+  // host: host.REMOTE,
+  host: host.LOCAL,
   setHost: (host: Host) => set(() => ({ host })),
   error: null,
   createApi: async (options) => {
@@ -37,11 +38,11 @@ const useRPC = create<RPCState>()((set, get) => ({
 
       return api;
     } catch (error) {
-      set(() => ({ error}));
+      set(() => ({ error }));
 
       console.error(error);
 
-      throw new Error(`Failed to connect to ${host}`);
+      throw new Error(`Failed to connect to ${ host }`);
     }
   },
 }));
