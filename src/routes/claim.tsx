@@ -40,26 +40,50 @@ const Home = () => {
   const api = useApi();
 
   const loadBalances = async (selectedAccount: InjectedAccountWithMeta) => {
+    // Check if selectedAccount and api are defined
+    if (!selectedAccount) {
+      console.error("Selected account is not defined");
+      return;
+    }
+
+    if (!api) {
+      console.error("API is not defined");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const results = await Promise.all([
-        // vested locked
+        // vesting locks
         api.query.balances.locks(selectedAccount.address),
         // vesting schedules
         api.query.vesting.vestingSchedules(selectedAccount.address),
         // current block
         api.query.system.number(),
-        // available
+        // available account data
         api.query.system.account<SystemAccount>(selectedAccount.address),
       ]);
 
+      // Check if results are defined and have the expected length
+      if (!results) {
+        console.error("Results are undefined");
+        return;
+      }
+
+      if (results.length !== 4) {
+        console.error("Results do not have the expected length");
+        return;
+      }
+
+      // Calculate the amount of tokens that are currently vested
       const vestedLocked = new BigNumber(
         results[0]
           .find((lock) => lock.id.toHuman() === "ormlvest")
           ?.amount.toString() || "0"
       );
 
+      // Set the vesting schedules
       const vestingSchedules = results[1] as unknown as {
         start: number;
         period: number;
@@ -67,54 +91,61 @@ const Home = () => {
         perPeriod: number;
       }[];
 
+      // Set the current block
       const currentBlock = results[2];
 
+      // Calculate the remaining vesting period
       const remainingVestingPeriod = vestingSchedules.length
         ? vestingSchedules[0].periodCount -
-        (currentBlock.toNumber() - vestingSchedules[0].start)
+        (parseInt(currentBlock.toString()) - vestingSchedules[0].start)
         : 0;
 
-      const unclaimedVested = vestingSchedules.reduce((acc) => acc, new BigNumber("0"));
+      // Initialize the total amount of tokens that will be locked in the future
+      let totalFutureLockedTokens = new BigNumber("0");
 
-      // const sumFutureLock = vestingSchedules.reduce((acc, vestingSchedule) => {
-      //   const startPeriod = new BigNumber(vestingSchedule.start);
+      // Iterate over each vesting schedule
+      for (const schedule of vestingSchedules) {
+        // Convert all relevant data to BigNumber for consistent calculations
+        const vestingStartBlock = new BigNumber(schedule.start);
+        const blocksPerPayout = new BigNumber(schedule.period);
+        const tokensPerPayout = new BigNumber(schedule.perPeriod);
+        const totalPayouts = new BigNumber(schedule.periodCount);
+        const currentBlockNumber = new BigNumber(currentBlock.toString());
 
-      //   const period = new BigNumber(vestingSchedule.period);
+        // Calculate the number of payouts that have occurred since the start of the vesting
+        let payoutsOccurred = currentBlockNumber.isGreaterThanOrEqualTo(vestingStartBlock)
+          ? currentBlockNumber.minus(vestingStartBlock).dividedBy(blocksPerPayout).integerValue(BigNumber.ROUND_DOWN)
+          : new BigNumber("0");
 
-      //   // if the vesting has not started, number of periods is 0
-      //   let numberOfPeriods = new BigNumber(currentBlock.toString())
-      //     .minus(startPeriod)
-      //     .dividedBy(period);
+        // Ensure the number of payouts is not negative
+        payoutsOccurred = payoutsOccurred.isNegative() ? new BigNumber("0") : payoutsOccurred;
 
-      //   numberOfPeriods = numberOfPeriods.isNegative()
-      //     ? new BigNumber("0")
-      //     : numberOfPeriods;
+        // Calculate the total amount of tokens vested over the occurred payouts
+        const tokensVestedSoFar = payoutsOccurred.multipliedBy(tokensPerPayout);
 
-      //   const perPeriod = new BigNumber(vestingSchedule.perPeriod);
+        // Calculate the total amount of tokens that were originally locked
+        const totalLockedTokens = totalPayouts.multipliedBy(tokensPerPayout);
 
-      //   const vestedOverPeriods = numberOfPeriods.multipliedBy(perPeriod);
+        // Calculate the amount of tokens unlocked so far
+        const tokensUnlockedSoFar = tokensVestedSoFar.gte(totalLockedTokens) ? totalLockedTokens : tokensVestedSoFar;
 
-      //   const periodCount = new BigNumber(vestingSchedule.periodCount);
+        // Calculate the amount of tokens that will be locked in the future
+        const futureLockedTokens = totalLockedTokens.minus(tokensUnlockedSoFar);
 
-      //   const originalLock = periodCount.multipliedBy(perPeriod);
+        // Add the future locked tokens to the total amount
+        totalFutureLockedTokens = totalFutureLockedTokens.plus(futureLockedTokens);
+      }
 
-      //   const unlocked = vestedOverPeriods.gte(originalLock)
-      //     ? originalLock
-      //     : vestedOverPeriods;
+      // Calculate the amount of tokens that are currently claimable
+      const vestedClaimable = vestedLocked.minus(totalFutureLockedTokens);
 
-      //   const futureLock = originalLock.minus(unlocked);
-
-      //   return acc.plus(futureLock);
-      // }, new BigNumber("0"));
-
-      // const vestedClaimable = vestedLocked.minus(sumFutureLock);
-
-      const claimableTNKR = vestedLocked.minus(unclaimedVested);
-
+      // Calculate the total amount of tokens
       const total = new BigNumber(results[3].data.free.toString());
 
+      // Calculate the amount of tokens that are currently frozen
       const frozen = new BigNumber(results[3].data.frozen.toString());
 
+      // Calculate the amount of tokens that are currently available
       const available = total.minus(frozen);
 
       setVestingData({
@@ -123,7 +154,7 @@ const Home = () => {
           withUnit: "TNKR",
           forceUnit: "-",
         }),
-        vestedClaimable: formatBalance(claimableTNKR.toString(), {
+        vestedClaimable: formatBalance(vestedClaimable.toString(), {
           decimals: 12,
           withUnit: "TNKR",
           forceUnit: "-",
@@ -144,15 +175,11 @@ const Home = () => {
       });
 
       toast.dismiss();
-
       setLoading(false);
-
       toast.success("Balances loaded");
     } catch (error) {
       toast.dismiss();
-
       setLoading(false);
-
       toast.error("Failed to load balances!");
       console.error(error);
     }
@@ -172,32 +199,23 @@ const Home = () => {
         getSignAndSendCallback({
           onInvalid: () => {
             toast.dismiss();
-
             toast.error("Invalid transaction");
-
             setWaiting(false);
           },
           onExecuted: () => {
             toast.dismiss();
-
             toast.loading("Waiting for confirmation...");
-
             setWaiting(true);
           },
           onSuccess: () => {
             toast.dismiss();
-
             toast.success("Claimed successfully");
-
             loadBalances(selectedAccount);
-
             setWaiting(false);
           },
           onDropped: () => {
             toast.dismiss();
-
             toast.error("Transaction dropped");
-
             setWaiting(false);
           },
         })
@@ -206,9 +224,7 @@ const Home = () => {
       toast.dismiss();
     } catch (error) {
       toast.dismiss();
-
       toast.error(`${ error }`);
-
       console.error(error);
     }
   };
