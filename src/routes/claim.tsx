@@ -184,9 +184,6 @@ const Home = () => {
     // Convert block time to seconds
     const remainingVestingPeriodInSeconds = remainingVestingPeriod * averageBlockTimeInSeconds;
 
-    // Get the current date time
-    const currentDate = new Date();
-
     // Calculate the end of the vesting period
     const endOfVestingPeriod = new Date(currentDate.getTime() + remainingVestingPeriodInSeconds * 1000);
 
