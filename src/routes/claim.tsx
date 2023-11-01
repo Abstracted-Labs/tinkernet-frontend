@@ -100,7 +100,7 @@ const Home = () => {
         (parseInt(currentBlock.toString()) - vestingSchedules[0].start)
         : 0;
 
-      // Initialize the total amount of tokens that will be locked in the future
+      // Initialize the total amount of tokens that are still locked into the future
       let totalFutureLockedTokens = new BigNumber("0");
 
       // Iterate over each vesting schedule
@@ -129,10 +129,10 @@ const Home = () => {
         // Calculate the amount of tokens unlocked so far
         const tokensUnlockedSoFar = tokensVestedSoFar.gte(totalLockedTokens) ? totalLockedTokens : tokensVestedSoFar;
 
-        // Calculate the amount of tokens that will be locked in the future
+        // Calculate the amount of tokens that are still locked into the future
         const futureLockedTokens = totalLockedTokens.minus(tokensUnlockedSoFar);
 
-        // Add the future locked tokens to the total amount
+        // Add the future locked tokens to the total future locked amount
         totalFutureLockedTokens = totalFutureLockedTokens.plus(futureLockedTokens);
       }
 
