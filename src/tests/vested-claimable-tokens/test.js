@@ -1,8 +1,7 @@
-const start = 2800000;
-const period = 1;
+const start = 2800000; // Vesting start block
 const periodCount = 2629800;
 const perPeriod = 68446200 / 1000000000000;  // Adjusted perPeriod
-const currentBlock = 2931849; // Update this to your current block number
+const currentBlock = 2938131; // Update this to your current block number
 
 // Calculate the number of blocks that have passed since the start of the vesting
 const blocksPassed = currentBlock - start;
