@@ -118,7 +118,7 @@ const Home = () => {
     }
 
     // Calculate the amount of tokens that are currently vested
-    const vestedLocked = new BigNumber(
+    const vestedLockedTokens = new BigNumber(
       results[0]
         ? (results[0] as LockType[]).find((lock) => lock.id.toHuman() === "ormlvest")?.amount.toString() || "0"
         : "0"
@@ -170,7 +170,7 @@ const Home = () => {
     }
 
     // Calculate the amount of tokens that are currently claimable
-    const vestedClaimable = vestedLocked.minus(totalFutureLockedTokens);
+    const unlockedClaimableTokens = vestedLockedTokens.minus(totalFutureLockedTokens);
 
     // Calculate the total amount of tokens
     const total = results[3] ? new BigNumber(((results[3] as unknown) as SystemAccount).data.free.toString()) : new BigNumber("0");
@@ -191,8 +191,8 @@ const Home = () => {
     const endOfVestingPeriod = new Date(currentDate.getTime() + remainingVestingPeriodInSeconds * 1000);
 
     return {
-      vestedLocked: formatBalance(vestedLocked.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
-      vestedClaimable: formatBalance(vestedClaimable.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
+      vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
+      vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       frozen: formatBalance(frozen.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       available: formatBalance(available.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(remainingVestingPeriod),
