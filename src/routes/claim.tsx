@@ -64,7 +64,7 @@ interface LockType {
 
 type StakeInfo = { era: string; staked: string; }[];
 
-type StakesInfo = { stakes: StakeInfo; };
+export type StakesInfo = { stakes: StakeInfo; };
 
 const Home = () => {
   const { selectedAccount } = useAccount(

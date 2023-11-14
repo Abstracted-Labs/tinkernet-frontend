@@ -14,6 +14,7 @@ import { Codec } from "@polkadot/types/types";
 import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import { UnsubscribePromise } from "@polkadot/api/types";
+import { StakesInfo } from "./claim";
 
 const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
@@ -40,6 +41,69 @@ type StakingCore = {
     name: string;
     description: string;
     image: string;
+  };
+};
+
+type BalanceType = {
+  nonce: string;
+  consumers: string;
+  providers: string;
+  sufficients: string;
+  data: {
+    free: string;
+    reserved: string;
+    frozen: string;
+  };
+};
+
+type CoreEraStakedInfoType = {
+  coreId: number;
+  account: string;
+  total: string;
+  numberOfStakers: number;
+  rewardClaimed: boolean;
+  active: boolean;
+};
+
+type CoreEraStakeType = {
+  total: string;
+  numberOfStakers: number;
+  rewardClaimed: boolean;
+  active: boolean;
+};
+
+type LedgerType = {
+  locked: number;
+  unbondingInfo: {
+    unlockingChunks: {
+      amount: number;
+      unlockEra: number;
+    }[];
+  };
+};
+
+type LockedType = { locked: string; };
+
+type StakedType = { staked: string; };
+
+type CorePrimitiveType = {
+  account: string;
+  metadata: {
+    name: string;
+    description: string;
+    image: string;
+  };
+};
+
+type ReturnResultType = {
+  nonce: string;
+  consumers: string;
+  providers: string;
+  sufficients: string;
+  data: {
+    free: string;
+    reserved: string;
+    frozen: string;
   };
 };
 
@@ -71,7 +135,7 @@ const Staking = () => {
   >([]);
   const [totalSupply, setTotalSupply] = useState<BigNumber>();
   const [unclaimedEras, setUnclaimedEras] = useState<{
-    cores: { coreId: number; earliestEra: number }[];
+    cores: { coreId: number; earliestEra: number; }[];
     total: number;
   }>({ cores: [], total: 0 });
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
@@ -113,7 +177,7 @@ const Staking = () => {
     },
     (
       _: unknown,
-      result: { stakers: { latestClaimBlock: number; totalRewards: string }[] }
+      result: { stakers: { latestClaimBlock: number; totalRewards: string; }[]; }
     ) => {
       if (result.stakers.length === 0) return;
 
@@ -148,9 +212,7 @@ const Staking = () => {
       generalEraInfo = api.query.ocifStaking.generalEraInfo(
         currentStakingEra,
         (c: Codec) => {
-          const stakingInfo = c.toPrimitive() as {
-            staked: string;
-          };
+          const stakingInfo = c.toPrimitive() as StakedType;
 
           setTotalStaked(new BigNumber(stakingInfo.staked));
         }
@@ -165,21 +227,11 @@ const Staking = () => {
     const account = api.query.system.account(
       selectedAccount.address,
       async (account) => {
-        const balance = account.toPrimitive() as {
-          nonce: string;
-          consumers: string;
-          providers: string;
-          sufficients: string;
-          data: {
-            free: string;
-            reserved: string;
-            frozen: string;
-          };
-        };
+        const balance = account.toPrimitive() as BalanceType;
 
         const locked = (
           await api.query.ocifStaking.ledger(selectedAccount.address)
-        ).toPrimitive() as { locked: string };
+        ).toPrimitive() as LockedType;
 
         setAvailableBalance(
           new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
@@ -195,16 +247,7 @@ const Staking = () => {
 
     // Core era stake + Use era stake subscriptions
     const coreEraStakeInfoMap: Map<
-      number,
-      {
-        coreId: number;
-        account: string;
-        total: string;
-        numberOfStakers: number;
-        rewardClaimed: boolean;
-        active: boolean;
-      }
-    > = new Map();
+      number, CoreEraStakedInfoType> = new Map();
 
     const userStakedInfoMap: Map<
       number,
@@ -220,12 +263,7 @@ const Staking = () => {
         stakingCore.key,
         currentStakingEra,
         (c: Codec) => {
-          const coreEraStake = c.toPrimitive() as {
-            total: string;
-            numberOfStakers: number;
-            rewardClaimed: boolean;
-            active: boolean;
-          };
+          const coreEraStake = c.toPrimitive() as CoreEraStakeType;
 
           coreEraStakeInfoMap.set(stakingCore.key, {
             coreId: stakingCore.key,
@@ -240,15 +278,7 @@ const Staking = () => {
       );
 
       api.query.ocifStaking.ledger(selectedAccount.address, (c: Codec) => {
-        const ledger = c.toPrimitive() as {
-          locked: number;
-          unbondingInfo: {
-            unlockingChunks: {
-              amount: number;
-              unlockEra: number;
-            }[];
-          };
-        };
+        const ledger = c.toPrimitive() as LedgerType;
 
         setHasUnbondedTokens(ledger.unbondingInfo.unlockingChunks.length > 0);
       });
@@ -257,14 +287,12 @@ const Staking = () => {
         stakingCore.key,
         selectedAccount.address,
         (generalStakerInfo: Codec) => {
-          const info = generalStakerInfo.toPrimitive() as {
-            stakes: { era: string; staked: string }[];
-          };
+          const info = generalStakerInfo.toPrimitive() as StakesInfo;
 
           if (info.stakes.length > 0) {
-              const unclaimedEarliest = info.stakes.reduce((p, v) => p.era < v.era ? p : v).era;
+            const unclaimedEarliest = info.stakes.reduce((p, v) => p.era < v.era ? p : v).era;
 
-              if (parseInt(unclaimedEarliest) < currentStakingEra) {
+            if (parseInt(unclaimedEarliest) < currentStakingEra) {
               const unclaimed = unclaimedEras;
 
               const cores = unclaimed.cores.filter((value) => {
@@ -293,7 +321,7 @@ const Staking = () => {
               }));
             }
 
-              const latestInfo = info.stakes.at(-1);
+            const latestInfo = info.stakes.at(-1);
 
             if (!latestInfo) {
               return;
@@ -358,9 +386,7 @@ const Staking = () => {
 
       const generalEraInfo = (
         await api.query.ocifStaking.generalEraInfo(currentStakingEra)
-      ).toPrimitive() as {
-        staked: string;
-      };
+      ).toPrimitive() as StakedType;
 
       setTotalStaked(new BigNumber(generalEraInfo.staked));
 
@@ -384,14 +410,7 @@ const Staking = () => {
           },
           core,
         ]) => {
-          const c = core.toPrimitive() as {
-            account: string;
-            metadata: {
-              name: string;
-              description: string;
-              image: string;
-            };
-          };
+          const c = core.toPrimitive() as CorePrimitiveType;
 
           const primitiveKey = key.toPrimitive() as number;
 
@@ -404,14 +423,7 @@ const Staking = () => {
 
       setStakingCores(stakingCores);
 
-      const coreEraStakeInfo: {
-        coreId: number;
-        account: string;
-        total: string;
-        numberOfStakers: number;
-        rewardClaimed: boolean;
-        active: boolean;
-      }[] = [];
+      const coreEraStakeInfo: CoreEraStakedInfoType[] = [];
 
       for (const stakingCore of stakingCores) {
         const coreEraStake = (
@@ -419,12 +431,7 @@ const Staking = () => {
             stakingCore.key,
             currentStakingEra
           )
-        ).toPrimitive() as {
-          total: string;
-          numberOfStakers: number;
-          rewardClaimed: boolean;
-          active: boolean;
-        };
+        ).toPrimitive() as CoreEraStakeType;
 
         coreEraStakeInfo.push({
           coreId: stakingCore.key,
@@ -441,17 +448,7 @@ const Staking = () => {
           api.query.ocifStaking.ledger(selectedAccount.address),
         ]);
 
-        const balance = results[0].toPrimitive() as {
-          nonce: string;
-          consumers: string;
-          providers: string;
-          sufficients: string;
-          data: {
-            free: string;
-            reserved: string;
-            frozen: string;
-          };
-        };
+        const balance = results[0].toPrimitive() as ReturnResultType;
 
         const locked = results[1].toPrimitive() as {
           locked: string;
@@ -467,21 +464,19 @@ const Staking = () => {
           staked: BigNumber;
         }[] = [];
 
-          let newUnclaimedCores: {
-              cores: { coreId: number; earliestEra: number }[];
-              total: number;
-          } = { cores: [], total: 0 };
+        let newUnclaimedCores: {
+          cores: { coreId: number; earliestEra: number; }[];
+          total: number;
+        } = { cores: [], total: 0 };
 
-          for (const stakingCore of stakingCores) {
+        for (const stakingCore of stakingCores) {
           const generalStakerInfo =
             await api.query.ocifStaking.generalStakerInfo(
               stakingCore.key,
               selectedAccount.address
             );
 
-          const info = generalStakerInfo.toPrimitive() as {
-            stakes: { era: string; staked: string }[];
-          };
+          const info = generalStakerInfo.toPrimitive() as StakesInfo;
 
           if (info.stakes.length > 0) {
             const unclaimedEarliest = info.stakes[0].era;
@@ -496,13 +491,13 @@ const Staking = () => {
                 earliestEra: parseInt(unclaimedEarliest),
               });
 
-                let total = newUnclaimedCores.total;
+              let total = newUnclaimedCores.total;
 
-                if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
+              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
                 total = currentStakingEra - parseInt(unclaimedEarliest);
               }
 
-                newUnclaimedCores = { cores, total };
+              newUnclaimedCores = { cores, total };
             }
 
             const latestInfo = info.stakes.at(-1);
@@ -519,9 +514,9 @@ const Staking = () => {
           }
         }
 
-          setUnclaimedEras(newUnclaimedCores);
+        setUnclaimedEras(newUnclaimedCores);
 
-          setUserStakedInfo(userStakedInfo);
+        setUserStakedInfo(userStakedInfo);
 
         const totalUserStaked = userStakedInfo.reduce(
           (acc, cur) => acc.plus(cur.staked),
@@ -534,16 +529,7 @@ const Staking = () => {
           (
             (
               await api.query.ocifStaking.ledger(selectedAccount.address)
-            ).toPrimitive() as {
-              locked: number;
-              unbondingInfo: {
-                unlockingChunks: {
-                  amount: number;
-                  unlockEra: number;
-                }[];
-              };
-            }
-          ).unbondingInfo.unlockingChunks.length > 0
+            ).toPrimitive() as LedgerType).unbondingInfo.unlockingChunks.length > 0
         );
       }
 
@@ -555,7 +541,7 @@ const Staking = () => {
 
       setLoading(false);
 
-      toast.error(`${error}`);
+      toast.error(`${ error }`);
     }
   };
 
@@ -599,19 +585,19 @@ const Staking = () => {
 
         for (let i = 0; i < currentStakingEra - core.earliestEra; i += 1) {
           batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
-            console.log("pushed core: ", core.coreId);
+          console.log("pushed core: ", core.coreId);
         }
       }
 
-        console.log("batch: ", batch);
-        console.log("uniqueCores: ", uniqueCores);
-        console.log("unclaimedEras: ", unclaimedEras)
+      console.log("batch: ", batch);
+      console.log("uniqueCores: ", uniqueCores);
+      console.log("unclaimedEras: ", unclaimedEras);
 
-        await api.tx.utility.batch(batch).signAndSend(
-            selectedAccount.address,
-            { signer: injector.signer },
-            getSignAndSendCallback({
-                onInvalid: () => {
+      await api.tx.utility.batch(batch).signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallback({
+          onInvalid: () => {
             toast.dismiss();
 
             toast.error("Invalid transaction");
@@ -646,7 +632,7 @@ const Staking = () => {
     } catch (error) {
       toast.dismiss();
 
-      toast.error(`${error}`);
+      toast.error(`${ error }`);
 
       console.error(error);
     }
@@ -701,15 +687,14 @@ const Staking = () => {
       {!isLoading ? (
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
           {selectedAccount &&
-          currentStakingEra &&
-          totalUserStaked &&
-          unclaimedEras ? (
+            currentStakingEra &&
+            totalUserStaked &&
+            unclaimedEras ? (
             <>
               <div className="flex flex-col flex-wrap items-center justify-between gap-4 md:flex-row">
                 <div>
-                  <span>Dashboard</span>
+                  <span>OCIF Staking Dashboard</span>
                 </div>
-
                 <div className="flex flex-wrap gap-8">
                   <button
                     type="button"
@@ -782,14 +767,14 @@ const Staking = () => {
                   <div>
                     <span className="text-md font-bold">
                       {totalSupply &&
-                      totalSupply.toNumber() > 0 &&
-                      totalStaked &&
-                      totalStaked.toNumber() > 0
+                        totalSupply.toNumber() > 0 &&
+                        totalStaked &&
+                        totalStaked.toNumber() > 0
                         ? totalSupply
-                            .times(4)
-                            .dividedBy(totalStaked)
-                            .decimalPlaces(2)
-                            .toString()
+                          .times(4)
+                          .dividedBy(totalStaked)
+                          .decimalPlaces(2)
+                          .toString()
                         : 0}
                       %
                     </span>
@@ -804,10 +789,10 @@ const Staking = () => {
                     <span className="text-md font-bold">
                       {totalSupply && totalSupply.toNumber() > 0
                         ? totalSupply
-                            .dividedBy(1000000000000)
-                            .times(0.06)
-                            .decimalPlaces(2)
-                            .toString()
+                          .dividedBy(1000000000000)
+                          .times(0.06)
+                          .decimalPlaces(2)
+                          .toString()
                         : 0}{" "}
                       TNKR
                     </span>
@@ -836,6 +821,18 @@ const Staking = () => {
               </div>
             </>
           ) : null}
+
+          <div>
+            {selectedAccount ? (
+              <button
+                type="button"
+                onClick={handleRegisterProject}
+                className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-40"
+              >
+                Register Project
+              </button>
+            ) : null}
+          </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {stakingCores.map((core) => {
@@ -892,7 +889,7 @@ const Staking = () => {
                             }}
                             disabled={
                               (coreInfo?.numberOfStakers || 0) >=
-                                (chainProperties?.maxStakersPerCore || 0) &&
+                              (chainProperties?.maxStakersPerCore || 0) &&
                               !totalUserStaked
                             }
                           >
@@ -901,14 +898,14 @@ const Staking = () => {
 
                           <span className="block text-sm">
                             {totalUserStaked
-                              ? `Your stake: ${formatBalance(
-                                  totalUserStaked.toString(),
-                                  {
-                                    decimals: 12,
-                                    withUnit: false,
-                                    forceUnit: "-",
-                                  }
-                                ).slice(0, -2)} TNKR`
+                              ? `Your stake: ${ formatBalance(
+                                totalUserStaked.toString(),
+                                {
+                                  decimals: 12,
+                                  withUnit: false,
+                                  forceUnit: "-",
+                                }
+                              ).slice(0, -2) } TNKR`
                               : null}
                           </span>
                         </div>
@@ -917,7 +914,7 @@ const Staking = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex gap-2 ">
                           {(coreInfo?.numberOfStakers || 0) >=
-                          (chainProperties?.maxStakersPerCore || 0) ? (
+                            (chainProperties?.maxStakersPerCore || 0) ? (
                             <LockClosedIcon
                               className="h-5 w-5 cursor-pointer text-white"
                               onClick={() => {
@@ -944,10 +941,10 @@ const Staking = () => {
                         <div className="truncate text-sm">
                           {coreInfo?.total
                             ? formatBalance(coreInfo.total.toString(), {
-                                decimals: 12,
-                                withUnit: false,
-                                forceUnit: "-",
-                              }).slice(0, -2)
+                              decimals: 12,
+                              withUnit: false,
+                              forceUnit: "-",
+                            }).slice(0, -2)
                             : "0"}{" "}
                           TNKR staked
                         </div>
@@ -958,22 +955,6 @@ const Staking = () => {
               );
             })}
           </div>
-
-          {selectedAccount ? (
-            <div className="flex items-center justify-between">
-              <div />
-
-              <div>
-                <button
-                  type="button"
-                  onClick={handleRegisterProject}
-                  className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-40"
-                >
-                  Register Project
-                </button>
-              </div>
-            </div>
-          ) : null}
         </div>
       ) : null}
     </>
