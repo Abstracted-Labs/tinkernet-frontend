@@ -62,6 +62,7 @@ const Home = () => {
   const [payoutSchedule, setPayoutSchedule] = useState<VestingScheduleLineItem[]>([]);
   const [isBalanceLoading, setBalanceLoading] = useState(false);
   const [isClaimWaiting, setClaimWaiting] = useState(false);
+  const [totalStakedTNKR, setTotalStakedTNKR] = useState<BigNumber>(new BigNumber(0));
   const api = useApi();
 
   const averageBlockTimeInSeconds = 12; // Average block time on Tinkernet
@@ -70,6 +71,91 @@ const Home = () => {
     year: 'numeric' as const,
     month: 'long' as const,
     day: 'numeric' as const
+  };
+
+  const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
+    try {
+      toast.loading("Loading staking cores...");
+
+      const currentEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
+
+      const stakingCores = (await api.query.ocifStaking.registeredCore.entries()).map(([{ args: [key] }, core]) => {
+        const coreData = core.toPrimitive() as {
+          account: string;
+          metadata: {
+            name: string;
+            description: string;
+            image: string;
+          };
+        };
+
+        const coreKey = key.toPrimitive() as number;
+
+        return {
+          key: coreKey,
+          ...coreData,
+        };
+      });
+
+      // const stakeInfoPerCore = stakingCores.map(async (core) => {
+      //   const coreStake = (await api.query.ocifStaking.coreEraStake(core.key, currentEra)).toPrimitive() as {
+      //     total: string;
+      //     numberOfStakers: number;
+      //     rewardClaimed: boolean;
+      //     active: boolean;
+      //   };
+
+      //   return {
+      //     coreId: core.key,
+      //     account: core.account,
+      //     ...coreStake,
+      //   };
+      // });
+
+      // const coreStakeInfo = await Promise.all(stakeInfoPerCore);
+
+      if (selectedAccount) {
+        const userStakeInfo: { coreId: number; era: number; staked: BigNumber; }[] = [];
+        let unclaimedCores = { cores: [] as { coreId: number; earliestEra: number; }[], total: 0 };
+
+        for (const core of stakingCores) {
+          const stakerInfo = await api.query.ocifStaking.generalStakerInfo(core.key, selectedAccount.address);
+          const info = stakerInfo.toPrimitive() as { stakes: { era: string; staked: string; }[]; };
+
+          if (info.stakes.length > 0) {
+            const earliestUnclaimedEra = parseInt(info.stakes[0].era);
+
+            if (earliestUnclaimedEra < currentEra) {
+              const updatedCores = unclaimedCores.cores.filter((value) => value.coreId !== core.key);
+              updatedCores.push({ coreId: core.key, earliestEra: earliestUnclaimedEra });
+
+              const total = Math.max(unclaimedCores.total, currentEra - earliestUnclaimedEra);
+
+              unclaimedCores = { cores: updatedCores, total };
+            }
+
+            const latestStake = info.stakes.at(-1);
+
+            if (latestStake) {
+              userStakeInfo.push({
+                coreId: core.key,
+                era: parseInt(latestStake.era),
+                staked: new BigNumber(latestStake.staked),
+              });
+            }
+          }
+        }
+
+        const totalUserStaked = userStakeInfo.reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
+
+        setTotalStakedTNKR(totalUserStaked);
+      }
+
+      toast.dismiss();
+    } catch (error) {
+      toast.dismiss();
+      toast.error(`${ error }`);
+    }
   };
 
   const fetchData = async (selectedAccount: InjectedAccountWithMeta): Promise<DataResultType> => {
@@ -115,6 +201,10 @@ const Home = () => {
   const calculateVestingData = (results: DataResultType, vestingSchedules: VestingSchedule[]) => {
     if (!results) {
       throw new Error("Results is undefined");
+    }
+
+    if (!totalStakedTNKR) {
+      throw new Error("totalStakedTNKR is undefined or null");
     }
 
     // Calculate the amount of tokens that are currently vested
@@ -201,6 +291,7 @@ const Home = () => {
     setBalanceLoading(true);
 
     try {
+      await loadStakedTNKR(selectedAccount);
       const results = await fetchData(selectedAccount);
       if (!results) {
         console.error("Failed to fetch data");
@@ -377,7 +468,12 @@ const Home = () => {
                   Staked:
                 </span>{" "}
                 <span className="text-lg font-bold leading-6 text-white">
-                  {vestingSummary.frozen}
+                  {formatBalance(totalStakedTNKR.toString(), {
+                    decimals: 12,
+                    withUnit: false,
+                    forceUnit: "-",
+                  }
+                  ).slice(0, -2)} TNKR
                 </span>
               </div>
             </div>
