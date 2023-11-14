@@ -75,8 +75,6 @@ const Home = () => {
 
   const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
-      toast.loading("Loading staking cores...");
-
       const currentEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
 
       const stakingCores = (await api.query.ocifStaking.registeredCore.entries()).map(([{ args: [key] }, core]) => {
@@ -150,10 +148,7 @@ const Home = () => {
 
         setTotalStakedTNKR(totalUserStaked);
       }
-
-      toast.dismiss();
     } catch (error) {
-      toast.dismiss();
       toast.error(`${ error }`);
     }
   };
