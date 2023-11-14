@@ -438,6 +438,15 @@ const Home = () => {
             <div className="border-t border-gray-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="px-6 py-2">
                 <span className="text-sm font-bold leading-6 text-white">
+                  Available:
+                </span>{" "}
+                <span className="text-lg font-bold leading-6 text-white">
+                  {vestingSummary.available}
+                </span>
+              </div>
+
+              <div className="px-6 py-2">
+                <span className="text-sm font-bold leading-6 text-white">
                   Staked:
                 </span>{" "}
                 <span className="text-lg font-bold leading-6 text-white">
@@ -447,15 +456,6 @@ const Home = () => {
                     forceUnit: "-",
                   }
                   ).slice(0, -2) || 0} TNKR
-                </span>
-              </div>
-
-              <div className="px-6 py-2">
-                <span className="text-sm font-bold leading-6 text-white">
-                  Available:
-                </span>{" "}
-                <span className="text-lg font-bold leading-6 text-white">
-                  {vestingSummary.available}
                 </span>
               </div>
             </div>
