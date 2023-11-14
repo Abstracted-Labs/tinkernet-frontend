@@ -44,6 +44,15 @@ type VestingScheduleLineItem = {
 
 type DataResultType = [unknown, unknown, unknown, unknown] | undefined;
 
+type CoreDataType = {
+  account: string;
+  metadata: {
+    name: string;
+    description: string;
+    image: string;
+  };
+};
+
 interface LockType {
   id: {
     toHuman: () => string;
@@ -52,6 +61,10 @@ interface LockType {
     toString: () => string;
   };
 }
+
+type StakeInfo = { era: string; staked: string; }[];
+
+type StakesInfo = { stakes: StakeInfo; };
 
 const Home = () => {
   const { selectedAccount } = useAccount(
@@ -76,17 +89,8 @@ const Home = () => {
   const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       const currentEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
-
       const stakingCores = (await api.query.ocifStaking.registeredCore.entries()).map(([{ args: [key] }, core]) => {
-        const coreData = core.toPrimitive() as {
-          account: string;
-          metadata: {
-            name: string;
-            description: string;
-            image: string;
-          };
-        };
-
+        const coreData = core.toPrimitive() as CoreDataType;
         const coreKey = key.toPrimitive() as number;
 
         return {
@@ -95,30 +99,13 @@ const Home = () => {
         };
       });
 
-      // const stakeInfoPerCore = stakingCores.map(async (core) => {
-      //   const coreStake = (await api.query.ocifStaking.coreEraStake(core.key, currentEra)).toPrimitive() as {
-      //     total: string;
-      //     numberOfStakers: number;
-      //     rewardClaimed: boolean;
-      //     active: boolean;
-      //   };
-
-      //   return {
-      //     coreId: core.key,
-      //     account: core.account,
-      //     ...coreStake,
-      //   };
-      // });
-
-      // const coreStakeInfo = await Promise.all(stakeInfoPerCore);
-
       if (selectedAccount) {
         const userStakeInfo: { coreId: number; era: number; staked: BigNumber; }[] = [];
         let unclaimedCores = { cores: [] as { coreId: number; earliestEra: number; }[], total: 0 };
 
         for (const core of stakingCores) {
           const stakerInfo = await api.query.ocifStaking.generalStakerInfo(core.key, selectedAccount.address);
-          const info = stakerInfo.toPrimitive() as { stakes: { era: string; staked: string; }[]; };
+          const info = stakerInfo.toPrimitive() as StakesInfo;
 
           if (info.stakes.length > 0) {
             const earliestUnclaimedEra = parseInt(info.stakes[0].era);
