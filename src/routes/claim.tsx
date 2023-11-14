@@ -158,25 +158,25 @@ const Home = () => {
     ]);
   };
 
-  const calculateVestingSchedule = (vestingSchedules: VestingSchedule[]): VestingScheduleLineItem[] => {
+  const calculateVestingSchedule = async (vestingSchedules: VestingSchedule[]): Promise<VestingScheduleLineItem[]> => {
+    const currentBlock = new BigNumber((await api.query.system.number()).toString());
+    console.log('cb', currentBlock.toString());
     return vestingSchedules.map(schedule => {
       const vestingStartBlock = new BigNumber(schedule.start);
       const blocksPerPayout = new BigNumber(schedule.period);
       const tokensPerPayout = new BigNumber(schedule.perPeriod / 1000000000000);
       const totalPayouts = new BigNumber(schedule.periodCount);
+      const endBlock = vestingStartBlock.plus(blocksPerPayout.multipliedBy(totalPayouts.toNumber()));
+      const payoutDateInSeconds = currentDate.getTime() / 1000 + averageBlockTimeInSeconds * ((vestingStartBlock.plus(endBlock)).minus(currentBlock).toNumber());
+      const payoutDate = new Date(payoutDateInSeconds * 1000);
+      const periodsPassed = currentBlock.minus(vestingStartBlock).dividedBy(blocksPerPayout).integerValue(BigNumber.ROUND_DOWN);
+      const remainingPeriods = totalPayouts.minus(periodsPassed);
+      const payoutAmount = tokensPerPayout.multipliedBy(remainingPeriods).toString();
 
-      const payoutDates = Array.from({ length: totalPayouts.toNumber() }, (_, i) => {
-        const payoutBlock = vestingStartBlock.plus(blocksPerPayout.multipliedBy(i));
-        const payoutDateInSeconds = currentDate.getTime() / 1000 - payoutBlock.multipliedBy(averageBlockTimeInSeconds).toNumber();
-        return new Date(payoutDateInSeconds * 1000);
-      });
-
-      const payoutAmount = tokensPerPayout.toString();
-
-      return payoutDates.map(date => ({
-        payoutDate: date,
+      return {
+        payoutDate,
         payoutAmount
-      }));
+      };
     }).flat();
   };
 
@@ -280,7 +280,7 @@ const Home = () => {
         return;
       }
       const vestingSchedules = results[1] as unknown as VestingSchedule[];
-      const vestingScheduleData = calculateVestingSchedule(vestingSchedules);
+      const vestingScheduleData = await calculateVestingSchedule(vestingSchedules);
       const vestingData = calculateVestingData(results, vestingSchedules);
 
       setPayoutSchedule(vestingScheduleData);
@@ -390,7 +390,7 @@ const Home = () => {
             <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="flex flex-col p-6">
                 <span className="text-lg font-normal text-white">
-                  Unlocked Tokens
+                  Claimable
                 </span>
                 <span className="text-2xl font-bold text-white">
                   {vestingSummary.vestedClaimable}
@@ -419,13 +419,13 @@ const Home = () => {
                 {payoutSchedule.length ? (
                   <>
                     <span className="mt-8 text-sm text-white">
-                      Latest unlocked date:
+                      Vesting ends:
                     </span>
                     <span className="text-sm text-white">
                       {payoutSchedule[0].payoutDate.toLocaleString('en-US', dateOptions)}
                     </span>
                     <span className="mt-8 text-sm text-white">
-                      Latest unlocked amount:
+                      Amount still to be vested:
                     </span>
                     <span className="text-sm text-white">
                       {payoutSchedule[0].payoutAmount} TNKR
@@ -438,15 +438,6 @@ const Home = () => {
             <div className="border-t border-gray-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="px-6 py-2">
                 <span className="text-sm font-bold leading-6 text-white">
-                  Available:
-                </span>{" "}
-                <span className="text-lg font-bold leading-6 text-white">
-                  {vestingSummary.available}
-                </span>
-              </div>
-
-              <div className="px-6 py-2">
-                <span className="text-sm font-bold leading-6 text-white">
                   Staked:
                 </span>{" "}
                 <span className="text-lg font-bold leading-6 text-white">
@@ -455,7 +446,16 @@ const Home = () => {
                     withUnit: false,
                     forceUnit: "-",
                   }
-                  ).slice(0, -2)} TNKR
+                  ).slice(0, -2) || 0} TNKR
+                </span>
+              </div>
+
+              <div className="px-6 py-2">
+                <span className="text-sm font-bold leading-6 text-white">
+                  Available:
+                </span>{" "}
+                <span className="text-lg font-bold leading-6 text-white">
+                  {vestingSummary.available}
                 </span>
               </div>
             </div>
