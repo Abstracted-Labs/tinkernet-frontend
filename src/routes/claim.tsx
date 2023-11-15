@@ -428,7 +428,7 @@ const Home = () => {
                   Time to Full Access:
                 </span>
                 <span className="text-sm text-white">
-                  {parseInt(vestingSummary.remainingVestingPeriod) > 0 ? `${ vestingSummary.remainingVestingPeriod } block${ parseInt(vestingSummary.remainingVestingPeriod) !== 1 ? '' : 's' }` : '--'}
+                  {parseInt(vestingSummary.remainingVestingPeriod) > 0 ? `${ vestingSummary.remainingVestingPeriod } block${ parseInt(vestingSummary.remainingVestingPeriod) !== 1 ? 's' : '' }` : '--'}
                 </span>
                 <span className="mt-8 text-sm text-white">
                   Access Completion Date:
