@@ -86,6 +86,12 @@ const Home = () => {
     day: 'numeric' as const
   };
 
+  let roundedPayoutAmount = "0";
+  if (payoutSchedule[0]) {
+    const payoutAmount = new BigNumber(payoutSchedule[0].payoutAmount);
+    roundedPayoutAmount = payoutAmount.decimalPlaces(4, 1).toString();
+  }
+
   const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       const currentEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
@@ -260,8 +266,8 @@ const Home = () => {
     const endOfVestingPeriod = new Date(currentDate.getTime() + remainingVestingPeriodInSeconds * 1000);
 
     return {
-      vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
-      vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
+      vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: false }),
+      vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: false }),
       frozen: formatBalance(frozen.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       available: formatBalance(available.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(remainingVestingPeriod),
@@ -390,10 +396,10 @@ const Home = () => {
             <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="flex flex-col p-6">
                 <span className="text-lg font-normal text-white">
-                  Claimable
+                  Ready to Claim
                 </span>
                 <span className="text-2xl font-bold text-white">
-                  {vestingSummary.vestedClaimable}
+                  {vestingSummary.vestedClaimable} TNKR
                 </span>
                 <button
                   type="button"
@@ -406,32 +412,30 @@ const Home = () => {
               </div>
 
               <div className="flex flex-col p-6">
-                <span className="text-lg font-normal text-white">Vesting</span>
+                <span className="text-lg font-normal text-white">
+                  Remaining Locked
+                </span>
                 <span className="text-2xl font-bold text-white">
-                  {vestingSummary.vestedLocked}
+                  {roundedPayoutAmount || 0} TNKR
                 </span>
                 <span className="mt-8 text-sm text-white">
-                  Vesting period remaining:
+                  Total Allocated:
                 </span>
                 <span className="text-sm text-white">
-                  {vestingSummary.remainingVestingPeriod} blocks <br />
+                  {vestingSummary.vestedLocked} TNKR
                 </span>
-                {payoutSchedule.length ? (
-                  <>
-                    <span className="mt-8 text-sm text-white">
-                      Vesting ends:
-                    </span>
-                    <span className="text-sm text-white">
-                      {payoutSchedule[0].payoutDate.toLocaleString('en-US', dateOptions)}
-                    </span>
-                    <span className="mt-8 text-sm text-white">
-                      Amount still to be vested:
-                    </span>
-                    <span className="text-sm text-white">
-                      {payoutSchedule[0].payoutAmount} TNKR
-                    </span>
-                  </>
-                ) : null}
+                <span className="mt-8 text-sm text-white">
+                  Time to Full Access:
+                </span>
+                <span className="text-sm text-white">
+                  {parseInt(vestingSummary.remainingVestingPeriod) > 0 ? `${ vestingSummary.remainingVestingPeriod } block${ parseInt(vestingSummary.remainingVestingPeriod) !== 1 ? '' : 's' }` : '--'}
+                </span>
+                <span className="mt-8 text-sm text-white">
+                  Access Completion Date:
+                </span>
+                <span className="text-sm text-white">
+                  {payoutSchedule[0] && payoutSchedule[0].payoutDate.toLocaleString('en-US', dateOptions) || '--'}
+                </span>
               </div>
             </div>
 
