@@ -166,19 +166,17 @@ const Home = () => {
 
   const calculateVestingSchedule = async (vestingSchedules: VestingSchedule[]): Promise<VestingScheduleLineItem[]> => {
     const currentBlock = new BigNumber((await api.query.system.number()).toString());
-    console.log('cb', currentBlock.toString());
-    return vestingSchedules.map(schedule => {
+    return vestingSchedules.sort((a, b) => (a.start + a.period * a.periodCount) - (b.start + b.period * b.periodCount)).map(schedule => {
       const vestingStartBlock = new BigNumber(schedule.start);
       const blocksPerPayout = new BigNumber(schedule.period);
       const tokensPerPayout = new BigNumber(schedule.perPeriod / 1000000000000);
       const totalPayouts = new BigNumber(schedule.periodCount);
-      const endBlock = vestingStartBlock.plus(blocksPerPayout.multipliedBy(totalPayouts.toNumber()));
+      const endBlock = blocksPerPayout.multipliedBy(totalPayouts.toNumber());
       const payoutDateInSeconds = currentDate.getTime() / 1000 + averageBlockTimeInSeconds * ((vestingStartBlock.plus(endBlock)).minus(currentBlock).toNumber());
       const payoutDate = new Date(payoutDateInSeconds * 1000);
       const periodsPassed = currentBlock.minus(vestingStartBlock).dividedBy(blocksPerPayout).integerValue(BigNumber.ROUND_DOWN);
       const remainingPeriods = totalPayouts.minus(periodsPassed);
       const payoutAmount = tokensPerPayout.multipliedBy(remainingPeriods).toString();
-
       return {
         payoutDate,
         payoutAmount
@@ -266,7 +264,7 @@ const Home = () => {
     const endOfVestingPeriod = new Date(currentDate.getTime() + remainingVestingPeriodInSeconds * 1000);
 
     return {
-      vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: false }),
+      vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: false }),
       frozen: formatBalance(frozen.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       available: formatBalance(available.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
@@ -413,25 +411,19 @@ const Home = () => {
 
               <div className="flex flex-col p-6">
                 <span className="text-lg font-normal text-white">
-                  Remaining Locked
+                  Remaining Vesting
                 </span>
                 <span className="text-2xl font-bold text-white">
                   {roundedPayoutAmount || 0} TNKR
                 </span>
                 <span className="mt-8 text-sm text-white">
-                  Total Allocated:
+                  Total Vesting:
                 </span>
                 <span className="text-sm text-white">
-                  {vestingSummary.vestedLocked} TNKR
+                  {vestingSummary.vestedLocked}
                 </span>
                 <span className="mt-8 text-sm text-white">
-                  Time to Full Access:
-                </span>
-                <span className="text-sm text-white">
-                  {parseInt(vestingSummary.remainingVestingPeriod) > 0 ? `${ vestingSummary.remainingVestingPeriod } block${ parseInt(vestingSummary.remainingVestingPeriod) !== 1 ? 's' : '' }` : '--'}
-                </span>
-                <span className="mt-8 text-sm text-white">
-                  Access Completion Date:
+                  Vesting Completion Date:
                 </span>
                 <span className="text-sm text-white">
                   {payoutSchedule[0] && payoutSchedule[0].payoutDate.toLocaleString('en-US', dateOptions) || '--'}
