@@ -177,10 +177,9 @@ const Home = () => {
       const totalPayouts = new BigNumber(schedule.periodCount);
 
       // Calculate the end block of the vesting period.
-      const endBlock = blocksPerPayout.multipliedBy(totalPayouts.toNumber());
-
+      const endBlock = vestingStartBlock.plus(blocksPerPayout.multipliedBy(totalPayouts.toNumber()));
       // Calculate the estimated payout date in seconds since the Unix Epoch.
-      const payoutDateInSeconds = currentDate.getTime() / 1000 + averageBlockTimeInSeconds * ((vestingStartBlock.plus(endBlock)).minus(currentBlock).toNumber());
+      const payoutDateInSeconds = currentDate.getTime() / 1000 + averageBlockTimeInSeconds * (endBlock.minus(currentBlock).toNumber());
 
       // Convert the payout date to a JavaScript Date object.
       const payoutDate = new Date(payoutDateInSeconds * 1000);
