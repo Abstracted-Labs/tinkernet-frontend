@@ -392,7 +392,7 @@ const Home = () => {
         ) : null}
 
         {!isBalanceLoading && selectedAccount && vestingSummary ? (
-          <div className="overflow-hidden rounded-md border border-gray-50 bg-neutral-900 shadow">
+          <div className="overflow-hidden rounded-md border border-gray-50 backdrop-blur-sm shadow mt-10">
             <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="flex flex-col p-6">
                 <span className="text-lg font-normal text-white">
@@ -407,7 +407,7 @@ const Home = () => {
                   onClick={() => handleClaim(selectedAccount)}
                   disabled={vestingSummary.vestedClaimable === "0" || isClaimWaiting}
                 >
-                  Claim Now
+                  {vestingSummary.vestedClaimable === "0" ? 'Nothing to Claim' : 'Claim Now'}
                 </button>
               </div>
 

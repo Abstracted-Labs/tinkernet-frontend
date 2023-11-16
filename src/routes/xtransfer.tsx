@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { BN, formatBalance, u8aToHex } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
-
 import background from "../assets/background.svg";
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
 import { ArrowRightIcon, ClipboardIcon } from "@heroicons/react/24/outline";
@@ -372,7 +371,7 @@ const XTransfer = () => {
   }, [api, apiBasilisk]);
 
   return (
-    <div className="relative flex h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
+    <div className="relative flex h-[calc(100vh_-_12rem)] mt-10 items-center justify-center overflow-hidden">
       <div
         className="hidden md:absolute md:inset-y-0 md:block md:h-full md:w-full"
         aria-hidden="true"
@@ -409,7 +408,7 @@ const XTransfer = () => {
         ) : null}
 
         {!isLoading && selectedAccount ? (
-          <div className="overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow">
+          <div className="overflow-hidden rounded-md border border-neutral-50 backdrop-blur-sm shadow">
             <div className="p-4">
               <div className="grid grid-cols-5 items-center justify-between p-6 pb-2">
                 <select
@@ -461,7 +460,7 @@ const XTransfer = () => {
               </div>
 
               {pair.from === currency.TINKERNET &&
-              pair.to === currency.BASILISK ? (
+                pair.to === currency.BASILISK ? (
                 <div className="flex flex-col gap-4 p-6">
                   <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                     <label
@@ -519,15 +518,15 @@ const XTransfer = () => {
                     disabled={
                       (pair.from === "Tinkernet"
                         ? new BigNumber(amount).div(1000000000000).toNumber() >=
-                            balanceInTinkernet
-                              .minus(100000000000)
-                              .div(1000000000000)
-                              .toNumber() || !destination
+                        balanceInTinkernet
+                          .minus(100000000000)
+                          .div(1000000000000)
+                          .toNumber() || !destination
                         : new BigNumber(amount).div(1000000000000).toNumber() >=
-                            balanceInBasilisk
-                              .minus(100000000000)
-                              .div(1000000000000)
-                              .toNumber() || !destination) || isWaiting
+                        balanceInBasilisk
+                          .minus(100000000000)
+                          .div(1000000000000)
+                          .toNumber() || !destination) || isWaiting
                     }
                     onClick={() => handleXTransferToBasilisk()}
                   >
@@ -537,7 +536,7 @@ const XTransfer = () => {
               ) : null}
 
               {pair.from === currency.BASILISK &&
-              pair.to === currency.TINKERNET ? (
+                pair.to === currency.TINKERNET ? (
                 <div className="flex flex-col gap-4 p-6">
                   <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
                     <label
@@ -594,10 +593,10 @@ const XTransfer = () => {
                     className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                     disabled={
                       new BigNumber(amount).div(1000000000000).toNumber() >=
-                        balanceInBasilisk
-                          .minus(100000000000)
-                          .div(1000000000000)
-                          .toNumber() ||
+                      balanceInBasilisk
+                        .minus(100000000000)
+                        .div(1000000000000)
+                        .toNumber() ||
                       !destination ||
                       isWaiting
                     }

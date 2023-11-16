@@ -7,22 +7,17 @@ import pattern from "../../assets/pattern.svg";
 
 const Layout = () => {
   return (
-    <div className="bg-neutral-900">
-      <div
-        className="pointer-events-none absolute inset-y-0 h-screen overflow-hidden"
-        aria-hidden="true"
-      >
-        {Array.from({ length: 10 }).map((_, i) => {
-          return (
-            <img
-              src={pattern}
-              key={`${pattern}-${i}`}
-              alt="pattern"
-              className="pointer-events-none"
-            />
-          );
-        })}
-      </div>
+    <div
+      className="bg-neutral-900"
+      aria-hidden="true"
+      style={{
+        backgroundImage: `url(${ pattern })`,
+        backgroundRepeat: 'repeat',
+        backgroundSize: 'auto',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
 
       <Header />
 

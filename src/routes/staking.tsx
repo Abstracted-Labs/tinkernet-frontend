@@ -685,7 +685,7 @@ const Staking = () => {
       ) : null}
 
       {!isLoading ? (
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8 mt-10">
           {selectedAccount &&
             currentStakingEra &&
             totalUserStaked &&
@@ -693,7 +693,7 @@ const Staking = () => {
             <>
               <div className="flex flex-col flex-wrap items-center justify-between gap-4 md:flex-row">
                 <div>
-                  <span>OCIF Staking Dashboard</span>
+                  <span className="sr-only">OCIF Staking Dashboard</span>
                 </div>
                 <div className="flex flex-wrap gap-8">
                   <button
@@ -716,8 +716,9 @@ const Staking = () => {
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-6">
-                <div className="flex flex-col gap-2 p-6">
+              <div
+                className="relative overflow-x-auto w-full rounded-md border border-neutral-50 shadow flex align-items-center gap-10 justify-between backdrop-blur-sm p-6">
+                <div className="flex flex-col justify-between">
                   <div>
                     <span className="text-sm">Your stake</span>
                   </div>
@@ -733,7 +734,7 @@ const Staking = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 p-6">
+                <div className="flex flex-col justify-between">
                   <div>
                     <span className="text-sm">Unclaimed Eras</span>
                   </div>
@@ -744,9 +745,9 @@ const Staking = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 p-6">
+                <div className="flex flex-col justify-between">
                   <div>
-                    <span className="text-sm">Total Rewards Claimed</span>
+                    <span className="text-sm">Claimable Rewards</span>
                   </div>
                   <div>
                     <span className="text-md font-bold">
@@ -760,9 +761,9 @@ const Staking = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 p-6">
+                <div className="flex flex-col justify-between">
                   <div>
-                    <span className="text-sm">Current Staking APY</span>
+                    <span className="text-sm">Staking APY</span>
                   </div>
                   <div>
                     <span className="text-md font-bold">
@@ -781,7 +782,7 @@ const Staking = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 p-6">
+                <div className="flex flex-col justify-between">
                   <div>
                     <span className="text-sm">Annual DAO rewards</span>
                   </div>
@@ -799,7 +800,7 @@ const Staking = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2 p-6">
+                <div className="flex flex-col justify-between">
                   <div>
                     <span className="text-sm">Current Era</span>
                   </div>
@@ -847,7 +848,7 @@ const Staking = () => {
               return (
                 <div
                   key={core.account}
-                  className="relative flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 p-6 pb-28 sm:flex-row"
+                  className="relative flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 p-6 pb-28 sm:flex-row backdrop-blur-sm"
                 >
                   <div className="flex w-full flex-col gap-4">
                     <div className="flex flex-shrink-0">

@@ -41,8 +41,8 @@ const Header = () => {
   }, [selectedAccount, api]);
 
   return (
-    <nav>
-      <div className="mx-auto flex max-w-7xl flex-row flex-wrap justify-between gap-8 p-4 sm:px-6 lg:px-8">
+    <nav className="fixed flex flex-row w-full z-20 justify-between bg-black bg-opacity-50 backdrop-blur-sm">
+      <div className="w-full flex flex-row justify-between gap-8 p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <div className="flex-shrink-0">
             <Link to="/">
@@ -59,7 +59,7 @@ const Header = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 text-xs md:text-sm">
             <Link to="/claim">
               <span className="truncate text-white">Claim</span>
             </Link>
@@ -72,11 +72,11 @@ const Header = () => {
           </div>
         </div>
 
-        <div className="mx-auto flex items-center gap-4 md:mx-0">
+        <div className="flex items-center gap-4 md:mx-0">
           {selectedAccount ? (
             <Menu as="div" className="relative inline-block text-left">
               <div>
-                <Menu.Button className="inline-flex items-center w-full justify-center truncate rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2">
+                <Menu.Button className="inline-flex items-center w-full justify-center truncate rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-xs md:text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2">
                   {selectedAccount ? (
                     <>
                       {selectedAccount.meta.name || selectedAccount.address}
@@ -100,7 +100,7 @@ const Header = () => {
                       className={`${ active
                         ? "bg-neutral-800 text-white"
                         : "text-neutral-900"
-                        } group w-full items-center rounded-md px-2 py-2 text-sm`}
+                        } group w-full items-center rounded-md px-2 py-2 text-xs md:text-sm`}
                       onClick={handleConnect}
                     >
                       <span className="mr-1">🔀</span> Switch Account

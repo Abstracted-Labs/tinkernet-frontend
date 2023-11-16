@@ -4,4 +4,5 @@
 
 html {
   font-feature-settings: "salt", "zero", "calt", "ccmp", "kern";
+  background-color: black;
 }
