@@ -165,23 +165,39 @@ const Home = () => {
   };
 
   const calculateVestingSchedule = async (vestingSchedules: VestingSchedule[]): Promise<VestingScheduleLineItem[]> => {
+    // Fetch the current block number from the blockchain.
     const currentBlock = new BigNumber((await api.query.system.number()).toString());
+
+    // Sort the vesting schedules by the end block of each vesting period in ascending order.
     return vestingSchedules.sort((a, b) => (a.start + a.period * a.periodCount) - (b.start + b.period * b.periodCount)).map(schedule => {
+      // Convert the start block, period, perPeriod, and periodCount of each vesting schedule to BigNumber for accurate calculations.
       const vestingStartBlock = new BigNumber(schedule.start);
       const blocksPerPayout = new BigNumber(schedule.period);
       const tokensPerPayout = new BigNumber(schedule.perPeriod / 1000000000000);
       const totalPayouts = new BigNumber(schedule.periodCount);
+
+      // Calculate the end block of the vesting period.
       const endBlock = blocksPerPayout.multipliedBy(totalPayouts.toNumber());
+
+      // Calculate the estimated payout date in seconds since the Unix Epoch.
       const payoutDateInSeconds = currentDate.getTime() / 1000 + averageBlockTimeInSeconds * ((vestingStartBlock.plus(endBlock)).minus(currentBlock).toNumber());
+
+      // Convert the payout date to a JavaScript Date object.
       const payoutDate = new Date(payoutDateInSeconds * 1000);
+
+      // Calculate the number of payout periods that have passed and the number of payout periods that are remaining.
       const periodsPassed = currentBlock.minus(vestingStartBlock).dividedBy(blocksPerPayout).integerValue(BigNumber.ROUND_DOWN);
       const remainingPeriods = totalPayouts.minus(periodsPassed);
+
+      // Calculate the total amount of tokens to be paid out.
       const payoutAmount = tokensPerPayout.multipliedBy(remainingPeriods).toString();
+
+      // Return a VestingScheduleLineItem object for each vesting schedule.
       return {
         payoutDate,
         payoutAmount
       };
-    }).flat();
+    }).flat();  // Flatten the array if there are any nested arrays.
   };
 
   const calculateVestingData = (results: DataResultType, vestingSchedules: VestingSchedule[]) => {
