@@ -76,16 +76,16 @@ const Header = () => {
           {selectedAccount ? (
             <Menu as="div" className="relative inline-block text-left">
               <div>
-                <Menu.Button className="inline-flex items-center justify-center truncate rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2">
+                <Menu.Button className="inline-flex items-center w-full justify-center truncate rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2">
                   {selectedAccount ? (
                     <>
                       {selectedAccount.meta.name || selectedAccount.address}
                       {balance
-                        ? ` (${formatBalance(balance.toString(), {
-                            decimals: 12,
-                            withUnit: "TNKR",
-                            forceUnit: "-",
-                          })})`
+                        ? ` (${ formatBalance(balance.toString(), {
+                          decimals: 12,
+                          withUnit: "TNKR",
+                          forceUnit: "-",
+                        }) })`
                         : null}
                     </>
                   ) : (
@@ -93,18 +93,17 @@ const Header = () => {
                   )}
                 </Menu.Button>
               </div>
-              <Menu.Items className="absolute right-0 z-20 mt-2 w-56 origin-top-right divide-y divide-neutral-100 rounded-md bg-white p-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <Menu.Items className="absolute right-0 z-20 mt-2 origin-top-right divide-y divide-neutral-100 rounded-md bg-white p-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                 <Menu.Item>
                   {({ active }) => (
                     <button
-                      className={`${
-                        active
-                          ? "bg-neutral-800 text-white"
-                          : "text-neutral-900"
-                      } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                      className={`${ active
+                        ? "bg-neutral-800 text-white"
+                        : "text-neutral-900"
+                        } group w-full items-center rounded-md px-2 py-2 text-sm`}
                       onClick={handleConnect}
                     >
-                      Change Account
+                      <span className="mr-1">🔀</span> Switch Account
                     </button>
                   )}
                 </Menu.Item>

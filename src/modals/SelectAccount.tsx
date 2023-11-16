@@ -46,15 +46,15 @@ const SelectWallet = ({ isOpen }: { isOpen: boolean; }) => {
         <span className="block">close</span>
       </button>
       <Dialog.Panel>
-        <div className="fixed left-1/2 top-1/2 z-50 mx-auto block max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-gray-50 bg-neutral-900 p-6 sm:w-full">
-          <h2 className="text-xl font-bold text-white">Select your Wallet</h2>
-          <ul className="w-full divide-y divide-gray-200">
+        <div className="fixed left-1/2 top-1/2 z-50 mx-auto block w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col rounded-md border border-gray-50 bg-neutral-900 p-6 sm:w-full">
+          <h2 className="text-xl font-bold text-white fixed bg-neutral-900 w-[calc(100%-2rem)] max-w-lg pb-4">Select your Wallet</h2>
+          <ul className="pt-10 w-full divide-y divide-gray-200 h-96 overflow-y-scroll mb-10">
             {accounts.map((account, index) => (
               <li
                 role="menuitem"
                 tabIndex={0}
                 key={`${ account.address }-${ index }}`}
-                className="w-full cursor-pointer py-4 text-white transition-colors hover:text-amber-300"
+                className={`w-full cursor-pointer py-4 transition-colors hover:text-amber-300 ${ account.address === selectedAccount?.address ? 'bg-amber-300 text-black pl-4 hover:bg-neutral-900' : 'text-white' }`}
                 onClick={() => {
                   handleAccountSelection(account);
                 }}
@@ -70,12 +70,11 @@ const SelectWallet = ({ isOpen }: { isOpen: boolean; }) => {
                 </span>
               </li>
             ))}
+          </ul>
+          <div className="fixed bottom-1 bg-neutral-900 w-[calc(100%-2rem)] max-w-lg">
             {selectedAccount ? (
-              <li
-                role="menuitem"
-                tabIndex={0}
-                key={selectedAccount.address}
-                className="underline-offset-2w-full flex cursor-pointer items-center gap-2 overflow-hidden text-ellipsis py-4 text-white underline transition-colors hover:text-amber-300"
+              <div
+                className="underline-offset-2w-full flex justify-end cursor-pointer items-center gap-2 overflow-hidden text-ellipsis py-4 pr-4 text-white underline transition-colors hover:text-amber-300"
                 onClick={() => {
                   handleAccountSelection(null);
                 }}
@@ -87,9 +86,9 @@ const SelectWallet = ({ isOpen }: { isOpen: boolean; }) => {
               >
                 <ArrowLeftOnRectangleIcon className="h-5 w-5" />
                 Disconnect
-              </li>
+              </div>
             ) : null}
-          </ul>
+          </div>
         </div>
       </Dialog.Panel>
     </Dialog>

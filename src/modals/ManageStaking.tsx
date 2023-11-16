@@ -26,7 +26,7 @@ const schema = z.object({
   }),
 });
 
-const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
+const ManageStaking = ({ isOpen }: { isOpen: boolean; }) => {
   const { setOpenModal, metadata } = useModal(
     (state) => ({
       setOpenModal: state.setOpenModal,
@@ -39,13 +39,13 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     resolver: zodResolver(schema),
     mode: "onBlur",
   });
-
   const unstakeForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     mode: "onBlur",
   });
-
   const api = useApi();
+  const watchedUnstakeAmount = unstakeForm.watch('amount');
+  const watchedStakeAmount = stakeForm.watch('amount');
 
   const handleStake = stakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
@@ -143,7 +143,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
     } catch (error) {
       toast.dismiss();
 
-      toast.error(`${error}`);
+      toast.error(`${ error }`);
     }
   });
 
@@ -293,7 +293,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
               </div>
 
               {metadata?.totalUserStaked &&
-              metadata?.totalUserStaked.toString() !== "0" ? (
+                metadata?.totalUserStaked.toString() !== "0" ? (
                 <div className="text-sm text-white">
                   <>
                     Staked:{" "}
@@ -313,7 +313,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
             <div className="flex flex-col gap-4">
               <Tab.Group>
                 {metadata?.totalUserStaked &&
-                metadata?.totalUserStaked.toString() !== "0" ? (
+                  metadata?.totalUserStaked.toString() !== "0" ? (
                   <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
                     <Tab
                       key={mode.STAKE}
@@ -327,7 +327,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                         )
                       }
                     >
-                      Stake
+                      Increase Stake
                     </Tab>
                     <Tab
                       key={mode.UNSTAKE}
@@ -350,7 +350,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                     key={mode.STAKE}
                     className={classNames(
                       "flex flex-col gap-4 rounded-md",
-                      "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2"
+                      "focus:outline-none"
                     )}
                   >
                     <form
@@ -402,7 +402,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                         disabled={!stakeForm.formState.isValid}
                         className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
                       >
-                        Stake
+                        Stake {watchedStakeAmount} TNKR
                       </button>
                     </form>
                   </Tab.Panel>
@@ -410,7 +410,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                     key={mode.UNSTAKE}
                     className={classNames(
                       "rounded-md",
-                      "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2"
+                      "focus:outline-none"
                     )}
                   >
                     <form
@@ -462,7 +462,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean }) => {
                         disabled={!unstakeForm.formState.isValid}
                         className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
                       >
-                        Unstake
+                        Unstake {watchedUnstakeAmount} TNKR
                       </button>
                     </form>
                   </Tab.Panel>
