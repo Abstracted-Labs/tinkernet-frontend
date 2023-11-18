@@ -6,10 +6,14 @@ module.exports = {
   content: [ "./src/**/*.{js,jsx,ts,tsx}" ],
   theme: {
     extend: {
+      scrollbar: [ 'dark' ],
       fontFamily: {
         sans: [ "Inter var", ...defaultTheme.fontFamily.sans ],
       },
+      fontSize: {
+        'xxs': '0.5rem',
+      },
     },
   },
-  plugins: [ require("@tailwindcss/forms") ],
+  plugins: [ require("@tailwindcss/forms"), require('tailwind-scrollbar') ],
 };

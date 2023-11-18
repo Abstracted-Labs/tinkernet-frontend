@@ -3,7 +3,7 @@ import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { formatBalance } from "@polkadot/util";
 import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
@@ -108,6 +108,7 @@ type ReturnResultType = {
 };
 
 const Staking = () => {
+  const descriptionRef = useRef<HTMLDivElement | null>(null);
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const api = useApi();
@@ -139,9 +140,17 @@ const Staking = () => {
     total: number;
   }>({ cores: [], total: 0 });
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
-
   const [isLoading, setLoading] = useState(false);
   const [isWaiting, setWaiting] = useState(false);
+  const [expandedCore, setExpandedCore] = useState<string | null>(null);
+  const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
+  const [chainProperties, setChainProperties] = useState<{
+    maxStakersPerCore: number;
+    inflationErasPerYear: number;
+  }>();
+  const [currentBlock, setCurrentBlock] = useState<number>(0);
+  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
+  const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
 
   const [rewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -153,17 +162,6 @@ const Staking = () => {
 
     pause: !selectedAccount,
   });
-
-  const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
-
-  const [chainProperties, setChainProperties] = useState<{
-    maxStakersPerCore: number;
-    inflationErasPerYear: number;
-  }>();
-
-  const [currentBlock, setCurrentBlock] = useState<number>(0);
-  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
-  const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
 
   useSubscription(
     {
@@ -650,6 +648,10 @@ const Staking = () => {
     });
   };
 
+  const toggleExpanded = (coreId: string) => {
+    setExpandedCore(expandedCore === coreId ? null : coreId);
+  };
+
   useEffect(() => {
     loadStakingCores(selectedAccount);
   }, [selectedAccount, api]);
@@ -676,6 +678,13 @@ const Staking = () => {
     };
   }, [selectedAccount, api]);
 
+  useEffect(() => {
+    if (descriptionRef.current && expandedCore !== null) {
+      console.log('got here');
+      descriptionRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [expandedCore]);
+
   return (
     <>
       {isLoading ? (
@@ -685,7 +694,7 @@ const Staking = () => {
       ) : null}
 
       {!isLoading ? (
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8 mt-10">
+        <div className="mx-auto w-full flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8 mt-10">
           {selectedAccount &&
             currentStakingEra &&
             totalUserStaked &&
@@ -717,7 +726,7 @@ const Staking = () => {
               </div>
 
               <div
-                className="relative overflow-x-auto w-full rounded-md border border-neutral-50 shadow flex align-items-center gap-10 justify-between backdrop-blur-sm p-6">
+                className="relative overflow-x-auto w-full rounded-md border border-neutral-50 shadow flex align-items-center gap-10 justify-between backdrop-blur-sm p-6 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-scroll">
                 <div className="flex flex-col justify-between">
                   <div>
                     <span className="text-sm">Your stake</span>
@@ -835,7 +844,7 @@ const Staking = () => {
             ) : null}
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {stakingCores.map((core) => {
               const totalUserStaked = userStakedInfo.find(
                 (info) => info.coreId === core.key
@@ -848,109 +857,136 @@ const Staking = () => {
               return (
                 <div
                   key={core.account}
-                  className="relative flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 p-6 pb-28 sm:flex-row backdrop-blur-sm"
+                  className="relative flex flex-col gap-4 overflow-hidden rounded-md p-4 sm:flex-row border border-neutral-50 backdrop-blur-sm"
                 >
-                  <div className="flex w-full flex-col gap-4">
-                    <div className="flex flex-shrink-0">
-                      <img
-                        src={core.metadata.image}
-                        alt={core.metadata.name}
-                        className="h-16 w-16 rounded-full"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-4">
-                      <h4 className="font-bold">{core.metadata.name}</h4>
+                  <div className="flex w-full flex-col gap-4 justify-between">
+                    <div className="h-72">
+                      <div className="flex flex-row items-center gap-4">
+                        <div className="flex flex-shrink-0">
+                          <img
+                            src={core.metadata.image}
+                            alt={core.metadata.name}
+                            className="h-16 w-16 rounded-full"
+                          />
+                        </div>
+                        <h4 className="font-bold">{core.metadata.name}</h4>
+                      </div>
 
-                      <p className="text-sm">{core.metadata.description}</p>
-                    </div>
-
-                    <div className="absolute bottom-0 left-0 flex w-full flex-col gap-4 p-6">
-                      {selectedAccount ? (
-                        <div className="flex items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            className="inline-flex w-full items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:border-neutral-400 disabled:bg-neutral-400"
-                            onClick={() => {
-                              const parsedTotalStaked =
-                                totalUserStaked || new BigNumber("0");
-
-                              const parsedAvailableBalance =
-                                availableBalance?.minus(
-                                  new BigNumber(10).pow(12).times(2)
-                                ) || new BigNumber("0");
-
-                              handleManageStaking({
-                                core,
-                                totalUserStaked: parsedTotalStaked,
-                                availableBalance:
-                                  parsedAvailableBalance.isNegative()
-                                    ? new BigNumber("0")
-                                    : parsedAvailableBalance,
-                              });
-                            }}
-                            disabled={
-                              (coreInfo?.numberOfStakers || 0) >=
-                              (chainProperties?.maxStakersPerCore || 0) &&
-                              !totalUserStaked
-                            }
+                      <div ref={descriptionRef} className={`mt-3 overflow-y-scroll ${ expandedCore !== core.account ? '' : 'h-[73%] tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin pr-3' }`}>
+                        <div>
+                          <p
+                            className={`relative text-sm overflow-hidden transition-all duration-200 ${ expandedCore !== core.account ? "line-clamp-2 gradient-bottom" : "" }`}
+                            onClick={() => toggleExpanded(core.account)}
                           >
-                            Manage Staking
+                            {core.metadata.description}
+                          </p>
+                          <button
+                            className={`flex flex-row text-xs items-center gap-1 mx-auto mt-2 mb-5 text-amber-300 hover:text-amber-50 rounded-lg text-xxs border border-amber-300 px-2 py-1 focus:outline-none ${ expandedCore !== core.account ? "relative top-[-10px]" : "" }`}
+                            onClick={() => toggleExpanded(core.account)}
+                          >
+                            SHOW {expandedCore === core.account ? "LESS" : "MORE"}
+                            <svg className={`w-2 h-2 transform transition-transform duration-200 ${ expandedCore === core.account ? "rotate-180" : "" }`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                           </button>
+                        </div>
 
-                          <span className="block text-sm">
-                            {totalUserStaked
-                              ? `Your stake: ${ formatBalance(
-                                totalUserStaked.toString(),
-                                {
+                        <div className="flex w-full flex-col border border-neutral-50 rounded-md mb-1">
+                          <div className="flex items-center justify-between border-b border-neutral-50 py-2 px-3">
+                            <div className="text-xs">Total Stakers</div>
+                            <div className="flex flex-row">
+                              {(coreInfo?.numberOfStakers || 0) >=
+                                (chainProperties?.maxStakersPerCore || 0) ? (
+                                <LockClosedIcon
+                                  className="h-5 w-5 cursor-pointer text-white"
+                                  onClick={() => {
+                                    toast.error(
+                                      "This core has reached the staker limit"
+                                    );
+                                  }}
+                                />
+                              ) : (
+                                <UserGroupIcon
+                                  className="h-5 w-5 cursor-pointer text-white"
+                                  onClick={() => {
+                                    toast.success(
+                                      "This core can have more stakers"
+                                    );
+                                  }}
+                                />
+                              )}
+                              <span className="ml-1 truncate text-sm font-bold">
+                                {coreInfo?.numberOfStakers || "0"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between border-b border-neutral-50 py-2 px-3">
+                            <span className="truncate text-xs">Total Staked</span>
+                            <span className="truncate text-sm font-bold">
+                              {coreInfo?.total
+                                ? formatBalance(coreInfo.total.toString(), {
                                   decimals: 12,
                                   withUnit: false,
                                   forceUnit: "-",
-                                }
-                              ).slice(0, -2) } TNKR`
-                              : null}
-                          </span>
-                        </div>
-                      ) : null}
+                                }).slice(0, -2)
+                                : "0"}{" "}
+                              TNKR
+                            </span>
+                          </div>
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-2 ">
-                          {(coreInfo?.numberOfStakers || 0) >=
-                            (chainProperties?.maxStakersPerCore || 0) ? (
-                            <LockClosedIcon
-                              className="h-5 w-5 cursor-pointer text-white"
-                              onClick={() => {
-                                toast.error(
-                                  "This core has reached the staker limit"
-                                );
-                              }}
-                            />
-                          ) : (
-                            <UserGroupIcon
-                              className="h-5 w-5 cursor-pointer text-white"
-                              onClick={() => {
-                                toast.success(
-                                  "This core can have more stakers"
-                                );
-                              }}
-                            />
-                          )}
-
-                          <span className="truncate text-sm">
-                            {coreInfo?.numberOfStakers || "0"} stakers
-                          </span>
-                        </div>
-                        <div className="truncate text-sm">
-                          {coreInfo?.total
-                            ? formatBalance(coreInfo.total.toString(), {
-                              decimals: 12,
-                              withUnit: false,
-                              forceUnit: "-",
-                            }).slice(0, -2)
-                            : "0"}{" "}
-                          TNKR staked
+                          <div className="flex items-center justify-between py-2 px-3">
+                            <span className="text-xs">My Stake</span>
+                            <span className="text-sm font-bold">
+                              {totalUserStaked
+                                ? `${ formatBalance(
+                                  totalUserStaked.toString(),
+                                  {
+                                    decimals: 12,
+                                    withUnit: false,
+                                    forceUnit: "-",
+                                  }
+                                ).slice(0, -2) } TNKR`
+                                : '--'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
+
+                    {selectedAccount ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          className="inline-flex w-full items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:border-neutral-400 disabled:bg-neutral-400"
+                          onClick={() => {
+                            const parsedTotalStaked =
+                              totalUserStaked || new BigNumber("0");
+
+                            const parsedAvailableBalance =
+                              availableBalance?.minus(
+                                new BigNumber(10).pow(12).times(2)
+                              ) || new BigNumber("0");
+
+                            handleManageStaking({
+                              core,
+                              totalUserStaked: parsedTotalStaked,
+                              availableBalance:
+                                parsedAvailableBalance.isNegative()
+                                  ? new BigNumber("0")
+                                  : parsedAvailableBalance,
+                            });
+                          }}
+                          disabled={
+                            (coreInfo?.numberOfStakers || 0) >=
+                            (chainProperties?.maxStakersPerCore || 0) &&
+                            !totalUserStaked
+                          }
+                        >
+                          Manage Staking
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               );

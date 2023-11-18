@@ -5,7 +5,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { shallow } from "zustand/shallow";
-
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
 
@@ -49,27 +48,30 @@ const SelectWallet = ({ isOpen }: { isOpen: boolean; }) => {
         <div className="fixed left-1/2 top-1/2 z-50 mx-auto block w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col rounded-md border border-gray-50 bg-neutral-900 p-6 sm:w-full">
           <h2 className="text-xl font-bold text-white fixed bg-neutral-900 w-[calc(100%-2rem)] max-w-lg pb-4">Select your Wallet</h2>
           <ul className="pt-10 w-full divide-y divide-gray-200 h-96 overflow-y-scroll mb-10">
-            {accounts.map((account, index) => (
-              <li
-                role="menuitem"
-                tabIndex={0}
-                key={`${ account.address }-${ index }}`}
-                className={`w-full cursor-pointer py-4 transition-colors hover:text-amber-300 ${ account.address === selectedAccount?.address ? 'bg-amber-300 text-black pl-4 hover:bg-neutral-900' : 'text-white' }`}
-                onClick={() => {
-                  handleAccountSelection(account);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+            {accounts.map((account, index) => {
+              return (
+                <li
+                  role="menuitem"
+                  tabIndex={0}
+                  key={`${ account.address }-${ index }}`}
+                  className={`w-full cursor-pointer py-4 transition-colors hover:text-amber-300 ${ account.address === selectedAccount?.address ? 'bg-amber-300 text-black px-4 hover:bg-neutral-900' : 'text-white' }`}
+                  onClick={() => {
                     handleAccountSelection(account);
-                  }
-                }}
-              >
-                <span className="block font-bold">{account.meta?.name}</span>
-                <span className="block overflow-hidden text-ellipsis text-sm">
-                  {account.address}
-                </span>
-              </li>
-            ))}
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleAccountSelection(account);
+                    }
+                  }}
+                >
+                  <span className="font-bold">{account.meta?.name}</span>
+                  <span className="float-right text-sm">{account.meta?.source}</span>
+                  <span className="block overflow-hidden text-ellipsis text-sm mt-2">
+                    {account.address}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
           <div className="fixed bottom-1 bg-neutral-900 w-[calc(100%-2rem)] max-w-lg">
             {selectedAccount ? (
