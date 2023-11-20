@@ -60,14 +60,14 @@ const Header = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            <Link to="/staking">
+              <span className="truncate text-white">Staking</span>
+            </Link>
             <Link to="/claim">
               <span className="truncate text-white">Claim</span>
             </Link>
             <Link to="/xtransfer">
               <span className="truncate text-white">X-Transfer</span>
-            </Link>
-            <Link to="/staking">
-              <span className="truncate text-white">Staking</span>
             </Link>
           </div>
         </div>
@@ -81,11 +81,11 @@ const Header = () => {
                     <>
                       {selectedAccount.meta.name || selectedAccount.address}
                       {balance
-                        ? ` (${formatBalance(balance.toString(), {
-                            decimals: 12,
-                            withUnit: "TNKR",
-                            forceUnit: "-",
-                          })})`
+                        ? ` (${ formatBalance(balance.toString(), {
+                          decimals: 12,
+                          withUnit: "TNKR",
+                          forceUnit: "-",
+                        }) })`
                         : null}
                     </>
                   ) : (
@@ -97,11 +97,10 @@ const Header = () => {
                 <Menu.Item>
                   {({ active }) => (
                     <button
-                      className={`${
-                        active
-                          ? "bg-neutral-800 text-white"
-                          : "text-neutral-900"
-                      } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                      className={`${ active
+                        ? "bg-neutral-800 text-white"
+                        : "text-neutral-900"
+                        } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                       onClick={handleConnect}
                     >
                       Change Account

@@ -54,7 +54,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <Modals />
 
           <Routes>
-            <Route index element={<Navigate to="claim" replace={true} />} />
+            <Route index element={<Navigate to="staking" replace={true} />} />
             <Route path="/" element={<Layout />}>
               <Route path="claim" element={<Claim />} />
 
