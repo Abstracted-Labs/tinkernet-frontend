@@ -460,10 +460,9 @@ const Home = () => {
                 <span className="text-lg font-bold leading-6 text-white">
                   {formatBalance(totalStakedTNKR.toString(), {
                     decimals: 12,
-                    withUnit: false,
+                    withUnit: 'TNKR',
                     forceUnit: "-",
-                  }
-                  ).slice(0, -2) || 0} TNKR
+                  })}
                 </span>
               </div>
             </div>
