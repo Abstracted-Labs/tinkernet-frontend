@@ -1,7 +1,7 @@
 import "@polkadot/api-augment";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
@@ -24,6 +24,7 @@ type SystemAccount = Struct & {
 type VestingData = {
   vestedLocked: string;
   vestedClaimable: string;
+  vestedRemaining: string;
   frozen: string;
   available: string;
   remainingVestingPeriod: string;
@@ -67,7 +68,6 @@ type StakeInfo = { era: string; staked: string; }[];
 export type StakesInfo = { stakes: StakeInfo; };
 
 const Home = () => {
-  const totalRemainingVesting = useRef("0");
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
@@ -256,9 +256,6 @@ const Home = () => {
       totalFutureLockedTokens = totalFutureLockedTokens.plus(futureLockedTokens);
     }
 
-    // Format the total future locked tokens
-    totalRemainingVesting.current = formatBalance(totalFutureLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
-
     // Calculate the amount of tokens that are currently claimable
     const unlockedClaimableTokens = vestedLockedTokens.minus(totalFutureLockedTokens);
 
@@ -280,6 +277,7 @@ const Home = () => {
     return {
       vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
+      vestedRemaining: formatBalance(totalFutureLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       frozen: formatBalance(frozen.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       available: formatBalance(available.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(remainingVestingPeriod),
@@ -428,7 +426,7 @@ const Home = () => {
                   Remaining Vesting
                 </span>
                 <span className="text-2xl font-bold text-white">
-                  {totalRemainingVesting.current}
+                  {vestingSummary.vestedRemaining}
                 </span>
                 <span className="mt-8 text-sm text-white">
                   Total Vesting:
