@@ -256,6 +256,9 @@ const Home = () => {
       totalFutureLockedTokens = totalFutureLockedTokens.plus(futureLockedTokens);
     }
 
+    // Format the total future locked tokens
+    totalRemainingVesting.current = formatBalance(totalFutureLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
+
     // Calculate the amount of tokens that are currently claimable
     const unlockedClaimableTokens = vestedLockedTokens.minus(totalFutureLockedTokens);
 
@@ -297,15 +300,6 @@ const Home = () => {
       const vestingSchedules = results[1] as unknown as VestingSchedule[];
       const vestingScheduleData = await calculateVestingSchedule(vestingSchedules);
       const vestingData = calculateVestingData(results, vestingSchedules);
-
-      // Calculate total remaining vesting
-      const remainingVesting = vestingScheduleData.reduce((total, item) => {
-        const amount = new BigNumber(item.payoutAmount);
-        return total.plus(amount);
-      }, new BigNumber(0));
-
-      // Format the total remaining vesting amount
-      totalRemainingVesting.current = formatBalance(remainingVesting.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
 
       setPayoutSchedule(vestingScheduleData);
       setVestingSummary(vestingData);
