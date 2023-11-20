@@ -88,6 +88,7 @@ const Home = () => {
 
   let roundedPayoutAmount = "0";
   if (payoutSchedule[0]) {
+    console.log('payoutSchedule[0].payoutAmount', payoutSchedule[0].payoutAmount);
     const payoutAmount = new BigNumber(payoutSchedule[0].payoutAmount);
     roundedPayoutAmount = formatBalance(payoutAmount.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
   }
@@ -173,7 +174,7 @@ const Home = () => {
       // Convert the start block, period, perPeriod, and periodCount of each vesting schedule to BigNumber for accurate calculations.
       const vestingStartBlock = new BigNumber(schedule.start);
       const blocksPerPayout = new BigNumber(schedule.period);
-      const tokensPerPayout = new BigNumber(schedule.perPeriod / 1000000000000);
+      const tokensPerPayout = new BigNumber(schedule.perPeriod);
       const totalPayouts = new BigNumber(schedule.periodCount);
 
       // Calculate the end block of the vesting period.
