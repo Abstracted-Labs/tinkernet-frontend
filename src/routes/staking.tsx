@@ -680,7 +680,6 @@ const Staking = () => {
 
   useEffect(() => {
     if (descriptionRef.current && expandedCore !== null) {
-      console.log('got here');
       descriptionRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [expandedCore]);
@@ -700,14 +699,14 @@ const Staking = () => {
             totalUserStaked &&
             unclaimedEras ? (
             <>
-              <div className="flex flex-col flex-wrap items-center justify-between gap-4 md:flex-row">
+              <div className="flex flex-col flex-wrap items-center justify-between md:flex-row">
                 <div>
                   <span className="sr-only">OCIF Staking Dashboard</span>
                 </div>
-                <div className="flex flex-wrap gap-8">
+                <div className="flex gap-4 justify-between">
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                    className="leading-4 inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400 text-sm md:text-base"
                     onClick={handleUnbondTokens}
                     disabled={!hasUnbondedTokens}
                   >
@@ -716,7 +715,7 @@ const Staking = () => {
 
                   <button
                     type="button"
-                    className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                    className="leading-4 inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400 text-sm md:text-base"
                     onClick={handleClaimAll}
                     disabled={unclaimedEras.total === 0 || isWaiting}
                   >
@@ -726,107 +725,90 @@ const Staking = () => {
               </div>
 
               <div
-                className="relative overflow-x-auto w-full rounded-md border border-neutral-50 shadow flex align-items-center gap-10 justify-between backdrop-blur-sm p-6 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-scroll">
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <span className="text-sm">Your stake</span>
+                className="relative overflow-x-auto w-full rounded-md border border-neutral-50 shadow flex gap-20 md:gap-16 justify-between backdrop-blur-sm p-4 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-scroll">
+
+                <div className="flex flex-col w-full justify-between">
+                  <div className="text-md font-bold leading-5 w-[200%]">
+                    {formatBalance(totalUserStaked.toString(), {
+                      decimals: 12,
+                      withUnit: false,
+                      forceUnit: "-",
+                    }).slice(0, -2) || "0"}{" "}
+                    TNKR
                   </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {formatBalance(totalUserStaked.toString(), {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }).slice(0, -2) || "0"}{" "}
-                      TNKR
-                    </span>
-                  </div>
+                  <div className="text-xs leading-4 w-[200%]">My Stake</div>
                 </div>
 
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <span className="text-sm">Unclaimed Eras</span>
+                <div className="flex flex-col w-full justify-between">
+                  <div className="text-md font-bold leading-5 w-[200%]">
+                    {unclaimedEras.total}
                   </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {unclaimedEras.total} eras
-                    </span>
-                  </div>
+                  <div className="text-xs leading-4 w-[200%]">Unclaimed Eras</div>
                 </div>
 
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <span className="text-sm">Claimable Rewards</span>
+                <div className="flex flex-col w-full justify-between">
+                  <div className="text-md font-bold leading-5 w-[200%]">
+                    {formatBalance(totalClaimed.toString(), {
+                      decimals: 12,
+                      withUnit: false,
+                      forceUnit: "-",
+                    }).slice(0, -2) || "0"}{" "}
+                    TNKR
                   </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {formatBalance(totalClaimed.toString(), {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }).slice(0, -2) || "0"}{" "}
-                      TNKR
-                    </span>
-                  </div>
+                  <div className="text-xs leading-4 w-[200%]">Claimable Rewards</div>
                 </div>
 
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <span className="text-sm">Staking APY</span>
+                <div className="flex flex-col w-full justify-between">
+                  <div className="text-md font-bold leading-5 w-[200%]">
+                    {totalSupply &&
+                      totalSupply.toNumber() > 0 &&
+                      totalStaked &&
+                      totalStaked.toNumber() > 0
+                      ? totalSupply
+                        .times(4)
+                        .dividedBy(totalStaked)
+                        .decimalPlaces(2)
+                        .toString()
+                      : 0}
+                    %
                   </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {totalSupply &&
-                        totalSupply.toNumber() > 0 &&
-                        totalStaked &&
-                        totalStaked.toNumber() > 0
-                        ? totalSupply
-                          .times(4)
-                          .dividedBy(totalStaked)
-                          .decimalPlaces(2)
-                          .toString()
-                        : 0}
-                      %
-                    </span>
-                  </div>
+                  <div className="text-xs leading-4 w-[200%]">Staking APY</div>
                 </div>
 
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <span className="text-sm">Annual DAO rewards</span>
+                <div className="flex flex-col w-full justify-between">
+                  <div className="text-md font-bold leading-5 w-[200%]">
+                    {totalSupply && totalSupply.toNumber() > 0
+                      ? totalSupply
+                        .dividedBy(1000000000000)
+                        .times(0.06)
+                        .decimalPlaces(2)
+                        .toString()
+                      : 0}{" "}
+                    TNKR
                   </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {totalSupply && totalSupply.toNumber() > 0
-                        ? totalSupply
-                          .dividedBy(1000000000000)
-                          .times(0.06)
-                          .decimalPlaces(2)
-                          .toString()
-                        : 0}{" "}
-                      TNKR
-                    </span>
-                  </div>
+                  <div className="text-xs leading-4 w-[200%]">Annual Rewards</div>
                 </div>
 
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <span className="text-sm">Current Era</span>
+                <div className="flex flex-col w-full justify-between">
+                  <div className="text-md font-bold leading-5 w-[200%]">
+                    {currentStakingEra}
                   </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {currentStakingEra} |{" "}
-                      {(
-                        ((currentBlock - (nextEraBlock - blocksPerEra)) /
-                          (nextEraBlock - (nextEraBlock - blocksPerEra))) *
-                        100
-                      ).toFixed(0)}
-                      % complete
-                    </span>
-                  </div>
+                  <div className="text-xs leading-4 w-[200%]">Current Era</div>
                   {/* <div>
                     <LineChart fill={CURRENT_BLOCK_FILLED_PERCENTAGE} />
                   </div> */}
+                </div>
+
+                <div className="flex flex-col w-full justify-between">
+                  <div className="text-md font-bold leading-5 w-[200%]">
+                    {(
+                      ((currentBlock - (nextEraBlock - blocksPerEra)) /
+                        (nextEraBlock - (nextEraBlock - blocksPerEra))) *
+                      100
+                    ).toFixed(0)}
+                    %
+                  </div>
+                  <div className="text-xs leading-4 w-[200%]">Completion Rate</div>
                 </div>
               </div>
             </>

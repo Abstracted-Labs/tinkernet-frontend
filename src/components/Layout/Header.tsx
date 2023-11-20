@@ -1,5 +1,5 @@
 import { Menu } from "@headlessui/react";
-import { formatBalance } from "@polkadot/util";
+import { formatBalance, stringShorten } from "@polkadot/util";
 import BigNumber from "bignumber.js";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -43,7 +43,7 @@ const Header = () => {
   return (
     <nav className="fixed flex flex-row w-full z-20 justify-between bg-black bg-opacity-50 backdrop-blur-sm">
       <div className="w-full flex flex-row justify-between gap-8 p-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4">
           <div className="flex-shrink-0">
             <Link to="/">
               <img
@@ -76,10 +76,10 @@ const Header = () => {
           {selectedAccount ? (
             <Menu as="div" className="relative inline-block text-left">
               <div>
-                <Menu.Button className="inline-flex items-center w-full justify-center truncate rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-xs md:text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2">
+                <Menu.Button className="inline-flex items-center w-full justify-center truncate rounded-md border border-amber-300 bg-amber-300 px-2 lg:px-4 py-2 text-xs md:text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2">
                   {selectedAccount ? (
                     <>
-                      {selectedAccount.meta.name || selectedAccount.address}
+                      {stringShorten(selectedAccount.meta.name || selectedAccount.address, 4)}
                       {balance
                         ? ` (${ formatBalance(balance.toString(), {
                           decimals: 12,
