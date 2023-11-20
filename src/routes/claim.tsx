@@ -86,13 +86,6 @@ const Home = () => {
     day: 'numeric' as const
   };
 
-  let roundedPayoutAmount = "0";
-  if (payoutSchedule[0]) {
-    console.log('payoutSchedule[0].payoutAmount', payoutSchedule[0].payoutAmount);
-    const payoutAmount = new BigNumber(payoutSchedule[0].payoutAmount);
-    roundedPayoutAmount = formatBalance(payoutAmount.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
-  }
-
   const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       const currentEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
@@ -190,7 +183,7 @@ const Home = () => {
       const remainingPeriods = totalPayouts.minus(periodsPassed);
 
       // Calculate the total amount of tokens to be paid out.
-      const payoutAmount = tokensPerPayout.multipliedBy(remainingPeriods).toString();
+      const payoutAmount = formatBalance(tokensPerPayout.multipliedBy(remainingPeriods).toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
 
       // Return a VestingScheduleLineItem object for each vesting schedule.
       return {
@@ -430,7 +423,7 @@ const Home = () => {
                   Remaining Vesting
                 </span>
                 <span className="text-2xl font-bold text-white">
-                  {roundedPayoutAmount}
+                  {payoutSchedule[0] && payoutSchedule[0].payoutAmount || '0'}
                 </span>
                 <span className="mt-8 text-sm text-white">
                   Total Vesting:
