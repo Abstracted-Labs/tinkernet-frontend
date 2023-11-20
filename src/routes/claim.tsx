@@ -89,7 +89,7 @@ const Home = () => {
   let roundedPayoutAmount = "0";
   if (payoutSchedule[0]) {
     const payoutAmount = new BigNumber(payoutSchedule[0].payoutAmount);
-    roundedPayoutAmount = payoutAmount.decimalPlaces(4, 1).toString();
+    roundedPayoutAmount = formatBalance(payoutAmount.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
   }
 
   const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
@@ -280,7 +280,7 @@ const Home = () => {
 
     return {
       vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
-      vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: false }),
+      vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       frozen: formatBalance(frozen.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       available: formatBalance(available.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(remainingVestingPeriod),
@@ -412,7 +412,7 @@ const Home = () => {
                   Ready to Claim
                 </span>
                 <span className="text-2xl font-bold text-white">
-                  {vestingSummary.vestedClaimable} TNKR
+                  {vestingSummary.vestedClaimable}
                 </span>
                 <button
                   type="button"
@@ -429,7 +429,7 @@ const Home = () => {
                   Remaining Vesting
                 </span>
                 <span className="text-2xl font-bold text-white">
-                  {roundedPayoutAmount || 0} TNKR
+                  {roundedPayoutAmount}
                 </span>
                 <span className="mt-8 text-sm text-white">
                   Total Vesting:
