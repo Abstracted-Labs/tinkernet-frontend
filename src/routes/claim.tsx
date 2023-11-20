@@ -1,7 +1,7 @@
 import "@polkadot/api-augment";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
@@ -68,6 +68,7 @@ type StakeInfo = { era: string; staked: string; }[];
 export type StakesInfo = { stakes: StakeInfo; };
 
 const Home = () => {
+  const totalInitialVestment = useRef("0");
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
@@ -180,12 +181,8 @@ const Home = () => {
       // Convert the payout date to a JavaScript Date object.
       const payoutDate = new Date(payoutDateInSeconds * 1000);
 
-      // Calculate the number of payout periods that have passed and the number of payout periods that are remaining.
-      const periodsPassed = currentBlock.minus(vestingStartBlock).dividedBy(blocksPerPayout).integerValue(BigNumber.ROUND_DOWN);
-      const remainingPeriods = totalPayouts.minus(periodsPassed);
-
       // Calculate the total amount of tokens to be paid out.
-      const payoutAmount = tokensPerPayout.multipliedBy(remainingPeriods).toString();
+      const payoutAmount = tokensPerPayout.multipliedBy(totalPayouts).toString();
 
       // Return a VestingScheduleLineItem object for each vesting schedule.
       return {
@@ -259,6 +256,14 @@ const Home = () => {
     // Calculate the amount of tokens that are currently claimable
     const unlockedClaimableTokens = vestedLockedTokens.minus(totalFutureLockedTokens);
 
+    const initialTotal = formatBalance(vestedLockedTokens.plus(totalFutureLockedTokens).toString(), {
+      decimals: 12,
+      withUnit: "TNKR",
+      forceUnit: "-",
+    });
+
+    console.log("initialTotal", initialTotal.toString());
+
     // Calculate the total amount of tokens
     const total = results[3] ? new BigNumber(((results[3] as unknown) as SystemAccount).data.free.toString()) : new BigNumber("0");
 
@@ -298,6 +303,15 @@ const Home = () => {
       const vestingSchedules = results[1] as unknown as VestingSchedule[];
       const vestingScheduleData = await calculateVestingSchedule(vestingSchedules);
       const vestingData = calculateVestingData(results, vestingSchedules);
+
+      // Calculate total remaining vesting
+      const remainingVesting = vestingScheduleData.reduce((total, item) => {
+        const amount = new BigNumber(item.payoutAmount);
+        return total.plus(amount);
+      }, new BigNumber(0));
+
+      // Format the total remaining vesting amount
+      totalInitialVestment.current = formatBalance(remainingVesting.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
 
       setPayoutSchedule(vestingScheduleData);
       setVestingSummary(vestingData);
@@ -432,7 +446,7 @@ const Home = () => {
                   Total Vesting:
                 </span>
                 <span className="text-sm text-white">
-                  {vestingSummary.vestedLocked}
+                  {totalInitialVestment.current}
                 </span>
                 <span className="mt-8 text-sm text-white">
                   Vesting Completion Date:
