@@ -300,7 +300,6 @@ const Home = () => {
 
       // Calculate total remaining vesting
       const remainingVesting = vestingScheduleData.reduce((total, item) => {
-        // Remove the unit and convert the string to a BigNumber
         const amount = new BigNumber(item.payoutAmount);
         return total.plus(amount);
       }, new BigNumber(0));
