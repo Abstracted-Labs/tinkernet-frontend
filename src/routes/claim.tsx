@@ -22,7 +22,6 @@ type SystemAccount = Struct & {
 };
 
 type VestingData = {
-  vestedLocked: string;
   vestedClaimable: string;
   vestedRemaining: string;
   frozen: string;
@@ -256,14 +255,6 @@ const Home = () => {
     // Calculate the amount of tokens that are currently claimable
     const unlockedClaimableTokens = vestedLockedTokens.minus(totalFutureLockedTokens);
 
-    const initialTotal = formatBalance(vestedLockedTokens.plus(totalFutureLockedTokens).toString(), {
-      decimals: 12,
-      withUnit: "TNKR",
-      forceUnit: "-",
-    });
-
-    console.log("initialTotal", initialTotal.toString());
-
     // Calculate the total amount of tokens
     const total = results[3] ? new BigNumber(((results[3] as unknown) as SystemAccount).data.free.toString()) : new BigNumber("0");
 
@@ -280,7 +271,6 @@ const Home = () => {
     const endOfVestingPeriod = new Date(currentDate.getTime() + remainingVestingPeriodInSeconds * 1000);
 
     return {
-      vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       vestedRemaining: formatBalance(totalFutureLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       frozen: formatBalance(frozen.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
