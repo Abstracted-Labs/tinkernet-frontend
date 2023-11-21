@@ -38,7 +38,7 @@ type VestingSchedule = {
 };
 
 type VestingScheduleLineItem = {
-  payoutDate: Date;
+  payoutDate: number;
   payoutAmount: string;
 };
 
@@ -86,6 +86,12 @@ const Home = () => {
     month: 'long' as const,
     day: 'numeric' as const
   };
+
+  let vestingCompletionDate = '--';
+  if (payoutSchedule.length > 0 && payoutSchedule.every(s => !isNaN(s.payoutDate))) {
+    const maxPayoutDate = Math.max(...payoutSchedule.map(s => s.payoutDate));
+    vestingCompletionDate = new Date(maxPayoutDate).toLocaleString('en-US', dateOptions);
+  }
 
   const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
@@ -178,7 +184,7 @@ const Home = () => {
       const payoutDateInSeconds = currentDate.getTime() / 1000 + averageBlockTimeInSeconds * (endBlock.minus(currentBlock).toNumber());
 
       // Convert the payout date to a JavaScript Date object.
-      const payoutDate = new Date(payoutDateInSeconds * 1000);
+      const payoutDate = new Date(payoutDateInSeconds * 1000).getTime();
 
       // Calculate the total amount of tokens to be paid out.
       const payoutAmount = tokensPerPayout.multipliedBy(totalPayouts).toString();
@@ -442,7 +448,7 @@ const Home = () => {
                   Vesting Completion Date:
                 </span>
                 <span className="text-sm text-white">
-                  {payoutSchedule[0] && payoutSchedule[0].payoutDate.toLocaleString('en-US', dateOptions) || '--'}
+                  {vestingCompletionDate}
                 </span>
               </div>
             </div>
