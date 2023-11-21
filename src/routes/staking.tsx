@@ -719,7 +719,7 @@ const Staking = () => {
                     onClick={handleClaimAll}
                     disabled={unclaimedEras.total === 0 || isWaiting}
                   >
-                    Claim TNKR Rewards
+                    Redeem Staking Rewards
                   </button>
                 </div>
               </div>
@@ -743,7 +743,7 @@ const Staking = () => {
                   <div className="text-md font-bold leading-5 w-[200%]">
                     {unclaimedEras.total}
                   </div>
-                  <div className="text-xs leading-4 w-[200%]">Unclaimed Eras</div>
+                  <div className="text-xs leading-4 w-[200%]">Unredeemed Eras</div>
                 </div>
 
                 <div className="flex flex-col w-full justify-between">
@@ -755,7 +755,7 @@ const Staking = () => {
                     }).slice(0, -2) || "0"}{" "}
                     TNKR
                   </div>
-                  <div className="text-xs leading-4 w-[200%]">Claimable Rewards</div>
+                  <div className="text-xs leading-4 w-[200%]">Redeemable Rewards</div>
                 </div>
 
                 <div className="flex flex-col w-full justify-between">
