@@ -1,7 +1,7 @@
 import "@polkadot/api-augment";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
@@ -22,8 +22,8 @@ type SystemAccount = Struct & {
 };
 
 type VestingData = {
-  vestedLocked: string;
   vestedClaimable: string;
+  vestedRemaining: string;
   frozen: string;
   available: string;
   remainingVestingPeriod: string;
@@ -38,7 +38,7 @@ type VestingSchedule = {
 };
 
 type VestingScheduleLineItem = {
-  payoutDate: Date;
+  payoutDate: number;
   payoutAmount: string;
 };
 
@@ -67,6 +67,7 @@ type StakeInfo = { era: string; staked: string; }[];
 export type StakesInfo = { stakes: StakeInfo; };
 
 const Home = () => {
+  const totalInitialVestment = useRef("0");
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
     shallow
@@ -75,7 +76,7 @@ const Home = () => {
   const [payoutSchedule, setPayoutSchedule] = useState<VestingScheduleLineItem[]>([]);
   const [isBalanceLoading, setBalanceLoading] = useState(false);
   const [isClaimWaiting, setClaimWaiting] = useState(false);
-  const [totalStakedTNKR, setTotalStakedTNKR] = useState<BigNumber>(new BigNumber(0));
+  const [totalStakedTNKR, setTotalStakedTNKR] = useState<string>('0');
   const api = useApi();
 
   const averageBlockTimeInSeconds = 12; // Average block time on Tinkernet
@@ -86,10 +87,10 @@ const Home = () => {
     day: 'numeric' as const
   };
 
-  let roundedPayoutAmount = "0";
-  if (payoutSchedule[0]) {
-    const payoutAmount = new BigNumber(payoutSchedule[0].payoutAmount);
-    roundedPayoutAmount = payoutAmount.decimalPlaces(4, 1).toString();
+  let vestingCompletionDate = '--';
+  if (payoutSchedule.length > 0 && payoutSchedule.every(s => !isNaN(s.payoutDate))) {
+    const maxPayoutDate = Math.max(...payoutSchedule.map(s => s.payoutDate));
+    vestingCompletionDate = new Date(maxPayoutDate).toLocaleString('en-US', dateOptions);
   }
 
   const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
@@ -139,7 +140,9 @@ const Home = () => {
 
         const totalUserStaked = userStakeInfo.reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
 
-        setTotalStakedTNKR(totalUserStaked);
+        const formattedStaked = formatBalance(totalUserStaked.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
+
+        setTotalStakedTNKR(formattedStaked.toString());
       }
     } catch (error) {
       toast.error(`${ error }`);
@@ -165,25 +168,35 @@ const Home = () => {
   };
 
   const calculateVestingSchedule = async (vestingSchedules: VestingSchedule[]): Promise<VestingScheduleLineItem[]> => {
+    // Fetch the current block number from the blockchain.
     const currentBlock = new BigNumber((await api.query.system.number()).toString());
-    console.log('cb', currentBlock.toString());
-    return vestingSchedules.map(schedule => {
+
+    // Sort the vesting schedules by the end block of each vesting period in ascending order.
+    return vestingSchedules.sort((a, b) => (a.start + a.period * a.periodCount) - (b.start + b.period * b.periodCount)).map(schedule => {
+      // Convert the start block, period, perPeriod, and periodCount of each vesting schedule to BigNumber for accurate calculations.
       const vestingStartBlock = new BigNumber(schedule.start);
       const blocksPerPayout = new BigNumber(schedule.period);
-      const tokensPerPayout = new BigNumber(schedule.perPeriod / 1000000000000);
+      const tokensPerPayout = new BigNumber(schedule.perPeriod);
       const totalPayouts = new BigNumber(schedule.periodCount);
-      const endBlock = vestingStartBlock.plus(blocksPerPayout.multipliedBy(totalPayouts.toNumber()));
-      const payoutDateInSeconds = currentDate.getTime() / 1000 + averageBlockTimeInSeconds * ((vestingStartBlock.plus(endBlock)).minus(currentBlock).toNumber());
-      const payoutDate = new Date(payoutDateInSeconds * 1000);
-      const periodsPassed = currentBlock.minus(vestingStartBlock).dividedBy(blocksPerPayout).integerValue(BigNumber.ROUND_DOWN);
-      const remainingPeriods = totalPayouts.minus(periodsPassed);
-      const payoutAmount = tokensPerPayout.multipliedBy(remainingPeriods).toString();
 
+      // Calculate the end block of the vesting period.
+      const endBlock = vestingStartBlock.plus(blocksPerPayout.multipliedBy(totalPayouts.toNumber()));
+
+      // Calculate the estimated payout date in seconds since the Unix Epoch.
+      const payoutDateInSeconds = currentDate.getTime() / 1000 + averageBlockTimeInSeconds * (endBlock.minus(currentBlock).toNumber());
+
+      // Convert the payout date to a JavaScript Date object.
+      const payoutDate = new Date(payoutDateInSeconds * 1000).getTime();
+
+      // Calculate the total amount of tokens to be paid out.
+      const payoutAmount = tokensPerPayout.multipliedBy(totalPayouts).toString();
+
+      // Return a VestingScheduleLineItem object for each vesting schedule.
       return {
         payoutDate,
         payoutAmount
       };
-    }).flat();
+    });
   };
 
   const calculateVestingData = (results: DataResultType, vestingSchedules: VestingSchedule[]) => {
@@ -266,8 +279,8 @@ const Home = () => {
     const endOfVestingPeriod = new Date(currentDate.getTime() + remainingVestingPeriodInSeconds * 1000);
 
     return {
-      vestedLocked: formatBalance(vestedLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
+      vestedRemaining: formatBalance(totalFutureLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       frozen: formatBalance(frozen.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       available: formatBalance(available.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
       remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(remainingVestingPeriod),
@@ -288,6 +301,15 @@ const Home = () => {
       const vestingSchedules = results[1] as unknown as VestingSchedule[];
       const vestingScheduleData = await calculateVestingSchedule(vestingSchedules);
       const vestingData = calculateVestingData(results, vestingSchedules);
+
+      // Calculate total remaining vesting
+      const remainingVesting = vestingScheduleData.reduce((total, item) => {
+        const amount = new BigNumber(item.payoutAmount);
+        return total.plus(amount);
+      }, new BigNumber(0));
+
+      // Format the total remaining vesting amount
+      totalInitialVestment.current = formatBalance(remainingVesting.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
 
       setPayoutSchedule(vestingScheduleData);
       setVestingSummary(vestingData);
@@ -413,28 +435,22 @@ const Home = () => {
 
               <div className="flex flex-col p-6">
                 <span className="text-lg font-normal text-white">
-                  Remaining Locked
+                  Remaining Vesting
                 </span>
                 <span className="text-2xl font-bold text-white">
-                  {roundedPayoutAmount || 0} TNKR
+                  {vestingSummary.vestedRemaining}
                 </span>
                 <span className="mt-8 text-sm text-white">
-                  Total Allocated:
+                  Total Vesting:
                 </span>
                 <span className="text-sm text-white">
-                  {vestingSummary.vestedLocked}
+                  {totalInitialVestment.current}
                 </span>
                 <span className="mt-8 text-sm text-white">
-                  Time to Full Access:
+                  Vesting Completion Date:
                 </span>
                 <span className="text-sm text-white">
-                  {parseInt(vestingSummary.remainingVestingPeriod) > 0 ? `${ vestingSummary.remainingVestingPeriod } block${ parseInt(vestingSummary.remainingVestingPeriod) !== 1 ? 's' : '' }` : '--'}
-                </span>
-                <span className="mt-8 text-sm text-white">
-                  Access Completion Date:
-                </span>
-                <span className="text-sm text-white">
-                  {payoutSchedule[0] && payoutSchedule[0].payoutDate.toLocaleString('en-US', dateOptions) || '--'}
+                  {vestingCompletionDate}
                 </span>
               </div>
             </div>
@@ -454,12 +470,7 @@ const Home = () => {
                   Staked:
                 </span>{" "}
                 <span className="text-lg font-bold leading-6 text-white">
-                  {formatBalance(totalStakedTNKR.toString(), {
-                    decimals: 12,
-                    withUnit: false,
-                    forceUnit: "-",
-                  }
-                  ).slice(0, -2) || 0} TNKR
+                  {totalStakedTNKR}
                 </span>
               </div>
             </div>

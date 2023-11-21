@@ -59,15 +59,15 @@ const Header = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4 text-xs md:text-sm">
+          <div className="flex items-center gap-4">
+            <Link to="/staking">
+              <span className="truncate text-white">Staking</span>
+            </Link>
             <Link to="/claim">
               <span className="truncate text-white">Claim</span>
             </Link>
             <Link to="/xtransfer">
               <span className="truncate text-white">X-Transfer</span>
-            </Link>
-            <Link to="/staking">
-              <span className="truncate text-white">Staking</span>
             </Link>
           </div>
         </div>
@@ -100,7 +100,7 @@ const Header = () => {
                       className={`${ active
                         ? "bg-neutral-800 text-white"
                         : "text-neutral-900"
-                        } group w-full items-center rounded-md px-2 py-2 text-xs md:text-sm`}
+                        } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                       onClick={handleConnect}
                     >
                       <span className="mr-1">🔀</span> Switch Account
