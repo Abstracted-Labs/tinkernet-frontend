@@ -9,7 +9,7 @@ import { shallow } from "zustand/shallow";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
 
-const SelectWallet = ({ isOpen }: { isOpen: boolean }) => {
+const SelectWallet = ({ isOpen }: { isOpen: boolean; }) => {
   const setOpenModal = useModal((state) => state.setOpenModal);
 
   const { selectedAccount, accounts, setSelectedAccount } = useAccount(
@@ -49,11 +49,11 @@ const SelectWallet = ({ isOpen }: { isOpen: boolean }) => {
         <div className="fixed left-1/2 top-1/2 z-50 mx-auto block max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-gray-50 bg-neutral-900 p-6 sm:w-full">
           <h2 className="text-xl font-bold text-white">Select your Wallet</h2>
           <ul className="w-full divide-y divide-gray-200">
-            {accounts.map((account) => (
+            {accounts.map((account, index) => (
               <li
                 role="menuitem"
                 tabIndex={0}
-                key={account.address}
+                key={`${ account.address }-${ index }}`}
                 className="w-full cursor-pointer py-4 text-white transition-colors hover:text-amber-300"
                 onClick={() => {
                   handleAccountSelection(account);

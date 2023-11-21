@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { createWithEqualityFn } from "zustand/traditional";
 
 const modalName = {
   SELECT_ACCOUNT: "SELECT_ACCOUNT",
@@ -23,7 +23,7 @@ type ModalState = {
   metadata?: Metadata;
 };
 
-const useModal = create<ModalState>()((set) => ({
+const useModal = createWithEqualityFn<ModalState>()((set) => ({
   openModal: null,
   metadata: undefined,
   setOpenModal: (modal) => {
