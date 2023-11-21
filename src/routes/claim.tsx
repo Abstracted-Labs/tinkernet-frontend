@@ -76,7 +76,7 @@ const Home = () => {
   const [payoutSchedule, setPayoutSchedule] = useState<VestingScheduleLineItem[]>([]);
   const [isBalanceLoading, setBalanceLoading] = useState(false);
   const [isClaimWaiting, setClaimWaiting] = useState(false);
-  const [totalStakedTNKR, setTotalStakedTNKR] = useState<BigNumber>(new BigNumber(0));
+  const [totalStakedTNKR, setTotalStakedTNKR] = useState<string>('0');
   const api = useApi();
 
   const averageBlockTimeInSeconds = 12; // Average block time on Tinkernet
@@ -140,7 +140,9 @@ const Home = () => {
 
         const totalUserStaked = userStakeInfo.reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
 
-        setTotalStakedTNKR(totalUserStaked);
+        const formattedStaked = formatBalance(totalUserStaked.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" });
+
+        setTotalStakedTNKR(formattedStaked.toString());
       }
     } catch (error) {
       toast.error(`${ error }`);
@@ -468,11 +470,7 @@ const Home = () => {
                   Staked:
                 </span>{" "}
                 <span className="text-lg font-bold leading-6 text-white">
-                  {formatBalance(totalStakedTNKR.toString(), {
-                    decimals: 12,
-                    withUnit: 'TNKR',
-                    forceUnit: "-",
-                  })}
+                  {totalStakedTNKR}
                 </span>
               </div>
             </div>
