@@ -34,9 +34,10 @@ const StakingDashboard = (props: StakingDashboardProps) => {
       <DashboardCard cardTitle="My Stake">
         {formatBalance(totalUserStaked.toString(), {
           decimals: 12,
-          withUnit: 'TNKR',
+          withUnit: false,
           forceUnit: "-",
-        }) || "0"}
+        }).slice(0, -2) || "0"}{" "}
+        TNKR
       </DashboardCard>
 
       <DashboardCard cardTitle="Unredeemed Eras">
@@ -48,7 +49,8 @@ const StakingDashboard = (props: StakingDashboardProps) => {
           decimals: 12,
           withUnit: 'TNKR',
           forceUnit: "-",
-        }) || "0"}
+        }).slice(0, -2) || "0"}{" "}
+        TNKR
       </DashboardCard>
 
       <DashboardCard cardTitle="Staking APY">
