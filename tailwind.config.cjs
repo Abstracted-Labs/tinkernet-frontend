@@ -6,9 +6,14 @@ module.exports = {
   content: [ "./src/**/*.{js,jsx,ts,tsx}" ],
   theme: {
     extend: {
+      colors: {
+        tinkerYellow: '#f8ce46',
+        tinkerGrey: '#202125', // Project card bg
+        tinkerDarkGrey: '#16171b', // Project desc bg
+      },
       scrollbar: [ 'dark' ],
       fontFamily: {
-        sans: [ "Inter var", ...defaultTheme.fontFamily.sans ],
+        sans: [ "InterVariable", ...defaultTheme.fontFamily.sans ],
       },
       fontSize: {
         'xxs': '0.5rem',

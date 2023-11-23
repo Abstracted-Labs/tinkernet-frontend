@@ -1,10 +1,13 @@
-import React, { RefObject } from 'react';
+import React, { RefObject, useState } from 'react';
 import { BigNumber } from 'bignumber.js';
-import { LockClosedIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { LockClosedIcon } from '@heroicons/react/24/outline';
 import { formatBalance } from '@polkadot/util';
 import toast from 'react-hot-toast';
 import { StakingCore, CoreEraStakedInfoType, ChainPropertiesType } from '../routes/staking';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
+import TotalStakersIcon from '../assets/total-stakers-icon.svg';
+import TotalStakedIcon from '../assets/total-staked-icon.svg';
+import MyProjectStakeIcon from '../assets/my-project-stake-icon.svg';
 
 export interface ProjectCardProps {
   core: StakingCore;
@@ -18,8 +21,7 @@ export interface ProjectCardProps {
     availableBalance: BigNumber;
   }) => void;
   descriptionRef: RefObject<HTMLDivElement>;
-  expandedCore: string | null;
-  toggleExpanded: (coreAccount: string) => void;
+  toggleExpanded: (core: StakingCore) => void;
   selectedAccount: InjectedAccountWithMeta | null;
 }
 
@@ -32,144 +34,145 @@ const ProjectCard = (props: ProjectCardProps) => {
     availableBalance,
     handleManageStaking,
     descriptionRef,
-    expandedCore,
     toggleExpanded,
     selectedAccount,
   } = props;
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleReadMore = (core: StakingCore) => {
+    setIsHovered(!isHovered);
+    toggleExpanded(core);
+  };
+
   return (
     <div
       key={core.account}
-      className="relative flex flex-col gap-4 overflow-hidden rounded-md p-4 sm:flex-row border border-neutral-50 backdrop-blur-sm"
-    >
-      <div className="flex w-full flex-col gap-4 justify-between">
-        <div className="h-72">
-          <div className="flex flex-row items-center gap-4">
-            <div className="flex flex-shrink-0">
-              <img
-                src={core.metadata.image}
-                alt={core.metadata.name}
-                className="h-16 w-16 rounded-full"
-              />
-            </div>
-            <h4 className="font-bold">{core.metadata.name}</h4>
+      className="flex flex-col justify-between w-full bg-tinkerGrey rounded-lg space-y-4">
+      <div className='p-8 h-96 flex flex-col justify-between'>
+        <div className="flex items-center space-x-4">
+          <div className="flex flex-shrink-0">
+            <img
+              src={core.metadata.image}
+              alt={core.metadata.name}
+              className="h-16 w-16 rounded-full"
+            />
           </div>
-
-          <div ref={descriptionRef} className={`mt-3 overflow-y-scroll ${ expandedCore !== core.account ? '' : 'h-[73%] tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin pr-3' }`}>
-            <div>
-              <p
-                className={`relative text-sm overflow-hidden transition-all duration-200 ${ expandedCore !== core.account ? "line-clamp-2 gradient-bottom" : "" }`}
-                onClick={() => toggleExpanded(core.account)}
-              >
-                {core.metadata.description}
-              </p>
-              <button
-                className={`flex flex-row text-xs items-center gap-1 mx-auto mt-2 mb-5 text-amber-300 hover:text-amber-50 rounded-lg text-xxs border border-amber-300 px-2 py-1 focus:outline-none ${ expandedCore !== core.account ? "relative top-[-10px]" : "" }`}
-                onClick={() => toggleExpanded(core.account)}
-              >
-                SHOW {expandedCore === core.account ? "LESS" : "MORE"}
-                <svg className={`w-2 h-2 transform transition-transform duration-200 ${ expandedCore === core.account ? "rotate-180" : "" }`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
+          <h4 className="font-bold text-white text-[18px] text-center tracking-[0] leading-[normal]">
+            {core.metadata.name}
+          </h4>
+        </div>
+        <div ref={descriptionRef} className={`relative bg-tinkerDarkGrey rounded-lg p-4 h-28 hover:cursor-pointer`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={() => handleReadMore(core)}>
+          <div className={`absolute inset-0 flex justify-center items-center font-normal text-tinkerYellow text-[12px] tracking-[0] leading-[normal] ${ isHovered ? 'opacity-100' : 'opacity-0' } transition duration-100 z-10 pointer-events-none`}>
+            Show More
+          </div>
+          <p className={`font-normal text-white text-[14px] tracking-[0] leading-[18px] line-clamp-4 gradient-bottom hover:text-opacity-20`}>
+            {core.metadata.description}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-2">
+          <div className="flex justify-between items-center pb-2 border-b border-b-[#2B2C30]">
+            <div className='flex flex-row items-center gap-2'>
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-50 flex items-center justify-center">
+                <img src={TotalStakersIcon} alt="Total Stakers Icon" />
+              </div>
+              <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
+                Total Stakers
+              </div>
             </div>
-
-            <div className="flex w-full flex-col border border-neutral-50 rounded-md mb-1">
-              <div className="flex items-center justify-between border-b border-neutral-50 py-2 px-3">
-                <div className="text-xs">Total Stakers</div>
-                <div className="flex flex-row">
-                  {(coreInfo?.numberOfStakers || 0) >=
-                    (chainProperties?.maxStakersPerCore || 0) ? (
-                    <LockClosedIcon
-                      className="h-5 w-5 cursor-pointer text-white"
-                      onClick={() => {
-                        toast.error(
-                          "This core has reached the staker limit"
-                        );
-                      }}
-                    />
-                  ) : (
-                    <UserGroupIcon
-                      className="h-5 w-5 cursor-pointer text-white"
-                      onClick={() => {
-                        toast.success(
-                          "This core can have more stakers"
-                        );
-                      }}
-                    />
-                  )}
-                  <span className="ml-1 truncate text-sm font-bold">
-                    {coreInfo?.numberOfStakers || "0"}
-                  </span>
-                </div>
+            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] flex flex-row items-center gap-1">
+              {(coreInfo?.numberOfStakers || 0) >=
+                (chainProperties?.maxStakersPerCore || 0) ? (
+                <LockClosedIcon
+                  className="h-3 w-3 cursor-pointer text-white"
+                  onClick={() => {
+                    toast.error(
+                      "This core has reached the staker limit"
+                    );
+                  }}
+                />
+              ) : null}
+              <span>{coreInfo?.numberOfStakers || "0"}</span>
+            </div>
+          </div>
+          <div className="flex justify-between items-center pb-2 border-b border-b-[#2B2C30]">
+            <div className='flex flex-row items-center gap-2'>
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-50 flex items-center justify-center">
+                <img src={TotalStakedIcon} alt="Total Staked Icon" />
               </div>
-
-              <div className="flex items-center justify-between border-b border-neutral-50 py-2 px-3">
-                <span className="truncate text-xs">Total Staked</span>
-                <span className="truncate text-sm font-bold">
-                  {coreInfo?.total
-                    ? formatBalance(coreInfo.total.toString(), {
-                      decimals: 12,
-                      withUnit: false,
-                      forceUnit: "-",
-                    }).slice(0, -2)
-                    : "0"}{" "}
-                  TNKR
-                </span>
+              <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
+                Total Staked
               </div>
-
-              <div className="flex items-center justify-between py-2 px-3">
-                <span className="text-xs">My Stake</span>
-                <span className="text-sm font-bold">
-                  {totalUserStaked
-                    ? `${ formatBalance(
-                      totalUserStaked.toString(),
-                      {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }
-                    ).slice(0, -2) } TNKR`
-                    : '--'}
-                </span>
+            </div>
+            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal]">
+              {coreInfo?.total
+                ? formatBalance(coreInfo.total.toString(), {
+                  decimals: 12,
+                  withUnit: false,
+                  forceUnit: "-",
+                }).slice(0, -2)
+                : "0"}{" "}
+              TNKR
+            </div>
+          </div>
+          <div className="flex justify-between items-center">
+            <div className='flex flex-row items-center gap-2'>
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-50 flex items-center justify-center">
+                <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
               </div>
+              <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
+                My Stake
+              </div>
+            </div>
+            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal]">
+              {totalUserStaked
+                ? `${ formatBalance(
+                  totalUserStaked.toString(),
+                  {
+                    decimals: 12,
+                    withUnit: false,
+                    forceUnit: "-",
+                  }
+                ).slice(0, -2) } TNKR`
+                : '--'}
             </div>
           </div>
         </div>
-
-        {selectedAccount ? (
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              className="inline-flex w-full items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:border-neutral-400 disabled:bg-neutral-400"
-              onClick={() => {
-                const parsedTotalStaked =
-                  totalUserStaked || new BigNumber("0");
-
-                const parsedAvailableBalance =
-                  availableBalance?.minus(
-                    new BigNumber(10).pow(12).times(2)
-                  ) || new BigNumber("0");
-
-                handleManageStaking({
-                  core,
-                  totalUserStaked: parsedTotalStaked,
-                  availableBalance:
-                    parsedAvailableBalance.isNegative()
-                      ? new BigNumber("0")
-                      : parsedAvailableBalance,
-                });
-              }}
-              disabled={
-                (coreInfo?.numberOfStakers || 0) >=
-                (chainProperties?.maxStakersPerCore || 0) &&
-                !totalUserStaked
-              }
-            >
-              Manage Staking
-            </button>
-          </div>
-        ) : null}
       </div>
+      {selectedAccount ? (
+        <div className='relative'>
+          <button type="button" className="bg-tinkerYellow bg-opacity-20 hover:bg-opacity-100 text-tinkerYellow hover:text-black w-full rounded-bl-lg rounded-br-lg p-4 transition duration-100 disabled:cursor-not-allowed disabled:bg-opacity-20 disabled:hover:bg-opacity-20 disabled:text-black disabled:text-opacity-40"
+            onClick={() => {
+              const parsedTotalStaked =
+                totalUserStaked || new BigNumber("0");
+
+              const parsedAvailableBalance =
+                availableBalance?.minus(
+                  new BigNumber(10).pow(12).times(2)
+                ) || new BigNumber("0");
+
+              handleManageStaking({
+                core,
+                totalUserStaked: parsedTotalStaked,
+                availableBalance:
+                  parsedAvailableBalance.isNegative()
+                    ? new BigNumber("0")
+                    : parsedAvailableBalance,
+              });
+            }}
+            disabled={
+              (coreInfo?.numberOfStakers || 0) >=
+              (chainProperties?.maxStakersPerCore || 0) &&
+              !totalUserStaked
+            }>
+            <span className="font-base text-[16px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
+              Manage Staking
+            </span>
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 };

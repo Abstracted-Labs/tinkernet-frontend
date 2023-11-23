@@ -5,6 +5,7 @@ const modalName = {
   MANAGE_STAKING: "MANAGE_STAKING",
   REGISTER_PROJECT: "REGISTER_PROJECT",
   UNBOND_TOKENS: "UNBOND_TOKENS",
+  READ_MORE: "READ_MORE",
 } as const;
 
 type ModalName = (typeof modalName)[keyof typeof modalName];
@@ -16,10 +17,12 @@ type ModalState = {
   setOpenModal: ({
     name,
     metadata,
-  }: {
-    name: ModalName | null;
-    metadata?: Metadata;
-  }) => void;
+  }: ModalType) => void;
+  metadata?: Metadata;
+};
+
+type ModalType = {
+  name: ModalName | null;
   metadata?: Metadata;
 };
 
@@ -37,7 +40,7 @@ const useModal = createWithEqualityFn<ModalState>()((set) => ({
   },
 }));
 
-export type { ModalName, Metadata };
+export type { ModalName, Metadata, ModalState, ModalType };
 
 export { modalName };
 

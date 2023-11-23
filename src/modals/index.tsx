@@ -3,6 +3,7 @@ import SelectAccount from "./SelectAccount";
 import ManageStaking from "./ManageStaking";
 import RegisterProject from "./RegisterProject";
 import UnbondTokens from "./UnbondTokens";
+import ReadMore from "./ReadMore";
 
 const Modals = () => {
   const { openModal } = useModal((state) => ({
@@ -18,6 +19,8 @@ const Modals = () => {
       <RegisterProject isOpen={openModal === modalName.REGISTER_PROJECT} />
 
       <UnbondTokens isOpen={openModal === modalName.UNBOND_TOKENS} />
+
+      <ReadMore isOpen={openModal === modalName.READ_MORE} />
     </>
   );
 };

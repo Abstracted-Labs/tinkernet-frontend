@@ -144,7 +144,6 @@ const Staking = () => {
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
   const [isLoading, setLoading] = useState(false);
   const [isWaiting, setWaiting] = useState(false);
-  const [expandedCore, setExpandedCore] = useState<string | null>(null);
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
   const [chainProperties, setChainProperties] = useState<ChainPropertiesType>();
   const [currentBlock, setCurrentBlock] = useState<number>(0);
@@ -642,8 +641,11 @@ const Staking = () => {
     });
   };
 
-  const toggleExpanded = (coreId: string) => {
-    setExpandedCore(expandedCore === coreId ? null : coreId);
+  const toggleReadMore = (core: StakingCore) => {
+    setOpenModal({
+      name: modalName.READ_MORE,
+      metadata: core.metadata,
+    });
   };
 
   useEffect(() => {
@@ -671,12 +673,6 @@ const Staking = () => {
       unsubs.forEach(async (unsub) => (await unsub)());
     };
   }, [selectedAccount, api]);
-
-  useEffect(() => {
-    if (descriptionRef.current && expandedCore !== null) {
-      descriptionRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [expandedCore]);
 
   return (
     <>
@@ -755,19 +751,19 @@ const Staking = () => {
               );
 
               return (
-                <ProjectCard
-                  key={core.key}
-                  core={core}
-                  totalUserStaked={totalUserStaked}
-                  coreInfo={coreInfo}
-                  handleManageStaking={handleManageStaking}
-                  expandedCore={expandedCore}
-                  toggleExpanded={toggleExpanded}
-                  chainProperties={chainProperties}
-                  availableBalance={availableBalance}
-                  descriptionRef={descriptionRef}
-                  selectedAccount={selectedAccount}
-                />
+                <div className="relative" key={core.key}>
+                  <ProjectCard
+                    core={core}
+                    totalUserStaked={totalUserStaked}
+                    coreInfo={coreInfo}
+                    handleManageStaking={handleManageStaking}
+                    toggleExpanded={toggleReadMore}
+                    chainProperties={chainProperties}
+                    availableBalance={availableBalance}
+                    descriptionRef={descriptionRef}
+                    selectedAccount={selectedAccount}
+                  />
+                </div>
               );
             })}
           </div>

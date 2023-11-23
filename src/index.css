@@ -10,7 +10,7 @@ html {
 @layer utilities {
   /* Scrollbars */
   .tinker-scrollbar::-webkit-scrollbar {
-    width: 5px;
+    width: 10px;
   }
 
   .tinker-scrollbar::-webkit-scrollbar-track {
@@ -34,7 +34,8 @@ html {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 40px; /* Adjust this value to control the height of the gradient */
+    height: 100%; /* Adjust this value to control the height of the gradient */
+    border-radius: 0.5rem;
     background: linear-gradient(to top, #171717 0%, transparent 100%);
   }
 }
