@@ -8,6 +8,7 @@ import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import TotalStakersIcon from '../assets/total-stakers-icon.svg';
 import TotalStakedIcon from '../assets/total-staked-icon.svg';
 import MyProjectStakeIcon from '../assets/my-project-stake-icon.svg';
+import Avatar from './Avatar';
 
 export interface ProjectCardProps {
   core: StakingCore;
@@ -50,13 +51,7 @@ const ProjectCard = (props: ProjectCardProps) => {
       className="flex flex-col justify-between w-full bg-tinkerGrey rounded-lg space-y-4">
       <div className='p-8 h-96 flex flex-col justify-between'>
         <div className="flex items-center space-x-4">
-          <div className="flex flex-shrink-0">
-            <img
-              src={core.metadata.image}
-              alt={core.metadata.name}
-              className="h-16 w-16 rounded-full"
-            />
-          </div>
+          <Avatar src={core.metadata.image} alt="Project Image" />
           <h4 className="font-bold text-white text-[18px] text-center tracking-[0] leading-[normal]">
             {core.metadata.name}
           </h4>
@@ -75,7 +70,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         <div className="grid grid-cols-1 gap-2">
           <div className="flex justify-between items-center pb-2 border-b border-b-[#2B2C30]">
             <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-50 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={TotalStakersIcon} alt="Total Stakers Icon" />
               </div>
               <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
@@ -99,7 +94,7 @@ const ProjectCard = (props: ProjectCardProps) => {
           </div>
           <div className="flex justify-between items-center pb-2 border-b border-b-[#2B2C30]">
             <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-50 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={TotalStakedIcon} alt="Total Staked Icon" />
               </div>
               <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
@@ -119,7 +114,7 @@ const ProjectCard = (props: ProjectCardProps) => {
           </div>
           <div className="flex justify-between items-center">
             <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-50 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
               </div>
               <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
