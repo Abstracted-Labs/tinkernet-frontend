@@ -10,6 +10,7 @@ module.exports = {
         tinkerYellow: '#f8ce46',
         tinkerGrey: '#202125', // Project card bg
         tinkerDarkGrey: '#16171b', // Project desc bg
+        tinkerTextGrey: '#7b7d84', // Card text
       },
       scrollbar: [ 'dark' ],
       fontFamily: {

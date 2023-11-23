@@ -22,7 +22,7 @@ const schema = z
   })
   .required();
 
-const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
+const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
   const { setOpenModal } = useModal(
     (state) => ({
       setOpenModal: state.setOpenModal,
@@ -120,7 +120,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
       } catch (error) {
         toast.dismiss();
 
-        toast.error(`${error}`);
+        toast.error(`${ error }`);
       }
     }
   );
@@ -153,7 +153,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean }) => {
 
         <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">
           <XMarkIcon className="h-5 w-5" />
-          <span className="block">close</span>
+          <span className="block">Close</span>
         </button>
         <Dialog.Panel className="flex flex-row gap-8">
           <div className="fixed left-1/2 top-1/2 z-50 mx-auto flex max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col gap-8 p-6 sm:w-full">

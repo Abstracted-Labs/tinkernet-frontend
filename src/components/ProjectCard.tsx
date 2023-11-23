@@ -73,7 +73,7 @@ const ProjectCard = (props: ProjectCardProps) => {
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={TotalStakersIcon} alt="Total Stakers Icon" />
               </div>
-              <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
+              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
                 Total Stakers
               </div>
             </div>
@@ -97,7 +97,7 @@ const ProjectCard = (props: ProjectCardProps) => {
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={TotalStakedIcon} alt="Total Staked Icon" />
               </div>
-              <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
+              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
                 Total Staked
               </div>
             </div>
@@ -117,7 +117,7 @@ const ProjectCard = (props: ProjectCardProps) => {
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
               </div>
-              <div className="font-normal text-[#7b7d84] text-[12px] tracking-[0] leading-[normal]">
+              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
                 My Stake
               </div>
             </div>
