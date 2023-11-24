@@ -74,7 +74,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         %
       </DashboardCard>
 
-      <DashboardCard cardTitle="Annual Rewards" iconSrc={AnnualRewardIcon}>
+      <DashboardCard cardTitle="Annual DAO Rewards" iconSrc={AnnualRewardIcon}>
         {totalSupply && totalSupply.toNumber() > 0
           ? totalSupply
             .dividedBy(1000000000000)
