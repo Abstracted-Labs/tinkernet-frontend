@@ -15,6 +15,7 @@ import { UnsubscribePromise } from "@polkadot/api/types";
 import { StakesInfo } from "./claim";
 import ProjectCard from "../components/ProjectCard";
 import StakingDashboard from "../components/StakingDashboard";
+import Button from "../components/Button";
 
 const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
@@ -690,27 +691,22 @@ const Staking = () => {
             unclaimedEras ? (
             <>
               <div className="flex flex-col flex-wrap items-center justify-between md:flex-row">
-                <div>
-                  <span className="sr-only">OCIF Staking Dashboard</span>
-                </div>
+                <h4 className="lg:text-xl font-normal my-3">
+                  <span>OCIF Staking</span>
+                </h4>
                 <div className="flex gap-4 justify-between">
-                  <button
-                    type="button"
-                    className="leading-4 inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400 text-sm md:text-base"
+                  <Button
                     onClick={handleUnbondTokens}
                     disabled={!hasUnbondedTokens}
-                  >
+                    variant="secondary">
                     Withdraw Unbonded TNKR
-                  </button>
-
-                  <button
-                    type="button"
-                    className="leading-4 inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400 text-sm md:text-base"
+                  </Button>
+                  <Button
                     onClick={handleClaimAll}
                     disabled={unclaimedEras.total === 0 || isWaiting}
-                  >
+                    variant="primary">
                     Redeem Staking Rewards
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -728,7 +724,7 @@ const Staking = () => {
             </>
           ) : null}
 
-          <div>
+          {/* <div>
             {selectedAccount ? (
               <button
                 type="button"
@@ -738,7 +734,7 @@ const Staking = () => {
                 Register Project
               </button>
             ) : null}
-          </div>
+          </div> */}
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {stakingCores.map((core: StakingCore) => {

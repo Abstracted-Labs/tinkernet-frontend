@@ -59,7 +59,7 @@ const Header = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 text-xs lg:text-md">
             <Link to="/staking">
               <span className="truncate text-white">Staking</span>
             </Link>
