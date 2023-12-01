@@ -1,9 +1,9 @@
 import useModal, { modalName } from "../stores/modals";
-import SelectAccount from "./SelectAccount";
 import ManageStaking from "./ManageStaking";
 import RegisterProject from "./RegisterProject";
 import UnbondTokens from "./UnbondTokens";
 import ReadMore from "./ReadMore";
+import AccountSelector from "./AccountSelector";
 
 const Modals = () => {
   const { openModal } = useModal((state) => ({
@@ -12,7 +12,7 @@ const Modals = () => {
 
   return (
     <>
-      <SelectAccount isOpen={openModal === modalName.SELECT_ACCOUNT} />
+      <AccountSelector isOpen={openModal === modalName.SELECT_ACCOUNT} />
 
       <ManageStaking isOpen={openModal === modalName.MANAGE_STAKING} />
 

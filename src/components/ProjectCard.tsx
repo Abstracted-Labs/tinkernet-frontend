@@ -137,7 +137,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         </div>
       </div>
       {selectedAccount ? (
-        <div className='relative'>
+        <div className='relative' style={{ margin: 0 }}>
           <button type="button" className="bg-tinkerYellow bg-opacity-20 hover:bg-opacity-100 text-tinkerYellow hover:text-black w-full rounded-bl-lg rounded-br-lg p-4 transition duration-100 disabled:cursor-not-allowed disabled:bg-opacity-20 disabled:hover:bg-opacity-20 disabled:text-black disabled:text-opacity-40"
             onClick={() => {
               const parsedTotalStaked =

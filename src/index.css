@@ -18,8 +18,8 @@ html {
     height: 100vh;
   }
 
-  .tinker-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
+  .tinker-scrollbar::-webkit-scrollbar-track, .tinker-scrollbar::-webkit-scrollbar-track:hover {
+    background: #16171b;
   }
 
   .tinker-scrollbar::-webkit-scrollbar-thumb {

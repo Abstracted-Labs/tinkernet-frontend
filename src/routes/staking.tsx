@@ -691,8 +691,8 @@ const Staking = () => {
             unclaimedEras ? (
             <>
               <div className="flex flex-col flex-wrap items-center justify-between md:flex-row">
-                <h4 className="lg:text-xl font-normal my-3">
-                  <span>OCIF Staking</span>
+                <h4 className="lg:text-xl font-bold my-3">
+                  <span>Staking</span>
                 </h4>
                 <div className="flex gap-4 justify-between">
                   <Button

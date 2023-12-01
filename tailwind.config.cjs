@@ -9,6 +9,7 @@ module.exports = {
       colors: {
         tinkerYellow: '#f8ce46',
         tinkerGrey: '#202125', // Project card bg
+        tinkerLightGrey: '#2D2E34', // Selected active account bg
         tinkerDarkGrey: '#16171b', // Project desc bg
         tinkerTextGrey: '#7b7d84', // Card text
       },
