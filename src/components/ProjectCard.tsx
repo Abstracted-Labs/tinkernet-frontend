@@ -89,7 +89,7 @@ const ProjectCard = (props: ProjectCardProps) => {
                   }}
                 />
               ) : null}
-              <span>{coreInfo?.numberOfStakers || "0"}</span>
+              <span>{coreInfo?.numberOfStakers}</span>
             </div>
           </div>
           <div className="flex justify-between items-center pb-2 border-b border-b-[#2B2C30]">
@@ -102,13 +102,11 @@ const ProjectCard = (props: ProjectCardProps) => {
               </div>
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal]">
-              {coreInfo?.total
-                ? formatBalance(coreInfo.total.toString(), {
-                  decimals: 12,
-                  withUnit: false,
-                  forceUnit: "-",
-                }).slice(0, -2)
-                : "0"}{" "}
+              {formatBalance(coreInfo?.total.toString(), {
+                decimals: 12,
+                withUnit: false,
+                forceUnit: "-",
+              }).slice(0, -2)}{" "}
               TNKR
             </div>
           </div>
