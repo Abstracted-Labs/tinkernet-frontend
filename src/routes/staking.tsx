@@ -116,6 +116,7 @@ export type CorePrimitiveType = {
 const Staking = () => {
   const api = useApi();
   const descriptionRef = useRef<HTMLDivElement | null>(null);
+  const mountedRef = useRef(false);
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const [hasUnbondedTokens, setHasUnbondedTokens] = useState(false);
@@ -127,6 +128,7 @@ const Staking = () => {
   const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
   >([]);
   const [totalSupply, setTotalSupply] = useState<BigNumber>();
+  const [aggregateStaked, setAggregateStaked] = useState<BigNumber>();
   const [unclaimedEras, setUnclaimedEras] = useState<{
     cores: { coreId: number; earliestEra: number; }[];
     total: number;
@@ -147,7 +149,7 @@ const Staking = () => {
     query: TotalRewardsClaimedQuery,
     variables: {
       accountId: selectedAccount
-        ? encodeAddress(selectedAccount.address, 2)
+        ? encodeAddress(selectedAccount.address, 117)
         : null,
     },
 
@@ -159,7 +161,7 @@ const Staking = () => {
       query: TotalRewardsClaimedSubscription,
       variables: {
         accountId: selectedAccount
-          ? encodeAddress(selectedAccount.address, 2)
+          ? encodeAddress(selectedAccount.address, 117)
           : null,
       },
       pause: !selectedAccount,
@@ -168,6 +170,7 @@ const Staking = () => {
       _: unknown,
       result: { stakers: { latestClaimBlock: number; totalRewards: string; }[]; }
     ) => {
+      if (!mountedRef.current) return;
       if (result.stakers.length === 0) return;
 
       if (!result.stakers[0].totalRewards) return;
@@ -357,6 +360,12 @@ const Staking = () => {
     setTotalSupply(new BigNumber(supply));
   };
 
+  const loadAggregateStaked = async () => {
+    const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
+    const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
+    setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
+  };
+
   const loadCores = async () => {
     const cores = await loadProjectCores(api);
 
@@ -396,6 +405,7 @@ const Staking = () => {
       await loadStakingConstants();
       await loadCurrentEraAndStake();
       await loadTotalSupply();
+      await loadAggregateStaked();
       await loadCoreEraStakeInfo(stakingCores);
 
       toast.dismiss();
@@ -530,16 +540,44 @@ const Staking = () => {
     );
   }
 
-  useEffect(() => {
-    loadStakingData(selectedAccount);
-  }, [selectedAccount]);
+  // async function fetchCoreInfoAndTotalUserStaked() {
+  //   const coreInfoResults: { [key: number]: CoreEraStakedInfoType | undefined; } = {};
+  //   const totalUserStakedResults: { [key: number]: BigNumber | undefined; } = {};
+
+  //   for (const core of stakingCores) {
+  //     const coreInfo = await getCoreInfo(coreEraStakeInfo, core);
+  //     const totalUserStaked = await getTotalUserStaked(userStakedInfo, core);
+
+  //     coreInfoResults[core.key] = coreInfo;
+  //     totalUserStakedResults[core.key] = totalUserStaked;
+  //   }
+
+  //   return { coreInfoResults, totalUserStakedResults };
+  // };
 
   useEffect(() => {
-    const fetchCoreInfoAndTotalUserStaked = async () => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    loadStakingData(selectedAccount);
+  }, [selectedAccount, api]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
       const coreInfoResults: { [key: number]: CoreEraStakedInfoType | undefined; } = {};
       const totalUserStakedResults: { [key: number]: BigNumber | undefined; } = {};
 
       for (const core of stakingCores) {
+        if (!isMounted) {
+          break;
+        }
+
         const coreInfo = await getCoreInfo(coreEraStakeInfo, core);
         const totalUserStaked = await getTotalUserStaked(userStakedInfo, core);
 
@@ -547,24 +585,40 @@ const Staking = () => {
         totalUserStakedResults[core.key] = totalUserStaked;
       }
 
-      setCoreInfoData(prevState => ({ ...prevState, ...coreInfoResults }));
-      setTotalUserStakedData(prevState => ({ ...prevState, ...totalUserStakedResults }));
-      setDataLoaded(true);
-    };
+      if (isMounted) {
+        setCoreInfoData(prevState => {
+          const newState = { ...prevState, ...coreInfoResults };
+          if (JSON.stringify(newState) !== JSON.stringify(prevState)) {
+            return newState;
+          }
+          return prevState;
+        });
 
-    fetchCoreInfoAndTotalUserStaked();
-    setLoading(false);
+        setTotalUserStakedData(prevState => {
+          const newState = { ...prevState, ...totalUserStakedResults };
+          if (JSON.stringify(newState) !== JSON.stringify(prevState)) {
+            return newState;
+          }
+          return prevState;
+        });
+
+        setDataLoaded(true);
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [stakingCores, coreEraStakeInfo, userStakedInfo, api]);
 
   useEffect(() => {
     if (!selectedAccount) return;
-
     if (!rewardsClaimedQuery.data?.stakers?.length) return;
 
     const totalClaimed = new BigNumber(
       rewardsClaimedQuery.data.stakers[0].totalRewards
     );
-
     setTotalClaimed(totalClaimed);
   }, [selectedAccount, rewardsClaimedQuery]);
 
@@ -615,14 +669,15 @@ const Staking = () => {
 
           <StakingDashboard
             totalUserStaked={totalUserStaked || new BigNumber(0)}
-            unclaimedEras={unclaimedEras}
             totalClaimed={totalClaimed || new BigNumber(0)}
             totalSupply={totalSupply || new BigNumber(0)}
             totalStaked={totalStaked || new BigNumber(0)}
+            aggregateStaked={aggregateStaked || new BigNumber(0)}
             currentStakingEra={currentStakingEra || 0}
             currentBlock={currentBlock}
             nextEraBlock={nextEraBlock}
             blocksPerEra={blocksPerEra}
+            unclaimedEras={unclaimedEras}
           />
 
 

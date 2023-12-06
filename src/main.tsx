@@ -22,11 +22,11 @@ import Layout from "./components/Layout";
 import Modals from "./modals";
 
 const wsClient = createWSClient({
-  url: "wss://squid.subsquid.io/ocif-squid/v/v1/graphql",
+  url: "wss://squid.subsquid.io/ocif-squid/graphql",
 });
 
 const client = new Client({
-  url: "https://squid.subsquid.io/ocif-squid/v/v1/graphql",
+  url: "https://squid.subsquid.io/ocif-squid/graphql",
   exchanges: [
     cacheExchange,
     fetchExchange,
