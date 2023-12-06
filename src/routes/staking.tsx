@@ -528,13 +528,13 @@ const Staking = () => {
     });
   };
 
-  async function getTotalUserStaked(userStakedInfo: UserStakedInfoType[], core: StakingCore) {
+  function getTotalUserStaked(userStakedInfo: UserStakedInfoType[], core: StakingCore) {
     return !!userStakedInfo && userStakedInfo.find(
       (info) => info.coreId === core.key
     )?.staked;
   }
 
-  async function getCoreInfo(coreEraStakeInfo: CoreEraStakedInfoType[], core: StakingCore) {
+  function getCoreInfo(coreEraStakeInfo: CoreEraStakedInfoType[], core: StakingCore) {
     return !!coreEraStakeInfo && coreEraStakeInfo.find(
       (info) => info.account === core.account
     );
@@ -578,8 +578,8 @@ const Staking = () => {
           break;
         }
 
-        const coreInfo = await getCoreInfo(coreEraStakeInfo, core);
-        const totalUserStaked = await getTotalUserStaked(userStakedInfo, core);
+        const coreInfo = getCoreInfo(coreEraStakeInfo, core);
+        const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
 
         coreInfoResults[core.key] = coreInfo;
         totalUserStakedResults[core.key] = totalUserStaked;
