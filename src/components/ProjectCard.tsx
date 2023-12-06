@@ -141,18 +141,14 @@ const ProjectCard = (props: ProjectCardProps) => {
               const parsedTotalStaked =
                 totalUserStaked || new BigNumber("0");
 
-              const parsedAvailableBalance =
-                availableBalance?.minus(
-                  new BigNumber(10).pow(12).times(2)
-                ) || new BigNumber("0");
+              const parsedAvailableBalance = availableBalance && availableBalance.isNegative()
+                ? new BigNumber("0")
+                : availableBalance || new BigNumber("0");
 
               handleManageStaking({
                 core,
                 totalUserStaked: parsedTotalStaked,
-                availableBalance:
-                  parsedAvailableBalance.isNegative()
-                    ? new BigNumber("0")
-                    : parsedAvailableBalance,
+                availableBalance: parsedAvailableBalance,
               });
             }}
             disabled={

@@ -156,31 +156,6 @@ const Staking = () => {
     pause: !selectedAccount,
   });
 
-  useSubscription(
-    {
-      query: TotalRewardsClaimedSubscription,
-      variables: {
-        accountId: selectedAccount
-          ? encodeAddress(selectedAccount.address, 117)
-          : null,
-      },
-      pause: !selectedAccount,
-    },
-    (
-      _: unknown,
-      result: { stakers: { latestClaimBlock: number; totalRewards: string; }[]; }
-    ) => {
-      if (!mountedRef.current) return;
-      if (result.stakers.length === 0) return;
-
-      if (!result.stakers[0].totalRewards) return;
-
-      const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
-
-      setTotalClaimed(totalClaimed);
-    }
-  );
-
   const setupSubscriptions = ({
     selectedAccount,
   }: {
@@ -220,14 +195,11 @@ const Staking = () => {
       selectedAccount.address,
       async (account) => {
         const balance = account.toPrimitive() as BalanceType;
-
         const locked = (
           await api.query.ocifStaking.ledger(selectedAccount.address)
         ).toPrimitive() as LockedType;
-
-        setAvailableBalance(
-          new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
-        );
+        const availableTNKR = new BigNumber(balance.data.free).minus(new BigNumber(locked.locked));
+        setAvailableBalance(availableTNKR);
       }
     );
 
@@ -540,27 +512,49 @@ const Staking = () => {
     );
   }
 
-  // async function fetchCoreInfoAndTotalUserStaked() {
-  //   const coreInfoResults: { [key: number]: CoreEraStakedInfoType | undefined; } = {};
-  //   const totalUserStakedResults: { [key: number]: BigNumber | undefined; } = {};
-
-  //   for (const core of stakingCores) {
-  //     const coreInfo = await getCoreInfo(coreEraStakeInfo, core);
-  //     const totalUserStaked = await getTotalUserStaked(userStakedInfo, core);
-
-  //     coreInfoResults[core.key] = coreInfo;
-  //     totalUserStakedResults[core.key] = totalUserStaked;
-  //   }
-
-  //   return { coreInfoResults, totalUserStakedResults };
-  // };
-
   useEffect(() => {
     mountedRef.current = true;
+
     return () => {
       mountedRef.current = false;
     };
   }, []);
+
+  useSubscription(
+    {
+      query: TotalRewardsClaimedSubscription,
+      variables: {
+        accountId: selectedAccount
+          ? encodeAddress(selectedAccount.address, 117)
+          : null,
+      },
+      pause: !selectedAccount,
+    },
+    (
+      _: unknown,
+      result: { stakers: { latestClaimBlock: number; totalRewards: string; }[]; }
+    ) => {
+      if (!mountedRef.current) return;
+      if (result.stakers.length === 0) return;
+
+      if (!result.stakers[0].totalRewards) return;
+
+      const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
+
+      setTotalClaimed(totalClaimed);
+    }
+  );
+
+  useEffect(() => {
+    let unsubs: UnsubscribePromise[] = [];
+    if (selectedAccount) {
+      unsubs = setupSubscriptions({ selectedAccount });
+    }
+
+    return () => {
+      unsubs.forEach(async (unsub) => (await unsub)());
+    };
+  }, [selectedAccount, api, stakingCores]);
 
   useEffect(() => {
     loadStakingData(selectedAccount);
@@ -581,8 +575,13 @@ const Staking = () => {
         const coreInfo = getCoreInfo(coreEraStakeInfo, core);
         const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
 
-        coreInfoResults[core.key] = coreInfo;
-        totalUserStakedResults[core.key] = totalUserStaked;
+        if (typeof coreInfo !== 'undefined') {
+          coreInfoResults[core.key] = coreInfo;
+        }
+
+        if (typeof totalUserStaked !== 'undefined') {
+          totalUserStakedResults[core.key] = totalUserStaked;
+        }
       }
 
       if (isMounted) {
@@ -610,27 +609,17 @@ const Staking = () => {
     return () => {
       isMounted = false;
     };
-  }, [stakingCores, coreEraStakeInfo, userStakedInfo, api]);
+  }, [stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   useEffect(() => {
-    if (!selectedAccount) return;
     if (!rewardsClaimedQuery.data?.stakers?.length) return;
 
-    const totalClaimed = new BigNumber(
+    const rewardsClaimed = new BigNumber(
       rewardsClaimedQuery.data.stakers[0].totalRewards
     );
-    setTotalClaimed(totalClaimed);
+
+    setTotalClaimed(rewardsClaimed);
   }, [selectedAccount, rewardsClaimedQuery]);
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-
-    const unsubs = setupSubscriptions({ selectedAccount });
-
-    return () => {
-      unsubs.forEach(async (unsub) => (await unsub)());
-    };
-  }, [selectedAccount, setupSubscriptions]);
 
   if (isLoading) {
     return (
@@ -644,7 +633,7 @@ const Staking = () => {
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8 mt-10">
       {selectedAccount &&
         currentStakingEra &&
-        totalUserStaked &&
+        // totalUserStaked &&
         unclaimedEras ? (
         <>
           <div className="flex flex-col flex-wrap items-center justify-between md:flex-row">

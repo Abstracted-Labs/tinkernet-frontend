@@ -42,7 +42,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
     <div
       className="relative overflow-x-auto w-full rounded-lg shadow flex flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4">
 
-      <DashboardCard cardTitle="My Stake" iconSrc={MyStakeIcon}>
+      <DashboardCard cardTitle="My Total Stake" iconSrc={MyStakeIcon}>
         {formatBalance(totalUserStaked.toString(), {
           decimals: 12,
           withUnit: 'TNKR',
@@ -90,7 +90,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
           : '0 TNKR'}
       </DashboardCard>
 
-      <DashboardCard cardTitle="My Redeemed Rewards" iconSrc={ClaimableRewardsIcon}>
+      <DashboardCard cardTitle="Redeemed Rewards" iconSrc={ClaimableRewardsIcon}>
         {formatBalance(totalClaimed.toString(), {
           decimals: 12,
           withUnit: 'TNKR',
@@ -106,7 +106,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         {currentStakingEra}
       </DashboardCard>
 
-      <DashboardCard cardTitle="Completion Rate" iconSrc={CompletionRateIcon}>
+      <DashboardCard cardTitle="% Til Next Redeem" iconSrc={CompletionRateIcon}>
         {(
           ((currentBlock - (nextEraBlock - blocksPerEra)) /
             (nextEraBlock - (nextEraBlock - blocksPerEra))) *

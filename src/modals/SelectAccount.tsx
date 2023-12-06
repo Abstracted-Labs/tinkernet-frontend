@@ -45,7 +45,7 @@ const SelectWallet = ({ isOpen }: { isOpen: boolean; }) => {
         <span className="block">Close</span>
       </button>
       <Dialog.Panel>
-        <div className="fixed left-1/2 top-1/2 z-50 mx-auto block w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col rounded-md border border-gray-50 bg-neutral-900 p-6 sm:w-full">
+        <div className="fixed left-1/2 top-1/2 z-50 mx-auto block w-[calc(100%-2rem)] max-h-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col rounded-lg border border-gray-50 bg-neutral-900 p-6 sm:w-full">
           <h2 className="text-xl font-bold text-white fixed bg-neutral-900 w-[calc(100%-2rem)] max-w-lg pb-4">Select your Wallet</h2>
           <ul className="pt-10 w-full divide-y divide-gray-200 h-96 overflow-y-scroll mb-10">
             {accounts.map((account, index) => {

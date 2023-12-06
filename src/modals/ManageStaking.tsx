@@ -268,15 +268,14 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean; }) => {
         <span className="block">Close</span>
       </button>
       <Dialog.Panel>
-        <div className="fixed left-1/2 top-1/2 z-50 mx-auto block max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-gray-50 bg-neutral-900 p-6 sm:w-full">
-          <h2 className="text-xl font-bold text-white">Manage Staking</h2>
+        <>
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] min-h-[380px] bg-tinkerDarkGrey rounded-lg space-y-4 p-8">
+            <h2 className="text-md font-bold text-white  bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg">Manage Staking</h2>
 
-          <div className="flex flex-col justify-between gap-4">
-            <div className="mt-4 flex flex-col justify-between gap-4 sm:flex-auto">
-              <div className="text-sm text-white">
-                <>
-                  Available:{" "}
-                  <span className="font-bold">
+            <div className="flex flex-col justify-between gap-4">
+              <div className="flex flex-row justify-around gap-4 sm:flex-auto mb-4">
+                <div className="text-sm text-white text-center">
+                  <div className="font-bold">
                     {formatBalance(
                       metadata?.availableBalance
                         ? metadata.availableBalance.toString()
@@ -288,189 +287,189 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean; }) => {
                       }
                     ).slice(0, -2) || "0"}{" "}
                     TNKR
-                  </span>
-                </>
-              </div>
+                  </div>
+                  <div className="text-xxs/none">Available to Stake</div>
+                </div>
 
-              {metadata?.totalUserStaked &&
-                metadata?.totalUserStaked.toString() !== "0" ? (
-                <div className="text-sm text-white">
-                  <>
-                    Staked:{" "}
-                    <span className="font-bold">
+                {metadata?.totalUserStaked &&
+                  metadata?.totalUserStaked.toString() !== "0" ? (
+                  <div className="text-sm text-white text-center">
+                    <div className="font-bold">
                       {formatBalance(metadata.totalUserStaked.toString(), {
                         decimals: 12,
                         withUnit: false,
                         forceUnit: "-",
                       }).slice(0, -2) || "0"}{" "}
                       TNKR
-                    </span>
-                  </>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <Tab.Group>
-                {metadata?.totalUserStaked &&
-                  metadata?.totalUserStaked.toString() !== "0" ? (
-                  <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
-                    <Tab
-                      key={mode.STAKE}
-                      className={({ selected }) =>
-                        classNames(
-                          "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
-                          "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
-                          selected
-                            ? "bg-white shadow"
-                            : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
-                        )
-                      }
-                    >
-                      Increase Stake
-                    </Tab>
-                    <Tab
-                      key={mode.UNSTAKE}
-                      className={({ selected }) =>
-                        classNames(
-                          "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
-                          "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
-                          selected
-                            ? "bg-white shadow"
-                            : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
-                        )
-                      }
-                    >
-                      Unstake
-                    </Tab>
-                  </Tab.List>
+                    </div>
+                    <div className="text-xxs/none">Currently Staked</div>
+                  </div>
                 ) : null}
-                <Tab.Panels>
-                  <Tab.Panel
-                    key={mode.STAKE}
-                    className={classNames(
-                      "flex flex-col gap-4 rounded-md",
-                      "focus:outline-none"
-                    )}
-                  >
-                    <form
-                      className="flex flex-col gap-4"
-                      onSubmit={handleStake}
-                    >
-                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                        <label
-                          htmlFor="stakeAmount"
-                          className="block text-xs font-medium text-white"
-                        >
-                          Stake Amount
-                        </label>
-                        <input
-                          type="text"
-                          {...stakeForm.register("amount", {
-                            required: true,
-                          })}
-                          className="mt-2 block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-transparent sm:text-sm"
-                        />
+              </div>
 
-                        <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
-                          <span
-                            className="pointer-events-none block text-white sm:text-sm"
-                            id="currency"
-                          >
-                            TNKR
-                          </span>
-
-                          <span
-                            className="block cursor-pointer text-white sm:text-sm"
-                            id="currency"
-                            onClick={handleStakeMax}
-                            tabIndex={0}
-                          >
-                            MAX
-                          </span>
-                        </div>
-                      </div>
-
-                      {stakeForm.formState.errors.amount ? (
-                        <div className="text-red-400">
-                          {stakeForm.formState.errors.amount.message}
-                        </div>
-                      ) : null}
-
-                      <button
-                        type="submit"
-                        disabled={!stakeForm.formState.isValid}
-                        className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+              <div className="flex flex-col gap-4">
+                <Tab.Group>
+                  {metadata?.totalUserStaked &&
+                    metadata?.totalUserStaked.toString() !== "0" ? (
+                    <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
+                      <Tab
+                        key={mode.STAKE}
+                        className={({ selected }) =>
+                          classNames(
+                            "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
+                            "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
+                            selected
+                              ? "bg-white shadow"
+                              : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
+                          )
+                        }
                       >
-                        Stake {watchedStakeAmount} TNKR
-                      </button>
-                    </form>
-                  </Tab.Panel>
-                  <Tab.Panel
-                    key={mode.UNSTAKE}
-                    className={classNames(
-                      "rounded-md",
-                      "focus:outline-none"
-                    )}
-                  >
-                    <form
-                      className="flex flex-col gap-4"
-                      onSubmit={handleUnstake}
-                    >
-                      <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                        <label
-                          htmlFor="unstakeAmount"
-                          className="block text-xs font-medium text-white"
-                        >
-                          Unstake Amount
-                        </label>
-                        <input
-                          type="text"
-                          {...unstakeForm.register("amount", {
-                            required: true,
-                          })}
-                          className="mt-2 block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                        />
-
-                        <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
-                          <span
-                            className="pointer-events-none block text-white sm:text-sm"
-                            id="currency"
-                          >
-                            TNKR
-                          </span>
-
-                          <span
-                            className="block cursor-pointer text-white sm:text-sm"
-                            id="currency"
-                            onClick={handleUnstakeMax}
-                            tabIndex={0}
-                          >
-                            MAX
-                          </span>
-                        </div>
-                      </div>
-
-                      {unstakeForm.formState.errors.amount ? (
-                        <div className="text-red-400">
-                          {unstakeForm.formState.errors.amount.message}
-                        </div>
-                      ) : null}
-
-                      <button
-                        type="submit"
-                        disabled={!unstakeForm.formState.isValid}
-                        className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                        Increase Stake
+                      </Tab>
+                      <Tab
+                        key={mode.UNSTAKE}
+                        className={({ selected }) =>
+                          classNames(
+                            "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
+                            "ring-white ring-opacity-60 ring-offset-2 ring-offset-neutral-400 focus:outline-none focus:ring-2",
+                            selected
+                              ? "bg-white shadow"
+                              : "bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
+                          )
+                        }
                       >
-                        Unstake {watchedUnstakeAmount} TNKR
-                      </button>
-                    </form>
-                  </Tab.Panel>
-                </Tab.Panels>
-              </Tab.Group>
+                        Unstake
+                      </Tab>
+                    </Tab.List>
+                  ) : null}
+                  <Tab.Panels>
+                    <Tab.Panel
+                      key={mode.STAKE}
+                      className={classNames(
+                        "flex flex-col gap-4 rounded-md",
+                        "focus:outline-none"
+                      )}
+                    >
+                      <form
+                        className="flex flex-col gap-4"
+                        onSubmit={handleStake}
+                      >
+                        <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                          <label
+                            htmlFor="stakeAmount"
+                            className="block text-xs font-medium text-white"
+                          >
+                            Stake Amount
+                          </label>
+                          <input
+                            type="text"
+                            {...stakeForm.register("amount", {
+                              required: true,
+                            })}
+                            className="mt-2 block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-transparent text-sm"
+                          />
+
+                          <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
+                            <span
+                              className="pointer-events-none block text-white text-xs"
+                              id="currency"
+                            >
+                              TNKR
+                            </span>
+
+                            <span
+                              className="block cursor-pointer text-white text-xs"
+                              id="currency"
+                              onClick={handleStakeMax}
+                              tabIndex={0}
+                            >
+                              MAX
+                            </span>
+                          </div>
+                        </div>
+
+                        {stakeForm.formState.errors.amount ? (
+                          <div className="text-red-400 text-xs/none">
+                            {stakeForm.formState.errors.amount.message}
+                          </div>
+                        ) : null}
+
+                        <button
+                          type="submit"
+                          disabled={!stakeForm.formState.isValid}
+                          className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                        >
+                          Stake {watchedStakeAmount} TNKR
+                        </button>
+                      </form>
+                    </Tab.Panel>
+                    <Tab.Panel
+                      key={mode.UNSTAKE}
+                      className={classNames(
+                        "rounded-md",
+                        "focus:outline-none"
+                      )}
+                    >
+                      <form
+                        className="flex flex-col gap-4"
+                        onSubmit={handleUnstake}
+                      >
+                        <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
+                          <label
+                            htmlFor="unstakeAmount"
+                            className="block text-xs font-medium text-white"
+                          >
+                            Unstake Amount
+                          </label>
+                          <input
+                            type="text"
+                            {...unstakeForm.register("amount", {
+                              required: true,
+                            })}
+                            className="mt-2 block w-[calc(100%-6rem)] border-0 bg-transparent p-0 text-white focus:ring-transparent text-sm"
+                          />
+
+                          <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
+                            <span
+                              className="pointer-events-none block text-white text-xs"
+                              id="currency"
+                            >
+                              TNKR
+                            </span>
+
+                            <span
+                              className="block cursor-pointer text-white text-xs"
+                              id="currency"
+                              onClick={handleUnstakeMax}
+                              tabIndex={0}
+                            >
+                              MAX
+                            </span>
+                          </div>
+                        </div>
+
+                        {unstakeForm.formState.errors.amount ? (
+                          <div className="text-red-400 text-xs/none">
+                            {unstakeForm.formState.errors.amount.message}
+                          </div>
+                        ) : null}
+
+                        <button
+                          type="submit"
+                          disabled={!unstakeForm.formState.isValid}
+                          className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
+                        >
+                          Unstake {watchedUnstakeAmount} TNKR
+                        </button>
+                      </form>
+                    </Tab.Panel>
+                  </Tab.Panels>
+                </Tab.Group>
+              </div>
             </div>
           </div>
-        </div>
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] md:w-[550px] min-h-[400px] rounded-lg border-[30px] border-tinkerGrey border-opacity-50" />
+        </>
       </Dialog.Panel>
     </Dialog>
   );
