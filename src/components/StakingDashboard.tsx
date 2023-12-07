@@ -50,12 +50,25 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         }) || "0 TNKR"}
       </DashboardCard>
 
-      <DashboardCard cardTitle="Total Supply Staked" iconSrc={AggregateStakedIcon}>
-        {formatBalance(aggregateStaked.toString(), {
-          decimals: 12,
-          withUnit: 'TNKR',
-          forceUnit: "-",
-        }) || "0 TNKR"}
+      <DashboardCard
+        cardTitle={
+          <>
+            {"Staked from Total"}
+            <br />
+            {/* {"Circulating Supply"}
+            <br /> */}
+            {formatBalance(aggregateStaked.toString(), {
+              decimals: 12,
+              withUnit: "TNKR",
+              forceUnit: "-",
+            }) || "0"}
+
+          </>
+        }
+        iconSrc={AggregateStakedIcon}
+        leading="leading-tight"
+      >
+        {totalStaked && totalStaked.toNumber() > 0 && aggregateStaked && aggregateStaked.toNumber() > 0 ? totalStaked.dividedBy(aggregateStaked).times(100).toFixed(2) : 0}%
       </DashboardCard>
 
       <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
@@ -106,7 +119,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         {currentStakingEra}
       </DashboardCard>
 
-      <DashboardCard cardTitle="% Til Next Redeem" iconSrc={CompletionRateIcon}>
+      <DashboardCard cardTitle="% Til Next Era" iconSrc={CompletionRateIcon}>
         {(
           ((currentBlock - (nextEraBlock - blocksPerEra)) /
             (nextEraBlock - (nextEraBlock - blocksPerEra))) *

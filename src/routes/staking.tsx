@@ -116,7 +116,6 @@ export type CorePrimitiveType = {
 const Staking = () => {
   const api = useApi();
   const descriptionRef = useRef<HTMLDivElement | null>(null);
-  const mountedRef = useRef(false);
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const [hasUnbondedTokens, setHasUnbondedTokens] = useState(false);
@@ -238,7 +237,6 @@ const Staking = () => {
 
       api.query.ocifStaking.ledger(selectedAccount.address, (c: Codec) => {
         const ledger = c.toPrimitive() as LedgerType;
-
         setHasUnbondedTokens(ledger.unbondingInfo.unlockingChunks.length > 0);
       });
 
@@ -247,15 +245,12 @@ const Staking = () => {
         selectedAccount.address,
         (generalStakerInfo: Codec) => {
           const info = generalStakerInfo.toPrimitive() as StakesInfo;
-
           if (info.stakes.length > 0) {
             const unclaimedEarliest = info.stakes.reduce((p, v) => p.era < v.era ? p : v).era;
-
             if (parseInt(unclaimedEarliest) < currentStakingEra) {
               const unclaimed = unclaimedEras;
-
               const cores = unclaimed.cores.filter((value) => {
-                return value.coreId != stakingCore.key;
+                return value.coreId === stakingCore.key;
               });
 
               cores.push({
@@ -264,14 +259,11 @@ const Staking = () => {
               });
 
               let total = unclaimed.total;
-
-              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
-                total = currentStakingEra - parseInt(unclaimedEarliest);
-              }
+              total = currentStakingEra - parseInt(unclaimedEarliest);
 
               setUnclaimedEras({
                 cores,
-                total: unclaimed.total,
+                total,
               });
             } else {
               setUnclaimedEras((unclaimedEras) => ({
@@ -351,6 +343,7 @@ const Staking = () => {
 
     for (const stakingCore of stakingCores) {
       const coreEraStake = (await api.query.ocifStaking.coreEraStake(stakingCore.key, currentStakingEra)).toPrimitive() as CoreEraStakeType;
+      console.log('coreEraStake', coreEraStake);
       coreEraStakeInfo.push({ coreId: stakingCore.key, account: stakingCore.account, ...coreEraStake });
     }
 
@@ -512,14 +505,6 @@ const Staking = () => {
     );
   }
 
-  useEffect(() => {
-    mountedRef.current = true;
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
   useSubscription(
     {
       query: TotalRewardsClaimedSubscription,
@@ -534,7 +519,6 @@ const Staking = () => {
       _: unknown,
       result: { stakers: { latestClaimBlock: number; totalRewards: string; }[]; }
     ) => {
-      if (!mountedRef.current) return;
       if (result.stakers.length === 0) return;
 
       if (!result.stakers[0].totalRewards) return;

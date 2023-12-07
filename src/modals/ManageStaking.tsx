@@ -311,7 +311,7 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean; }) => {
                 <Tab.Group>
                   {metadata?.totalUserStaked &&
                     metadata?.totalUserStaked.toString() !== "0" ? (
-                    <Tab.List className="flex gap-6 space-x-1 rounded-md bg-neutral-900">
+                    <Tab.List className="flex gap-3 space-x-1 rounded-md bg-neutral-900">
                       <Tab
                         key={mode.STAKE}
                         className={({ selected }) =>
@@ -371,13 +371,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean; }) => {
 
                           <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
                             <span
-                              className="pointer-events-none block text-white text-xs"
-                              id="currency"
-                            >
-                              TNKR
-                            </span>
-
-                            <span
                               className="block cursor-pointer text-white text-xs"
                               id="currency"
                               onClick={handleStakeMax}
@@ -430,13 +423,6 @@ const ManageStaking = ({ isOpen }: { isOpen: boolean; }) => {
                           />
 
                           <div className="absolute inset-y-0 right-0 flex items-center gap-4 pr-3">
-                            <span
-                              className="pointer-events-none block text-white text-xs"
-                              id="currency"
-                            >
-                              TNKR
-                            </span>
-
                             <span
                               className="block cursor-pointer text-white text-xs"
                               id="currency"
