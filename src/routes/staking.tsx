@@ -359,7 +359,7 @@ const Staking = () => {
     setAvailableBalance(currentBalance);
   };
 
-  const loadStakingData = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const loadDashboardData = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       toast.loading("Loading staking cores...");
 
@@ -541,7 +541,7 @@ const Staking = () => {
   }, [selectedAccount, api, stakingCores]);
 
   useEffect(() => {
-    loadStakingData(selectedAccount);
+    loadDashboardData(selectedAccount);
   }, [selectedAccount, api]);
 
   useEffect(() => {

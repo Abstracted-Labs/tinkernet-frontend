@@ -53,16 +53,15 @@ const StakingDashboard = (props: StakingDashboardProps) => {
       <DashboardCard
         cardTitle={
           <>
-            {"Staked from Total"}
+            {"Staked TNKR of"}
             <br />
-            {/* {"Circulating Supply"}
-            <br /> */}
             {formatBalance(aggregateStaked.toString(), {
               decimals: 12,
-              withUnit: "TNKR",
+              withUnit: false,
               forceUnit: "-",
             }) || "0"}
-
+            <br />
+            {"Total Supply"}
           </>
         }
         iconSrc={AggregateStakedIcon}
