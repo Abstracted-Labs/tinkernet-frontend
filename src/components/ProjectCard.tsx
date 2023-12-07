@@ -48,7 +48,7 @@ const ProjectCard = (props: ProjectCardProps) => {
   return (
     <div
       key={core.account}
-      className="flex flex-col justify-between w-full bg-tinkerGrey rounded-lg space-y-4">
+      className="flex flex-col justify-between w-full bg-tinkerGrey rounded-xl space-y-4">
       <div className='p-8 h-96 flex flex-col justify-between'>
         <div className="flex items-center space-x-4">
           <Avatar src={core.metadata.image} alt="Project Image" />
@@ -136,7 +136,7 @@ const ProjectCard = (props: ProjectCardProps) => {
       </div>
       {selectedAccount ? (
         <div className='relative' style={{ margin: 0 }}>
-          <button type="button" className="bg-tinkerYellow bg-opacity-20 hover:bg-opacity-100 text-tinkerYellow hover:text-black w-full rounded-bl-lg rounded-br-lg p-4 transition duration-100 disabled:cursor-not-allowed disabled:bg-opacity-20 focus:outline-none disabled:hover:bg-opacity-20 disabled:text-black disabled:text-opacity-40"
+          <button type="button" className="bg-tinkerYellow bg-opacity-20 hover:bg-opacity-100 text-tinkerYellow hover:text-black w-full rounded-bl-xl rounded-br-xl p-4 transition duration-100 disabled:cursor-not-allowed disabled:bg-opacity-20 focus:outline-none disabled:hover:bg-opacity-20 disabled:text-black disabled:text-opacity-40"
             onClick={() => {
               const parsedTotalStaked =
                 totalUserStaked || new BigNumber("0");

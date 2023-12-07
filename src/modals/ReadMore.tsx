@@ -50,7 +50,7 @@ const ReadMore = (props: ReadMoreProps) => {
       </button>
       <Dialog.Panel>
         <>
-          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] bg-tinkerDarkGrey rounded-lg space-y-4 p-8">
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] bg-tinkerDarkGrey rounded-xl space-y-4 p-8">
             <div className="flex items-center space-x-4">
               <Avatar src={image} alt="Project Image" />
               <div className="font-bold text-white text-[18px] text-center tracking-[0] leading-[normal]">
@@ -68,7 +68,7 @@ const ReadMore = (props: ReadMoreProps) => {
               </span>
             </button>
           </div>
-          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] h-[492px] rounded-lg border-[30px] border-tinkerGrey border-opacity-50" />
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] h-[492px] rounded-xl border-[30px] border-tinkerGrey border-opacity-50" />
         </>
       </Dialog.Panel>
     </Dialog>

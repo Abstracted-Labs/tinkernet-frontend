@@ -40,7 +40,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
 
   return (
     <div
-      className="relative overflow-x-auto w-full rounded-lg shadow flex flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4">
+      className="relative overflow-x-auto w-full rounded-xl shadow flex flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4">
 
       <DashboardCard cardTitle="My Total Stake" iconSrc={MyStakeIcon}>
         {formatBalance(totalUserStaked.toString(), {
@@ -48,6 +48,20 @@ const StakingDashboard = (props: StakingDashboardProps) => {
           withUnit: 'TNKR',
           forceUnit: "-",
         }) || "0 TNKR"}
+      </DashboardCard>
+
+      <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
+        {totalSupply &&
+          totalSupply.toNumber() > 0 &&
+          totalStaked &&
+          totalStaked.toNumber() > 0
+          ? totalSupply
+            .times(4) // 4 eras per year
+            .dividedBy(totalStaked) // Total supply / total staked
+            .decimalPlaces(2)
+            .toString()
+          : 0}
+        %
       </DashboardCard>
 
       <DashboardCard
@@ -68,20 +82,6 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         leading="leading-tight"
       >
         {totalStaked && totalStaked.toNumber() > 0 && aggregateStaked && aggregateStaked.toNumber() > 0 ? totalStaked.dividedBy(aggregateStaked).times(100).toFixed(2) : 0}%
-      </DashboardCard>
-
-      <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
-        {totalSupply &&
-          totalSupply.toNumber() > 0 &&
-          totalStaked &&
-          totalStaked.toNumber() > 0
-          ? totalSupply
-            .times(4) // 4 eras per year
-            .dividedBy(totalStaked) // Total supply / total staked
-            .decimalPlaces(2)
-            .toString()
-          : 0}
-        %
       </DashboardCard>
 
       <DashboardCard cardTitle="Annual DAO Rewards" iconSrc={AnnualRewardIcon}>

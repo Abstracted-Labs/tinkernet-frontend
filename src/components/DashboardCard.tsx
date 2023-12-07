@@ -10,7 +10,7 @@ interface DashboardCardProps {
 const DashboardCard = (props: DashboardCardProps) => {
   const { children, cardTitle, iconSrc, leading } = props;
   return (
-    <div className="min-w-[151px] h-[194px] bg-tinkerDarkGrey rounded-lg p-8 flex flex-col justify-between items-center">
+    <div className="min-w-[151px] h-[194px] bg-tinkerDarkGrey rounded-xl p-8 flex flex-col justify-between items-center">
       <div className="w-[48px] h-[48px] bg-[#393a3e] rounded-full mx-auto flex items-center justify-center">
         {iconSrc && <img src={iconSrc} alt="icon" />}
       </div>

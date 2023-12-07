@@ -343,7 +343,7 @@ const Staking = () => {
 
     for (const stakingCore of stakingCores) {
       const coreEraStake = (await api.query.ocifStaking.coreEraStake(stakingCore.key, currentStakingEra)).toPrimitive() as CoreEraStakeType;
-      console.log('coreEraStake', coreEraStake);
+
       coreEraStakeInfo.push({ coreId: stakingCore.key, account: stakingCore.account, ...coreEraStake });
     }
 

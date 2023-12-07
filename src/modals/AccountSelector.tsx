@@ -50,7 +50,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
       </button>
       <Dialog.Panel>
         <>
-          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] md:w-[530px] h-[472px] bg-tinkerGrey rounded-lg space-y-4 p-8">
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] md:w-[530px] h-[472px] bg-tinkerGrey rounded-xl space-y-4 p-8">
             <h2 className="text-md font-bold text-white fixed bg-tinkerGrey w-[calc(100%-2rem)] max-w-lg pb-4">Select your Wallet</h2>
             <ul className="w-full h-80 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto mb-10 pt-8 pr-4">
               {accounts.map((account, index) => {
@@ -59,7 +59,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
                     role="menuitem"
                     tabIndex={0}
                     key={`${ account.address }-${ index }}`}
-                    className={`flex flex-row items-center gap-4 cursor-pointer p-6 transition-colors hover:text-amber-300 ${ account.address === selectedAccount?.address ? 'rounded-lg bg-tinkerLightGrey text-white hover:bg-neutral-900' : 'text-white' }`}
+                    className={`flex flex-row items-center gap-4 cursor-pointer p-6 transition-colors hover:text-amber-300 ${ account.address === selectedAccount?.address ? 'rounded-xl bg-tinkerLightGrey text-white hover:bg-neutral-900' : 'text-white' }`}
                     onClick={() => {
                       handleAccountSelection(account);
                     }}
@@ -91,7 +91,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
               </span>
             </button>
           </div>
-          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] md:w-[550px] h-[492px] rounded-lg border-[30px] border-tinkerGrey border-opacity-50" />
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] md:w-[550px] h-[492px] rounded-xl border-[30px] border-tinkerGrey border-opacity-50" />
         </>
       </Dialog.Panel>
     </Dialog>
