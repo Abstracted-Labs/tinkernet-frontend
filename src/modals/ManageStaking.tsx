@@ -257,10 +257,26 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     });
   };
 
+  const handleTabChange = (index: number) => {
+    if (index === 0) {
+      stakeForm.reset();
+      return;
+    }
+
+    unstakeForm.reset();
+  };
+
   useEffect(() => {
     stakeForm.reset();
     unstakeForm.reset();
   }, [metadata?.key]);
+
+  // const RestakingDropdown = () => {
+  //   const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }));
+  //   if (!list || list.length === 0) return null;
+  //   return <Dropdown list={list} onSelect={() => { }} />;
+  // };
+
 
   return (
     <Dialog open={isOpen} onClose={() => setOpenModal({ name: null })}>
@@ -311,7 +327,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
               </div>
 
               <div className="flex flex-col gap-4">
-                <Tab.Group>
+                <Tab.Group onChange={handleTabChange}>
                   {metadata?.totalUserStaked &&
                     metadata?.totalUserStaked.toString() !== "0" ? (
                     <Tab.List className="flex gap-3 space-x-1 rounded-md bg-neutral-900">
@@ -319,7 +335,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                         key={mode.STAKE}
                         className={({ selected }) =>
                           classNames(
-                            "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
+                            "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700 focus:outline-none",
                             selected
                               ? "bg-white shadow border-2 border-tinkerYellow"
                               : "border-2 border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
@@ -332,7 +348,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                         key={mode.UNSTAKE}
                         className={({ selected }) =>
                           classNames(
-                            "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700",
+                            "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700 focus:outline-none",
                             selected
                               ? "bg-white shadow border-2 border-tinkerYellow"
                               : "border-2 border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
@@ -439,7 +455,5 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     </Dialog >
   );
 };
-
-/*  */
 
 export default ManageStaking;

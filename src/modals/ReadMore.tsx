@@ -37,7 +37,7 @@ const ReadMore = (props: ReadMoreProps) => {
 
   if (!localMetadata) return null;
 
-  const { name, description, image } = localMetadata as ReadMoreMetadata;
+  const { name, description, image } = localMetadata;
 
   if (!name || !description || !image) return null;
 

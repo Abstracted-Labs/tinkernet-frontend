@@ -46,6 +46,8 @@ export type StakingCore = {
   };
 };
 
+export type TotalUserStakedData = { [key: number]: BigNumber | undefined; };
+
 type BalanceType = {
   nonce: string;
   consumers: string;
@@ -142,7 +144,7 @@ const Staking = () => {
   const [nextEraBlock, setNextEraBlock] = useState<number>(0);
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
   const [coreInfoData, setCoreInfoData] = useState<{ [key: number]: CoreEraStakedInfoType | undefined; }>({});
-  const [totalUserStakedData, setTotalUserStakedData] = useState<{ [key: number]: BigNumber | undefined; }>({});
+  const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
 
   const [rewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -392,7 +394,7 @@ const Staking = () => {
   }) => {
     setOpenModal({
       name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalUserStaked, availableBalance },
+      metadata: { ...core, totalUserStaked, availableBalance, stakingCores, totalUserStakedData },
     });
   };
 
