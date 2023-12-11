@@ -34,6 +34,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
+  const [coreName, setCoreName] = useState<string | undefined>();
   const { setOpenModal, metadata } = useModal(
     (state) => ({
       setOpenModal: state.setOpenModal,
@@ -278,6 +279,10 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     if ('totalUserStakedData' in metadata) {
       setTotalUserStakedData(metadata.totalUserStakedData as TotalUserStakedData);
     }
+    if ('metadata' in metadata) {
+      const name = (metadata.metadata as { name: string; })?.name || '';
+      setCoreName(name);
+    }
   }, [metadata]);
 
   useEffect(() => {
@@ -288,7 +293,11 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const RestakingDropdown = () => {
     const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }));
     if (!list || list.length === 0) return null;
-    return <Dropdown list={list} onSelect={() => { }} />;
+
+    // Filter the active coreName
+    const inactiveCores = list.filter(item => item.name !== coreName);
+
+    return <Dropdown list={inactiveCores} onSelect={() => { }} />;
   };
 
   return (
@@ -302,7 +311,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       <Dialog.Panel>
         <>
           <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] h-[430px] md:h-[380px] bg-tinkerDarkGrey rounded-xl space-y-4 p-8">
-            <h2 className="text-md font-bold text-white  bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg truncate">Manage Staking for {(metadata?.metadata as { name: string; })?.name ?? ''}</h2>
+            <h2 className="text-md font-bold text-white  bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg truncate">Manage Staking for {coreName}</h2>
 
             <div className="flex flex-col justify-between gap-4">
               <div className="flex flex-row justify-around gap-4 sm:flex-auto mb-4">
