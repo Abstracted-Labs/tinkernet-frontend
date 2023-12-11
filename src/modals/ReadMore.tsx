@@ -57,7 +57,7 @@ const ReadMore = (props: ReadMoreProps) => {
                 {name}
               </div>
             </div>
-            <div className="overflow-y-auto h-3/5 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto pr-5">
+            <div className="overflow-y-auto h-3/5 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 pr-5">
               <p className="text-white text-[14px] tracking-[0] leading-[18px]">
                 {description}
               </p>

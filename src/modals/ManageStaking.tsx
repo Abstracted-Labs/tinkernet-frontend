@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
@@ -16,6 +16,8 @@ import useModal from "../stores/modals";
 import classNames from "../utils/classNames";
 import Input from "../components/Input";
 import Button from "../components/Button";
+import { StakingCore, TotalUserStakedData } from "../routes/staking";
+import Dropdown from "../components/Dropdown";
 
 const mode = {
   STAKE: "STAKE",
@@ -30,6 +32,8 @@ const schema = z.object({
 
 const ManageStaking = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
+  const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
+  const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
   const { setOpenModal, metadata } = useModal(
     (state) => ({
       setOpenModal: state.setOpenModal,
@@ -59,7 +63,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
     if (Number.isNaN(parsedAmount)) {
       stakeForm.setError("amount", {
-        type: "manual",
+        type: "valueAsNumber",
         message: "Amount must be a number",
       });
 
@@ -267,16 +271,25 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   };
 
   useEffect(() => {
+    if (!metadata) return;
+    if ('stakingCores' in metadata) {
+      setStakingCores(metadata.stakingCores as StakingCore[]);
+    }
+    if ('totalUserStakedData' in metadata) {
+      setTotalUserStakedData(metadata.totalUserStakedData as TotalUserStakedData);
+    }
+  }, [metadata]);
+
+  useEffect(() => {
     stakeForm.reset();
     unstakeForm.reset();
   }, [metadata?.key]);
 
-  // const RestakingDropdown = () => {
-  //   const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }));
-  //   if (!list || list.length === 0) return null;
-  //   return <Dropdown list={list} onSelect={() => { }} />;
-  // };
-
+  const RestakingDropdown = () => {
+    const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }));
+    if (!list || list.length === 0) return null;
+    return <Dropdown list={list} onSelect={() => { }} />;
+  };
 
   return (
     <Dialog open={isOpen} onClose={() => setOpenModal({ name: null })}>
@@ -288,8 +301,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       </button>
       <Dialog.Panel>
         <>
-          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] min-h-[380px] bg-tinkerDarkGrey rounded-xl space-y-4 p-8">
-            <h2 className="text-md font-bold text-white  bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg">Manage Staking</h2>
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] h-[430px] md:h-[380px] bg-tinkerDarkGrey rounded-xl space-y-4 p-8">
+            <h2 className="text-md font-bold text-white  bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg truncate">Manage Staking for {(metadata?.metadata as { name: string; })?.name ?? ''}</h2>
 
             <div className="flex flex-col justify-between gap-4">
               <div className="flex flex-row justify-around gap-4 sm:flex-auto mb-4">
@@ -307,7 +320,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                     ).slice(0, -2) || "0"}{" "}
                     TNKR
                   </div>
-                  <div className="text-xxs/none">Available to Stake</div>
+                  <div className="text-xxs/none">Available Balance</div>
                 </div>
 
                 {metadata?.totalUserStaked &&
@@ -342,7 +355,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           )
                         }
                       >
-                        Increase Stake
+                        Stake More
                       </Tab>
                       <Tab
                         key={mode.UNSTAKE}
@@ -355,7 +368,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           )
                         }
                       >
-                        Unstake
+                        Stake Less
                       </Tab>
                     </Tab.List>
                   ) : null}
@@ -371,30 +384,36 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                         className="flex flex-col items-between gap-4"
                         onSubmit={handleStake}
                       >
-                        <div>
-                          <label
-                            htmlFor="stakeAmount"
-                            className="block text-xxs font-medium text-white mb-1"
-                          >Stake Amount</label>
-                          <div className="relative flex flex-row items-center">
-                            <Input {...stakeForm.register("amount", {
-                              required: true,
-                            })} type="text" id="stakeAmount"
-                            />
-                            <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
-                              <span
-                                className="block cursor-pointer text-white hover:text-tinkerYellow text-xs"
-                                onClick={handleStakeMax}
-                                tabIndex={0}
-                              >
-                                MAX
-                              </span>
-                            </div>
+                        <div className="flex flex-col md:flex-row gap-4 items-between justify-center">
+                          <div className="flex-grow">
+                            <div className="block text-xxs font-medium text-white mb-1">Transfer Funds From</div>
+                            <RestakingDropdown />
                           </div>
-                          {stakeForm.formState.errors.amount ? (
-                            <p className="text-xs text-red-400 mt-1">{stakeForm.formState.errors.amount.message}
-                            </p>
-                          ) : null}
+                          <div className="flex-grow">
+                            <label
+                              htmlFor="stakeAmount"
+                              className="block text-xxs font-medium text-white mb-1"
+                            >Stake Amount</label>
+                            <div className="relative flex flex-row items-center">
+                              <Input {...stakeForm.register("amount", {
+                                required: true,
+                              })} type="text" id="stakeAmount"
+                              />
+                              <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
+                                <span
+                                  className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
+                                  onClick={handleStakeMax}
+                                  tabIndex={0}
+                                >
+                                  MAX
+                                </span>
+                              </div>
+                            </div>
+                            {stakeForm.formState.errors.amount ? (
+                              <p className="text-xs text-red-400 mt-1">{stakeForm.formState.errors.amount.message}
+                              </p>
+                            ) : null}
+                          </div>
                         </div>
 
                         <Button mini variant="primary" type="submit" disabled={!stakeForm.formState.isValid}>
@@ -425,7 +444,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                             />
                             <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
                               <span
-                                className="block cursor-pointer text-white hover:text-tinkerYellow text-xs"
+                                className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
                                 onClick={handleUnstakeMax}
                                 tabIndex={0}
                               >
@@ -449,7 +468,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
               </div>
             </div>
           </div>
-          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] md:w-[550px] min-h-[400px] rounded-xl border-[30px] border-tinkerGrey border-opacity-50" />
+          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] md:w-[550px] h-[450px] md:h-[400px] rounded-xl border-[30px] border-tinkerGrey border-opacity-50" />
         </>
       </Dialog.Panel>
     </Dialog >
