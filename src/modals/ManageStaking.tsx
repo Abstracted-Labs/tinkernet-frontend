@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
@@ -26,6 +26,8 @@ export interface SelectedCoreInfo extends Metadata {
   availableBalance: string | undefined;
 }
 
+const NO_METADATA_ERROR = "Metadata not available";
+
 const mode = {
   STAKE: "STAKE",
   UNSTAKE: "UNSTAKE",
@@ -42,7 +44,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [selectedCore, setSelectedCore] = useState<StakingCore | null>(null);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
-  const [showBalance, setShowBalance] = useState<boolean>(false);
+  const [altBalance, isAltBalance] = useState<boolean>(false);
   const [coreStakedBalance, setCoreStakedBalance] = useState<string>("0");
   const { setOpenModal, metadata } = useModal(
     (state) => ({
@@ -70,7 +72,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const handleStake = stakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
 
-    if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
+    if (!metadata) throw new Error(NO_METADATA_ERROR);
 
     const parsedAmount = parseFloat(amount);
 
@@ -83,9 +85,14 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    const maxValue = new BigNumber(metadata.availableBalance as string)
-      .dividedBy(new BigNumber(10).pow(12))
-      .toString();
+    let maxValue;
+    if (altBalance) {
+      maxValue = coreStakedBalance;
+    } else {
+      maxValue = new BigNumber(metadata.availableBalance as string)
+        .dividedBy(new BigNumber(10).pow(12))
+        .toString();
+    }
 
     const minValue = new BigNumber(10);
 
@@ -130,47 +137,61 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     const injector = await web3FromAddress(selectedAccount.address);
 
     try {
-      await api.tx.ocifStaking
-        .stake(metadata.key, parsedStakeAmount.toString())
-        .signAndSend(
-          selectedAccount.address,
-          { signer: injector.signer },
-          getSignAndSendCallback({
-            onInvalid: () => {
-              toast.dismiss();
+      const toasts = {
+        onInvalid: () => {
+          toast.dismiss();
+          toast.error("Invalid transaction");
+        },
+        onExecuted: () => {
+          toast.dismiss();
+          toast.loading("Waiting for confirmation...");
+        },
+        onSuccess: () => {
+          toast.dismiss();
+          toast.success("Staked successfully");
+        },
+        onDropped: () => {
+          toast.dismiss();
+          toast.error("Transaction dropped");
+        },
+      };
 
-              toast.error("Invalid transaction");
-            },
-            onExecuted: () => {
-              toast.dismiss();
+      if (!altBalance) {
+        const fromCore = metadata.key;
+        const amount = parsedStakeAmount.toString();
 
-              toast.loading("Waiting for confirmation...");
-            },
-            onSuccess: () => {
-              toast.dismiss();
+        await api.tx.ocifStaking
+          .stake(fromCore, amount)
+          .signAndSend(
+            selectedAccount.address,
+            { signer: injector.signer },
+            getSignAndSendCallback(toasts)
+          );
+      } else {
+        const toCore = metadata.key;
+        const fromCore = selectedCoreInfo?.id;
+        const amount = parsedStakeAmount.toString();
 
-              toast.success("Staked successfully");
-            },
-            onDropped: () => {
-              toast.dismiss();
-
-              toast.error("Transaction dropped");
-            },
-          })
-        );
-
-      setOpenModal({ name: null });
+        await api.tx.ocifStaking
+          .moveStake(fromCore, amount, toCore)
+          .signAndSend(
+            selectedAccount.address,
+            { signer: injector.signer },
+            getSignAndSendCallback(toasts)
+          );
+      }
     } catch (error) {
       toast.dismiss();
-
       toast.error(`${ error }`);
+    } finally {
+      setOpenModal({ name: null });
     }
   });
 
   const handleUnstake = unstakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
 
-    if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
+    if (!metadata) throw new Error(NO_METADATA_ERROR);
 
     const parsedAmount = parseFloat(amount);
 
@@ -215,43 +236,42 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
           getSignAndSendCallback({
             onInvalid: () => {
               toast.dismiss();
-
               toast.error("Invalid transaction");
             },
             onExecuted: () => {
               toast.dismiss();
-
               toast.loading("Waiting for confirmation...");
             },
             onSuccess: () => {
               toast.dismiss();
-
               toast.success("Unstaked successfully");
             },
             onDropped: () => {
               toast.dismiss();
-
               toast.error("Transaction dropped");
             },
           })
         );
-
-      setOpenModal({ name: null });
     } catch (error) {
       toast.dismiss();
-
       toast.error("Failed to unstake");
+    } finally {
+      setOpenModal({ name: null });
     }
   });
 
   const handleStakeMax = () => {
-    if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
+    if (!metadata) throw new Error(NO_METADATA_ERROR);
+
+    const availableBalance = new BigNumber(metadata.availableBalance as string)
+      .dividedBy(new BigNumber(10).pow(12))
+      .toString();
+
+    const balance = altBalance ? coreStakedBalance : availableBalance;
 
     stakeForm.setValue(
       "amount",
-      new BigNumber(metadata.availableBalance as string)
-        .dividedBy(new BigNumber(10).pow(12))
-        .toString()
+      balance
     );
 
     stakeForm.trigger("amount", {
@@ -260,7 +280,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   };
 
   const handleUnstakeMax = () => {
-    if (!metadata) throw new Error("METADATA_NOT_AVAILABLE");
+    if (!metadata) throw new Error(NO_METADATA_ERROR);
 
     unstakeForm.setValue(
       "amount",
@@ -319,7 +339,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
   useEffect(() => {
     if (selectedCoreInfo && initialCore && selectedCoreInfo?.name !== initialCore?.name) {
-      setShowBalance(true);
+      isAltBalance(true);
 
       if (selectedCoreInfo?.userStaked) {
         const stakedBalance = formatBalance(selectedCoreInfo?.userStaked?.toString(), {
@@ -332,16 +352,26 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    setShowBalance(false);
+    isAltBalance(false);
     setCoreStakedBalance("0");
   }, [selectedCoreInfo, initialCore, metadata]);
 
-  const RestakingDropdown = () => {
+  useEffect(() => {
+    if (altBalance) {
+      const currentAmount = parseFloat(stakeForm.getValues('amount'));
+      const maxBalance = parseFloat(coreStakedBalance);
+      if (currentAmount > maxBalance) {
+        stakeForm.setValue('amount', maxBalance.toString());
+      }
+    }
+  }, [altBalance, coreStakedBalance, stakeForm]);
+
+  const RestakingDropdown = memo(() => {
     const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }) as SelectedCoreInfo);
     if (!list || list.length === 0) return null;
 
     return <Dropdown initialValue={(initialSelectedCore.current?.metadata as SelectedCoreInfo)?.name as string} currentValue={selectedCoreInfo} list={list} onSelect={handleSelect} />;
-  };
+  });
 
   return (
     <Dialog open={isOpen} onClose={() => setOpenModal({ name: null })}>
@@ -406,7 +436,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           )
                         }
                       >
-                        Stake More
+                        Stake More/Restake
                       </Tab>
                       <Tab
                         key={mode.UNSTAKE}
@@ -423,6 +453,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                       </Tab>
                     </Tab.List>
                   ) : null}
+
                   <Tab.Panels>
                     <Tab.Panel
                       key={mode.STAKE}
@@ -446,7 +477,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                               className="block text-xxs font-medium text-white mb-1"
                             >
                               <span>Stake Amount</span>
-                              {showBalance ?
+                              {altBalance ?
                                 <span className="float-right">
                                   Balance: <span className="font-bold">{coreStakedBalance}</span> TNKR
                                 </span> : null}
@@ -474,7 +505,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                         </div>
 
                         <Button mini variant="primary" type="submit" disabled={!stakeForm.formState.isValid}>
-                          Stake {watchedStakeAmount} TNKR
+                          {altBalance ? 'Restake' : 'Stake'} {watchedStakeAmount} TNKR
                         </Button>
                       </form>
                     </Tab.Panel>
