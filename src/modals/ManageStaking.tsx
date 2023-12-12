@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
@@ -12,12 +12,19 @@ import { shallow } from "zustand/shallow";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
-import useModal from "../stores/modals";
+import useModal, { Metadata } from "../stores/modals";
 import classNames from "../utils/classNames";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { StakingCore, TotalUserStakedData } from "../routes/staking";
 import Dropdown from "../components/Dropdown";
+
+export interface SelectedCoreInfo extends Metadata {
+  id: number;
+  userStaked: BigNumber | undefined;
+  name: string;
+  availableBalance: string | undefined;
+}
 
 const mode = {
   STAKE: "STAKE",
@@ -33,8 +40,10 @@ const schema = z.object({
 const ManageStaking = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
+  const [selectedCore, setSelectedCore] = useState<StakingCore | null>(null);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
-  const [coreName, setCoreName] = useState<string | undefined>();
+  const [showBalance, setShowBalance] = useState<boolean>(false);
+  const [coreStakedBalance, setCoreStakedBalance] = useState<string>("0");
   const { setOpenModal, metadata } = useModal(
     (state) => ({
       setOpenModal: state.setOpenModal,
@@ -42,6 +51,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     }),
     shallow
   );
+  const initialSelectedCore = useRef<Metadata | undefined>(metadata);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const stakeForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -54,6 +64,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const api = useApi();
   const watchedUnstakeAmount = unstakeForm.watch('amount');
   const watchedStakeAmount = stakeForm.watch('amount');
+  const selectedCoreInfo = selectedCore ? { id: selectedCore.key, userStaked: totalUserStakedData[selectedCore.key], name: selectedCore.metadata.name } as SelectedCoreInfo : null;
+  const initialCore = initialSelectedCore.current?.metadata as SelectedCoreInfo;
 
   const handleStake = stakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
@@ -271,6 +283,19 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     unstakeForm.reset();
   };
 
+  const handleSelect = (selected: { id: number; userStaked: BigNumber | undefined; name: string; } | null) => {
+    if (selected) {
+      const selectCore = stakingCores.find(core => core.metadata.name === selected.name);
+      if (selectCore) {
+        setSelectedCore(selectCore);
+      }
+    }
+  };
+
+  useEffect(() => {
+    initialSelectedCore.current = metadata;
+  }, [metadata]);
+
   useEffect(() => {
     if (!metadata) return;
     if ('stakingCores' in metadata) {
@@ -279,10 +304,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     if ('totalUserStakedData' in metadata) {
       setTotalUserStakedData(metadata.totalUserStakedData as TotalUserStakedData);
     }
-    if ('metadata' in metadata) {
-      const name = (metadata.metadata as { name: string; })?.name || '';
-      setCoreName(name);
-    }
   }, [metadata]);
 
   useEffect(() => {
@@ -290,14 +311,36 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     unstakeForm.reset();
   }, [metadata?.key]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedCore(null);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (selectedCoreInfo && initialCore && selectedCoreInfo?.name !== initialCore?.name) {
+      setShowBalance(true);
+
+      if (selectedCoreInfo?.userStaked) {
+        const stakedBalance = formatBalance(selectedCoreInfo?.userStaked?.toString(), {
+          decimals: 12,
+          withUnit: false,
+          forceUnit: "-",
+        }).slice(0, -2) || "0";
+        setCoreStakedBalance(stakedBalance);
+      }
+      return;
+    }
+
+    setShowBalance(false);
+    setCoreStakedBalance("0");
+  }, [selectedCoreInfo, initialCore, metadata]);
+
   const RestakingDropdown = () => {
-    const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }));
+    const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }) as SelectedCoreInfo);
     if (!list || list.length === 0) return null;
 
-    // Filter the active coreName
-    const inactiveCores = list.filter(item => item.name !== coreName);
-
-    return <Dropdown list={inactiveCores} onSelect={() => { }} />;
+    return <Dropdown initialValue={(initialSelectedCore.current?.metadata as SelectedCoreInfo)?.name as string} currentValue={selectedCoreInfo} list={list} onSelect={handleSelect} />;
   };
 
   return (
@@ -311,7 +354,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       <Dialog.Panel>
         <>
           <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] h-[430px] md:h-[380px] bg-tinkerDarkGrey rounded-xl space-y-4 p-8">
-            <h2 className="text-md font-bold text-white  bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg truncate">Manage Staking for {coreName}</h2>
+            <h2 className="text-md font-bold text-white  bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg truncate">Manage Staking for {(initialSelectedCore.current?.metadata as { name: string; })?.name}</h2>
 
             <div className="flex flex-col justify-between gap-4">
               <div className="flex flex-row justify-around gap-4 sm:flex-auto mb-4">
@@ -336,12 +379,11 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                   metadata?.totalUserStaked.toString() !== "0" ? (
                   <div className="text-sm text-white text-center">
                     <div className="font-bold">
-                      {formatBalance(metadata.totalUserStaked.toString(), {
+                      {formatBalance(metadata?.totalUserStaked?.toString(), {
                         decimals: 12,
                         withUnit: false,
                         forceUnit: "-",
-                      }).slice(0, -2) || "0"}{" "}
-                      TNKR
+                      }).slice(0, -2) || "0"} TNKR
                     </div>
                     <div className="text-xxs/none">Currently Staked</div>
                   </div>
@@ -402,7 +444,13 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                             <label
                               htmlFor="stakeAmount"
                               className="block text-xxs font-medium text-white mb-1"
-                            >Stake Amount</label>
+                            >
+                              <span>Stake Amount</span>
+                              {showBalance ?
+                                <span className="float-right">
+                                  Balance: <span className="font-bold">{coreStakedBalance}</span> TNKR
+                                </span> : null}
+                            </label>
                             <div className="relative flex flex-row items-center">
                               <Input {...stakeForm.register("amount", {
                                 required: true,
