@@ -8,12 +8,12 @@ import pattern from "../../assets/pattern.svg";
 const Layout = () => {
   return (
     <div
-      className="bg-neutral-900"
+      className="bg-neutral-900 h-screen overflow-y-hidden flex flex-col justify-between"
       aria-hidden="true"
       style={{
         backgroundImage: `url(${ pattern })`,
         backgroundRepeat: 'repeat',
-        backgroundSize: 'auto',
+        backgroundSize: 'stretch',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
       }}
@@ -21,7 +21,7 @@ const Layout = () => {
 
       <Header />
 
-      <main className="relative min-h-screen py-8 text-white">
+      <main className="relative py-8 text-white tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto">
         <Outlet />
       </main>
 
