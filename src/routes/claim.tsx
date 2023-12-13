@@ -12,6 +12,7 @@ import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import useApi from "../hooks/useApi";
+import Button from "../components/Button";
 
 type SystemAccount = Struct & {
   data: {
@@ -376,26 +377,12 @@ const Home = () => {
   }, [selectedAccount]);
 
   return (
-    <div className="relative flex md:h-[calc(100vh_-_12rem)] items-center justify-center overflow-hidden">
-      <div
-        className="hidden md:absolute md:inset-y-0 md:block md:h-full md:w-full"
-        aria-hidden="true"
-      >
-        <div className="mx-auto h-full max-w-7xl">
-          <img
-            src={background}
-            alt="background"
-            className="pointer-events-none absolute right-full translate-y-0 translate-x-1/3 transform"
-          />
-          <img
-            src={background}
-            alt="background"
-            className="pointer-events-none absolute left-full translate-y-0 -translate-x-1/3 transform"
-          />
-        </div>
-      </div>
+    <div className="relative flex flex-row items-center justify-center overflow-hidden">
+      <div className="z-10 w-full p-4 sm:max-w-3xl mt-10">
+        <h2 className="lg:text-xl font-bold my-3">
+          <span>Claim</span>
+        </h2>
 
-      <div className="z-10 w-full py-6 px-8 sm:max-w-3xl md:mt-10">
         {!selectedAccount ? (
           <div className="text-center">
             <h1 className="text-2xl font-bold text-white">
@@ -414,23 +401,23 @@ const Home = () => {
         ) : null}
 
         {!isBalanceLoading && selectedAccount && vestingSummary ? (
-          <div className="overflow-hidden rounded-md border border-gray-50 backdrop-blur-sm shadow mt-10">
+          <div className="overflow-hidden rounded-md border border-gray-50 backdrop-blur-sm shadow">
             <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-              <div className="flex flex-col p-6">
+              <div className="flex flex-col justify-start p-6">
                 <span className="text-lg font-normal text-white">
                   Ready to Claim
                 </span>
                 <span className="text-2xl font-bold text-white">
                   {vestingSummary.vestedClaimable}
                 </span>
-                <button
+                <Button
+                  variant="primary"
                   type="button"
-                  className="mt-8 inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                   onClick={() => handleClaim(selectedAccount)}
                   disabled={vestingSummary.vestedClaimable === "0" || isClaimWaiting}
                 >
                   {vestingSummary.vestedClaimable === "0" ? 'Nothing to Claim' : 'Claim Now'}
-                </button>
+                </Button>
               </div>
 
               <div className="flex flex-col p-6">

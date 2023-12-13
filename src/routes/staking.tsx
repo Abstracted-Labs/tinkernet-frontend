@@ -622,11 +622,11 @@ const Staking = () => {
         // totalUserStaked &&
         unclaimedEras ? (
         <>
-          <div className="flex flex-col flex-wrap items-center justify-between md:flex-row">
+          <div className="flex flex-col flex-wrap items-start justify-between md:flex-row">
             <h2 className="lg:text-xl font-bold my-3">
               <span>Staking</span>
             </h2>
-            <div className="flex gap-4 justify-between z-10">
+            <div className="flex gap-4 flex-wrap md:flex-nowrap w-full md:w-auto justify-between z-10">
               <Button
                 onClick={handleUnbondTokens}
                 disabled={!hasUnbondedTokens}

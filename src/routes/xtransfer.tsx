@@ -413,8 +413,8 @@ const XTransfer = () => {
   }, [pair.from, pair.to]);
 
   return (
-    <div className="relative flex flex-col h-[calc(100vh_-_12rem)] mt-10 items-center justify-start overflow-hidden">
-      <div className="z-10 w-full py-6 px-8 sm:max-w-2xl">
+    <div className="relative flex flex-col mt-10 items-center justify-start overflow-hidden">
+      <div className="z-10 w-full p-4 sm:max-w-2xl">
         <h2 className="lg:text-xl font-bold my-3">
           <span>X-Transfer</span>
         </h2>
@@ -470,7 +470,7 @@ const XTransfer = () => {
             <div className="p-4">
               <div className="flex flex-row items-center gap-0">
                 <Dropdown
-                  defaultOption="Select Chain"
+                  defaultOption="Select Source Chain"
                   initialValue={{ name: pair.from }}
                   currentValue={{ name: pair.from }}
                   onSelect={(opt) => {
@@ -484,7 +484,7 @@ const XTransfer = () => {
                   }}
                 >
                   {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
-                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start">
+                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-xs">
                       {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
                       <span>{chain.name}</span>
                     </span>
@@ -499,7 +499,7 @@ const XTransfer = () => {
                 </div>
 
                 <Dropdown
-                  defaultOption="Select Chain"
+                  defaultOption="Select Destination Chain"
                   initialValue={{ name: pair.to }}
                   currentValue={{ name: pair.to }}
                   onSelect={(opt) => {
@@ -513,7 +513,7 @@ const XTransfer = () => {
                   }}
                 >
                   {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
-                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start">
+                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-xs">
                       {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
                       <span>{chain.name}</span>
                     </span>

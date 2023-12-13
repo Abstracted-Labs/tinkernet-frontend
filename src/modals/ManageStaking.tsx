@@ -303,7 +303,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     unstakeForm.reset();
   };
 
-  const handleSelect = (selected: { id: number; userStaked: BigNumber | undefined; name: string; } | null) => {
+  const handleSelect = (selected: { name: string; } | null) => {
     if (selected) {
       const selectCore = stakingCores.find(core => core.metadata.name === selected.name);
       if (selectCore) {
