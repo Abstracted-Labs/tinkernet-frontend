@@ -6,9 +6,8 @@ import { useEffect, useState } from "react";
 import { BN, formatBalance, u8aToHex } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
-import background from "../assets/background.svg";
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto";
-import { ArrowRightIcon, ClipboardIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
@@ -18,8 +17,12 @@ import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import useApi from "../hooks/useApi";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { FrameSystemAccountInfo } from "@polkadot/types/lookup";
+import Input from "../components/Input";
+import Button from "../components/Button";
 
 const RPC_PROVIDER_BASILISK = "wss://basilisk-rpc.dwellir.com";
+
+const MINI_BUTTON_STYLE = "cursor-pointer bg-white hover:bg-tinkerYellow text-black py-1 px-2 rounded-lg text-xxs font-medium";
 
 type SystemAccount = Struct & {
   data: {
@@ -188,6 +191,38 @@ const XTransfer = () => {
 
   const handleChangedAmount = (e: string) => {
     setAmount(parseFloat(e).toFixed(12).replace(/\./g, ""));
+  };
+
+  const balanceTNKR25 = () => {
+    setAmount(formatBalance(balanceInTinkernet.multipliedBy(0.25).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+  };
+
+  const balanceTNKR50 = () => {
+    setAmount(formatBalance(balanceInTinkernet.multipliedBy(0.5).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+  };
+
+  const balanceTNKR75 = () => {
+    setAmount(formatBalance(balanceInTinkernet.multipliedBy(0.75).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+  };
+
+  const balanceTNKR100 = () => {
+    setAmount(formatBalance(balanceInTinkernet.multipliedBy(1).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+  };
+
+  const balanceBSX25 = () => {
+    setAmount(formatBalance(balanceInBasilisk.multipliedBy(0.25).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+  };
+
+  const balanceBSX50 = () => {
+    setAmount(formatBalance(balanceInBasilisk.multipliedBy(0.5).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+  };
+
+  const balanceBSX75 = () => {
+    setAmount(formatBalance(balanceInBasilisk.multipliedBy(0.75).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+  };
+
+  const balanceBSX100 = () => {
+    setAmount(formatBalance(balanceInBasilisk.multipliedBy(1).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
   };
 
   const handleChangedDestination = (e: string) => {
@@ -370,31 +405,22 @@ const XTransfer = () => {
     };
   }, [api, apiBasilisk]);
 
+  useEffect(() => {
+    setAmount("0");
+  }, [pair.from, pair.to]);
+
   return (
-    <div className="relative flex h-[calc(100vh_-_12rem)] mt-10 items-center justify-center overflow-hidden">
-      <div
-        className="hidden md:absolute md:inset-y-0 md:block md:h-full md:w-full"
-        aria-hidden="true"
-      >
-        <div className="mx-auto h-full max-w-7xl">
-          <img
-            src={background}
-            alt="background"
-            className="pointer-events-none absolute right-full translate-y-0 translate-x-1/3 transform"
-          />
-          <img
-            src={background}
-            alt="background"
-            className="pointer-events-none absolute left-full translate-y-0 -translate-x-1/3 transform"
-          />
-        </div>
-      </div>
+    <div className="relative flex flex-col h-[calc(100vh_-_12rem)] mt-10 items-center justify-start overflow-hidden">
       <div className="z-10 w-full py-6 px-8 sm:max-w-2xl">
+        <h2 className="lg:text-xl font-bold my-3">
+          <span>X-Transfer</span>
+        </h2>
+
         {!selectedAccount ? (
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white">
+            <h5 className="text-2xl font-bold text-white">
               Wallet not connected
-            </h1>
+            </h5>
             <p className="mt-8 text-lg text-white">
               You can connect your wallet to use x-transfer.
             </p>
@@ -409,8 +435,37 @@ const XTransfer = () => {
 
         {!isLoading && selectedAccount ? (
           <div className="overflow-hidden rounded-md border border-neutral-50 backdrop-blur-sm shadow">
+            <div className="border-b border-neutral-50 p-4">
+              <div className="flex flex-row items-center justify-around gap-4">
+                <div className="flex flex-col items-center">
+                  <span className="text-lg font-bold text-white leading-none">
+                    {formatBalance(balanceInTinkernet.toString(), {
+                      decimals: 12,
+                      withUnit: "TNKR",
+                      forceUnit: "-",
+                    })}
+                  </span>
+                  <span className="text-xxs font-normal text-white">
+                    Free balance on Tinkernet
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <span className="text-lg font-bold text-white leading-none">
+                    {formatBalance(balanceInBasilisk.toString(), {
+                      decimals: 12,
+                      withUnit: "TNKR",
+                      forceUnit: "-",
+                    })}
+                  </span>
+                  <span className="text-xxs font-normal text-white">
+                    Free balance on Basilisk
+                  </span>
+                </div>
+              </div>
+            </div>
             <div className="p-4">
-              <div className="grid grid-cols-5 items-center justify-between p-6 pb-2">
+              <div className="grid grid-cols-5 items-center justify-between">
                 <select
                   id="destination"
                   name="destination"
@@ -461,60 +516,56 @@ const XTransfer = () => {
 
               {pair.from === currency.TINKERNET &&
                 pair.to === currency.BASILISK ? (
-                <div className="flex flex-col gap-4 p-6">
-                  <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                    <label
-                      htmlFor="amount"
-                      className="block text-xs font-medium text-white"
-                    >
-                      Amount
-                    </label>
-                    <input
-                      type="text"
-                      name="amount"
-                      id="amount"
-                      disabled={balanceInTinkernet.toNumber() === 0}
-                      className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                      onChange={(e) => handleChangedAmount(e.target.value)}
-                    />
+                <div className="flex flex-col gap-4 mt-3">
+                  <div className="flex flex-row items-start justify-between gap-4">
+                    <div>
+                      <label
+                        htmlFor="amount"
+                        className="block text-xxs font-medium text-white mb-2"
+                      >
+                        TNKR Amount
+                      </label>
+                      <div>
+                        <Input type="text"
+                          value={amount}
+                          name="amount"
+                          id="amount"
+                          disabled={balanceInTinkernet.toNumber() === 0}
+                          onChange={(e) => handleChangedAmount(e.target.value)} />
+                        <div className="flex flex-row justify-between mt-2 gap-2">
+                          <span className={MINI_BUTTON_STYLE} onClick={balanceTNKR25}>25%</span>
+                          <span className={MINI_BUTTON_STYLE} onClick={balanceTNKR50}>50%</span>
+                          <span className={MINI_BUTTON_STYLE} onClick={balanceTNKR75}>75%</span>
+                          <span className={MINI_BUTTON_STYLE} onClick={balanceTNKR100}>100%</span>
+                        </div>
+                      </div>
+                    </div>
 
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                      <span className="text-white sm:text-sm" id="currency">
-                        TNKR
-                      </span>
+                    <div className="flex-grow">
+                      <label
+                        htmlFor="destination"
+                        className="block text-xxs font-medium text-white mb-2 flex flex-row items-end justify-between"
+                      >
+                        <span>Destination</span>
+                      </label>
+                      <div>
+                        <Input type="text"
+                          name="destination"
+                          id="destination"
+                          value={encode(destinationField, 10041)}
+                          onChange={(e) => handleChangedDestination(e.target.value)} />
+                        <div className="flex flex-row justify-end mt-2">
+                          <span className={MINI_BUTTON_STYLE} onClick={() =>
+                            handleChangedDestination(selectedAccount.address)
+                          }>To Myself</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                    <label
-                      htmlFor="destination"
-                      className="block text-xs font-medium text-white"
-                    >
-                      Destination
-                    </label>
-
-                    <input
-                      type="text"
-                      name="destination"
-                      id="destination"
-                      className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                      value={encode(destinationField, 10041)}
-                      onChange={(e) => handleChangedDestination(e.target.value)}
-                    />
-
-                    <div
-                      className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
-                      onClick={() =>
-                        handleChangedDestination(selectedAccount.address)
-                      }
-                    >
-                      <ClipboardIcon className="h-5 w-5 text-white" />
-                    </div>
-                  </div>
-
-                  <button
+                  <Button
+                    variant="primary"
                     type="button"
-                    className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                     disabled={
                       (pair.from === "Tinkernet"
                         ? new BigNumber(amount).div(1000000000000).toNumber() >=
@@ -531,115 +582,81 @@ const XTransfer = () => {
                     onClick={() => handleXTransferToBasilisk()}
                   >
                     Transfer
-                  </button>
+                  </Button>
                 </div>
               ) : null}
 
               {pair.from === currency.BASILISK &&
                 pair.to === currency.TINKERNET ? (
-                <div className="flex flex-col gap-4 p-6">
-                  <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                    <label
-                      htmlFor="amount"
-                      className="block text-xs font-medium text-white"
-                    >
-                      Amount
-                    </label>
-                    <input
-                      type="text"
-                      name="amount"
-                      id="amount"
-                      disabled={balanceInBasilisk.toNumber() === 0}
-                      className="block w-full border-0 bg-transparent p-0 text-white focus:ring-0 sm:text-sm"
-                      onChange={(e) => handleChangedAmount(e.target.value)}
-                    />
+                <div className="flex flex-col gap-4 mt-3">
+                  <div className="flex flex-row items-start justify-between gap-4">
+                    <div>
+                      <label
+                        htmlFor="amount"
+                        className="block text-xxs font-medium text-white mb-2"
+                      >
+                        TNKR Amount
+                      </label>
+                      <div>
+                        <Input type="text"
+                          value={amount}
+                          name="amount"
+                          id="amount"
+                          disabled={balanceInBasilisk.toNumber() === 0}
+                          onChange={(e) => handleChangedAmount(e.target.value)} />
+                        <div className="flex flex-row justify-between mt-2 gap-2">
+                          <span className={MINI_BUTTON_STYLE} onClick={balanceBSX25}>25%</span>
+                          <span className={MINI_BUTTON_STYLE} onClick={balanceBSX50}>50%</span>
+                          <span className={MINI_BUTTON_STYLE} onClick={balanceBSX75}>75%</span>
+                          <span className={MINI_BUTTON_STYLE} onClick={balanceBSX100}>100%</span>
+                        </div>
+                      </div>
+                    </div>
 
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                      <span className="text-white sm:text-sm" id="currency">
-                        TNKR
-                      </span>
+                    <div className="flex-grow">
+                      <label
+                        htmlFor="destination"
+                        className="block text-xxs font-medium text-white mb-2 flex flex-row items-end justify-between"
+                      >
+                        <span>Destination</span>
+                      </label>
+                      <div>
+                        <Input type="text"
+                          name="destination"
+                          id="destination"
+                          value={encode(destinationField, 10041)}
+                          onChange={(e) => handleChangedDestination(e.target.value)} />
+                        <div className="flex flex-row justify-end mt-2">
+                          <span className={MINI_BUTTON_STYLE} onClick={() =>
+                            handleChangedDestination(selectedAccount.address)
+                          }>To Myself</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="relative rounded-md border border-neutral-300 px-3 py-2 shadow-sm focus-within:border-neutral-600 focus-within:ring-1 focus-within:ring-neutral-600">
-                    <label
-                      htmlFor="destination"
-                      className="block text-xs font-medium text-white"
-                    >
-                      Destination
-                    </label>
-
-                    <input
-                      type="text"
-                      name="destination"
-                      id="destination"
-                      className="block w-full truncate border-0 bg-transparent p-0 pr-8 text-white focus:ring-0 sm:text-sm"
-                      value={encode(destinationField, 117)}
-                      onChange={(e) => handleChangedDestination(e.target.value)}
-                    />
-
-                    <div
-                      className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3"
-                      onClick={() =>
-                        handleChangedDestination(selectedAccount.address)
-                      }
-                    >
-                      <ClipboardIcon className="h-5 w-5 text-white" />
-                    </div>
-                  </div>
-
-                  <button
+                  <Button
+                    variant="primary"
                     type="button"
-                    className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-75"
                     disabled={
-                      new BigNumber(amount).div(1000000000000).toNumber() >=
-                      balanceInBasilisk
-                        .minus(100000000000)
-                        .div(1000000000000)
-                        .toNumber() ||
-                      !destination ||
-                      isWaiting
+                      (pair.from === "Basilisk"
+                        ? new BigNumber(amount).div(1000000000000).toNumber() >=
+                        balanceInBasilisk
+                          .minus(100000000000)
+                          .div(1000000000000)
+                          .toNumber() || !destination
+                        : new BigNumber(amount).div(1000000000000).toNumber() >=
+                        balanceInTinkernet
+                          .minus(100000000000)
+                          .div(1000000000000)
+                          .toNumber() || !destination) || isWaiting
                     }
                     onClick={() => handleXTransferToTinkernet()}
                   >
                     Transfer
-                  </button>
+                  </Button>
                 </div>
               ) : null}
-            </div>
-
-            <div className="border-t border-neutral-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-              <div className="px-6">
-                <span className="text-sm font-normal leading-6 text-white">
-                  Free balance on Tinkernet:
-                </span>
-
-                <br />
-
-                <span className="text-lg font-normal leading-6 text-white">
-                  {formatBalance(balanceInTinkernet.toString(), {
-                    decimals: 12,
-                    withUnit: "TNKR",
-                    forceUnit: "-",
-                  })}
-                </span>
-              </div>
-
-              <div className="px-6">
-                <span className="text-sm font-normal leading-6 text-white">
-                  Free balance on Basilisk:
-                </span>
-
-                <br />
-
-                <span className="text-lg font-normal leading-6 text-white">
-                  {formatBalance(balanceInBasilisk.toString(), {
-                    decimals: 12,
-                    withUnit: "TNKR",
-                    forceUnit: "-",
-                  })}
-                </span>
-              </div>
             </div>
           </div>
         ) : null}
