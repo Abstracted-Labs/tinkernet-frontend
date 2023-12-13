@@ -78,7 +78,7 @@ const Dropdown = memo(function Dropdown<T extends { name: string; }>({ initialVa
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <Listbox.Options className="absolute z-50 py-1 mt-1 overflow-auto text-xs bg-tinkerGrey rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm max-h-50 w-2/5 tinker-scrollbar scrollbar scrollbar-thumb-amber-300">
+          <Listbox.Options className={`absolute z-50 py-1 mt-1 overflow-auto text-xs bg-tinkerGrey rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm max-h-50 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 ${ children ? 'w-2/5' : 'w-4/5 md:w-2/5' }`}>
             {children ? children.map((child, childIdx) => (
               <Listbox.Option
                 key={childIdx}
