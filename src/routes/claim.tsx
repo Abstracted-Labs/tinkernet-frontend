@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
-import background from "../assets/background.svg";
 import { toast } from "react-hot-toast";
 import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
@@ -385,20 +384,16 @@ const Home = () => {
 
         {!selectedAccount ? (
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-white">
+            <h5 className="text-2xl font-bold text-white">
               Wallet not connected
-            </h1>
+            </h5>
             <p className="mt-8 text-lg text-white">
               You can connect your wallet to claim your vested tokens.
             </p>
           </div>
         ) : null}
 
-        {isBalanceLoading ? (
-          <div className="flex items-center justify-center">
-            <LoadingSpinner />
-          </div>
-        ) : null}
+        {isBalanceLoading ? <LoadingSpinner /> : null}
 
         {!isBalanceLoading && selectedAccount && vestingSummary ? (
           <div className="overflow-hidden rounded-md border border-gray-50 backdrop-blur-sm shadow">

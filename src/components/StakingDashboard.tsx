@@ -12,26 +12,26 @@ import CompletionRateIcon from '../assets/completion-rate-icon.svg';
 import AggregateStakedIcon from '../assets/aggregate-staked-icon.svg';
 
 interface StakingDashboardProps {
-  totalUserStaked: BigNumber;
-  unclaimedEras: UnclaimedErasType;
-  totalClaimed: BigNumber;
-  totalSupply: BigNumber;
-  totalStaked: BigNumber;
-  aggregateStaked: BigNumber;
-  currentStakingEra: number;
-  currentBlock: number;
-  nextEraBlock: number;
-  blocksPerEra: number;
+  aggregateStaked: BigNumber; // Required for total TNKR supply staked
+  totalUserStaked: BigNumber; // Required for my total stake
+  totalSupply: BigNumber; // Required for projected annual DAO rewards
+  totalStaked: BigNumber | undefined; // Required for my total stake
+  unclaimedEras: UnclaimedErasType | undefined;
+  totalClaimed: BigNumber | undefined;
+  currentStakingEra: number | undefined;
+  currentBlock: number | undefined;
+  nextEraBlock: number | undefined;
+  blocksPerEra: number | undefined;
 }
 
 const StakingDashboard = (props: StakingDashboardProps) => {
   const {
+    aggregateStaked,
     totalUserStaked,
+    totalSupply,
     unclaimedEras,
     totalClaimed,
-    totalSupply,
     totalStaked,
-    aggregateStaked,
     currentStakingEra,
     currentBlock,
     nextEraBlock,
@@ -40,7 +40,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
 
   return (
     <div
-      className="relative overflow-x-auto w-full rounded-xl shadow flex flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4">
+      className="relative overflow-x-auto w-full rounded-xl shadow flex flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4 mb-4">
 
       <DashboardCard cardTitle="My Total Stake" iconSrc={MyStakeIcon}>
         {formatBalance(totalUserStaked.toString(), {
@@ -50,7 +50,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         }) || "0 TNKR"}
       </DashboardCard>
 
-      <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
+      <DashboardCard cardTitle="Individual Staking APY" iconSrc={StakingApyIcon}>
         {totalSupply &&
           totalSupply.toNumber() > 0 &&
           totalStaked &&
@@ -73,9 +73,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
               decimals: 12,
               withUnit: false,
               forceUnit: "-",
-            }) || "0"}
-            <br />
-            {"Total Supply"}
+            }) || "0"} Total Supply
           </>
         }
         iconSrc={AggregateStakedIcon}
@@ -84,7 +82,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         {totalStaked && totalStaked.toNumber() > 0 && aggregateStaked && aggregateStaked.toNumber() > 0 ? totalStaked.dividedBy(aggregateStaked).times(100).toFixed(2) : 0}%
       </DashboardCard>
 
-      <DashboardCard cardTitle="Annual DAO Rewards" iconSrc={AnnualRewardIcon}>
+      <DashboardCard cardTitle="Projected Annual DAO Rewards" iconSrc={AnnualRewardIcon}>
         {totalSupply && totalSupply.toNumber() > 0
           ? formatBalance(
             totalSupply
@@ -102,30 +100,30 @@ const StakingDashboard = (props: StakingDashboardProps) => {
           : '0 TNKR'}
       </DashboardCard>
 
-      <DashboardCard cardTitle="Redeemed Rewards" iconSrc={ClaimableRewardsIcon}>
-        {formatBalance(totalClaimed.toString(), {
+      {totalClaimed !== undefined && <DashboardCard cardTitle="Redeemed Rewards" iconSrc={ClaimableRewardsIcon}>
+        {totalClaimed ? formatBalance(totalClaimed.toString(), {
           decimals: 12,
           withUnit: 'TNKR',
           forceUnit: "-",
-        }) || "0"}
-      </DashboardCard>
+        }) : "0"}
+      </DashboardCard>}
 
-      <DashboardCard cardTitle="Unredeemed Eras" iconSrc={UnclaimedErasIcon}>
-        {unclaimedEras.total}
-      </DashboardCard>
+      {unclaimedEras !== undefined && <DashboardCard cardTitle="Unredeemed Eras" iconSrc={UnclaimedErasIcon}>
+        {unclaimedEras ? unclaimedEras.total : 0}
+      </DashboardCard>}
 
-      <DashboardCard cardTitle="Current Era" iconSrc={CurrentEraIcon}>
-        {currentStakingEra}
-      </DashboardCard>
+      {currentStakingEra !== undefined && <DashboardCard cardTitle="Current Era" iconSrc={CurrentEraIcon}>
+        {currentStakingEra || 0}
+      </DashboardCard>}
 
-      <DashboardCard cardTitle="% Til Next Era" iconSrc={CompletionRateIcon}>
-        {(
+      {currentBlock !== undefined && nextEraBlock !== undefined && blocksPerEra !== undefined && <DashboardCard cardTitle="% Til Next Era" iconSrc={CompletionRateIcon}>
+        {currentBlock && nextEraBlock && blocksPerEra ? (
           ((currentBlock - (nextEraBlock - blocksPerEra)) /
             (nextEraBlock - (nextEraBlock - blocksPerEra))) *
           100
-        ).toFixed(0)}
+        ).toFixed(0) : 0}
         %
-      </DashboardCard>
+      </DashboardCard>}
     </div>
   );
 };

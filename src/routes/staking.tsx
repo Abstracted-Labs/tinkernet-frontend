@@ -616,33 +616,44 @@ const Staking = () => {
   }
 
   return (
-    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8 mt-10">
+    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <h2 className="lg:text-xl font-bold my-3">
+          <span>Staking</span>
+        </h2>
+        {/* {selectedAccount && <div className="flex flex-col md:flex-row gap-4 items-start justify-between float-right">
+          <Button
+            onClick={handleUnbondTokens}
+            disabled={!hasUnbondedTokens}
+            variant="secondary">
+            Withdraw Unbonded TNKR
+          </Button>
+          <Button
+            onClick={handleClaimAll}
+            disabled={unclaimedEras.total === 0 || isWaiting}
+            variant="primary">
+            Redeem Staking Rewards
+          </Button>
+        </div>} */}
+      </div>
       {selectedAccount &&
         currentStakingEra &&
         // totalUserStaked &&
         unclaimedEras ? (
         <>
-          <div className="flex flex-col flex-wrap items-start justify-between md:flex-row">
-            <h2 className="lg:text-xl font-bold my-3">
-              <span>Staking</span>
-            </h2>
-            <div className="flex gap-4 flex-wrap md:flex-nowrap w-full md:w-auto justify-between z-10">
-              <Button
-                onClick={handleUnbondTokens}
-                disabled={!hasUnbondedTokens}
-                variant="secondary">
-                Withdraw Unbonded TNKR
-              </Button>
-              <Button
-                onClick={handleClaimAll}
-                disabled={unclaimedEras.total === 0 || isWaiting}
-                variant="primary">
-                Redeem Staking Rewards
-              </Button>
-            </div>
-          </div>
-
           <StakingDashboard
+            aggregateStaked={aggregateStaked || new BigNumber(0)}
+            totalUserStaked={totalUserStaked || new BigNumber(0)}
+            totalSupply={totalSupply || new BigNumber(0)}
+            totalStaked={totalStaked || new BigNumber(0)}
+            totalClaimed={undefined}
+            currentStakingEra={undefined}
+            currentBlock={undefined}
+            nextEraBlock={undefined}
+            blocksPerEra={undefined}
+            unclaimedEras={undefined}
+          />
+          {/* <StakingDashboard
             totalUserStaked={totalUserStaked || new BigNumber(0)}
             totalClaimed={totalClaimed || new BigNumber(0)}
             totalSupply={totalSupply || new BigNumber(0)}
@@ -653,8 +664,7 @@ const Staking = () => {
             nextEraBlock={nextEraBlock}
             blocksPerEra={blocksPerEra}
             unclaimedEras={unclaimedEras}
-          />
-
+          /> */}
 
           {/* <div>
             {selectedAccount ? (
@@ -691,7 +701,14 @@ const Staking = () => {
             }) : <LoadingSpinner />}
           </div>
         </>
-      ) : null}
+      ) : <div className="text-center">
+        <h5 className="text-2xl font-bold text-white">
+          Wallet not connected
+        </h5>
+        <p className="mt-8 text-lg text-white">
+          You can connect your wallet to access your staking information.
+        </p>
+      </div>}
     </div>
   );
 };
