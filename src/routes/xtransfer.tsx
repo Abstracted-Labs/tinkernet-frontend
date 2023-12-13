@@ -19,6 +19,8 @@ import { UnsubscribePromise } from "@polkadot/api/types";
 import { FrameSystemAccountInfo } from "@polkadot/types/lookup";
 import Input from "../components/Input";
 import Button from "../components/Button";
+import { ChainLogo, getChainInfo } from "../utils/getChainInfo";
+import Dropdown from "../components/Dropdown";
 
 const RPC_PROVIDER_BASILISK = "wss://basilisk-rpc.dwellir.com";
 
@@ -40,6 +42,7 @@ const currency = {
 type Currency = (typeof currency)[keyof typeof currency];
 
 const XTransfer = () => {
+  const chainInfoLedger = getChainInfo();
   const { createApi } = useRPC();
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
@@ -465,14 +468,14 @@ const XTransfer = () => {
               </div>
             </div>
             <div className="p-4">
-              <div className="grid grid-cols-5 items-center justify-between">
-                <select
-                  id="destination"
-                  name="destination"
-                  className="col-span-2 block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
-                  value={pair.from}
-                  onChange={(e) => {
-                    const from = e.target.value as Currency;
+              <div className="flex flex-row items-center gap-0">
+                <Dropdown
+                  defaultOption="Select Chain"
+                  initialValue={{ name: pair.from }}
+                  currentValue={{ name: pair.from }}
+                  onSelect={(opt) => {
+                    if (!opt) return;
+                    const from = opt.name as Currency;
 
                     setPair((pair) => ({
                       from: from,
@@ -480,24 +483,28 @@ const XTransfer = () => {
                     }));
                   }}
                 >
-                  <option value={currency.BASILISK}>Basilisk</option>
-                  <option value={currency.TINKERNET}>Tinkernet</option>
-                </select>
+                  {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
+                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start">
+                      {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
+                      <span>{chain.name}</span>
+                    </span>
+                  )) : []}
+                </Dropdown>
 
-                <div className="flex justify-center">
+                <div className="mx-3">
                   <ArrowRightIcon
                     className="h-5 w-5 cursor-pointer text-white"
                     onClick={handlePairSwap}
                   />
                 </div>
 
-                <select
-                  id="destination"
-                  name="destination"
-                  className="col-span-2 block w-full rounded-md border border-gray-300 bg-transparent p-4 text-white focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 sm:text-sm"
-                  value={pair.to}
-                  onChange={(e) => {
-                    const to = e.target.value as Currency;
+                <Dropdown
+                  defaultOption="Select Chain"
+                  initialValue={{ name: pair.to }}
+                  currentValue={{ name: pair.to }}
+                  onSelect={(opt) => {
+                    if (!opt) return;
+                    const to = opt.name as Currency;
 
                     setPair((pair) => ({
                       from: to === pair.from ? pair.to : pair.from,
@@ -505,13 +512,13 @@ const XTransfer = () => {
                     }));
                   }}
                 >
-                  {pair.from === currency.BASILISK ? (
-                    <option value={currency.TINKERNET}>Tinkernet</option>
-                  ) : null}
-                  {pair.from === currency.TINKERNET ? (
-                    <option value={currency.BASILISK}>Basilisk</option>
-                  ) : null}
-                </select>
+                  {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
+                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start">
+                      {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
+                      <span>{chain.name}</span>
+                    </span>
+                  )) : []}
+                </Dropdown>
               </div>
 
               {pair.from === currency.TINKERNET &&
@@ -521,7 +528,7 @@ const XTransfer = () => {
                     <div>
                       <label
                         htmlFor="amount"
-                        className="block text-xxs font-medium text-white mb-2"
+                        className="block text-xxs font-medium text-white mb-1"
                       >
                         TNKR Amount
                       </label>
@@ -544,7 +551,7 @@ const XTransfer = () => {
                     <div className="flex-grow">
                       <label
                         htmlFor="destination"
-                        className="block text-xxs font-medium text-white mb-2 flex flex-row items-end justify-between"
+                        className="block text-xxs font-medium text-white mb-1 flex flex-row items-end justify-between"
                       >
                         <span>Destination</span>
                       </label>

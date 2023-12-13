@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { shallow } from "zustand/shallow";
 
 import logoFull from "../../assets/logo-full.svg";
-import logoIcon from "../../assets/logo-icon.svg";
+import logoIcon from "../../assets/tinkernet-logo-icon.svg";
 import useApi from "../../hooks/useApi";
 
 import useConnect from "../../hooks/useConnect";
