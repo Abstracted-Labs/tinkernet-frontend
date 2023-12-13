@@ -12,9 +12,9 @@ import CompletionRateIcon from '../assets/completion-rate-icon.svg';
 import AggregateStakedIcon from '../assets/aggregate-staked-icon.svg';
 
 interface StakingDashboardProps {
-  aggregateStaked: BigNumber; // Required for total TNKR supply staked
-  totalUserStaked: BigNumber; // Required for my total stake
-  totalSupply: BigNumber; // Required for projected annual DAO rewards
+  aggregateStaked: BigNumber | undefined; // Required for total TNKR supply staked
+  totalUserStaked: BigNumber | undefined; // Required for my total stake
+  totalSupply: BigNumber | undefined; // Required for projected annual DAO rewards
   totalStaked: BigNumber | undefined; // Required for my total stake
   unclaimedEras: UnclaimedErasType | undefined;
   totalClaimed: BigNumber | undefined;
@@ -42,15 +42,15 @@ const StakingDashboard = (props: StakingDashboardProps) => {
     <div
       className="relative overflow-x-auto w-full rounded-xl shadow flex flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4 mb-4">
 
-      <DashboardCard cardTitle="My Total Stake" iconSrc={MyStakeIcon}>
+      {totalUserStaked !== undefined && <DashboardCard cardTitle="My Total Stake" iconSrc={MyStakeIcon}>
         {formatBalance(totalUserStaked.toString(), {
           decimals: 12,
           withUnit: 'TNKR',
           forceUnit: "-",
         }) || "0 TNKR"}
-      </DashboardCard>
+      </DashboardCard>}
 
-      <DashboardCard cardTitle="Individual Staking APY" iconSrc={StakingApyIcon}>
+      {totalSupply !== undefined && totalStaked !== undefined && <DashboardCard cardTitle="Individual Staking APY" iconSrc={StakingApyIcon}>
         {totalSupply &&
           totalSupply.toNumber() > 0 &&
           totalStaked &&
@@ -62,9 +62,9 @@ const StakingDashboard = (props: StakingDashboardProps) => {
             .toString()
           : 0}
         %
-      </DashboardCard>
+      </DashboardCard>}
 
-      <DashboardCard
+      {aggregateStaked !== undefined && totalStaked !== undefined && <DashboardCard
         cardTitle={
           <>
             {"Staked TNKR of"}
@@ -80,9 +80,9 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         leading="leading-tight"
       >
         {totalStaked && totalStaked.toNumber() > 0 && aggregateStaked && aggregateStaked.toNumber() > 0 ? totalStaked.dividedBy(aggregateStaked).times(100).toFixed(2) : 0}%
-      </DashboardCard>
+      </DashboardCard>}
 
-      <DashboardCard cardTitle="Projected Annual DAO Rewards" iconSrc={AnnualRewardIcon}>
+      {totalSupply !== undefined && <DashboardCard cardTitle="Projected Annual DAO Rewards" iconSrc={AnnualRewardIcon}>
         {totalSupply && totalSupply.toNumber() > 0
           ? formatBalance(
             totalSupply
@@ -98,7 +98,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
             }
           )
           : '0 TNKR'}
-      </DashboardCard>
+      </DashboardCard>}
 
       {totalClaimed !== undefined && <DashboardCard cardTitle="Redeemed Rewards" iconSrc={ClaimableRewardsIcon}>
         {totalClaimed ? formatBalance(totalClaimed.toString(), {
