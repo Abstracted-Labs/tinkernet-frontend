@@ -10,6 +10,7 @@ import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import Button from "../components/Button";
 
 const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
   const { setOpenModal } = useModal(
@@ -129,8 +130,8 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
         <span className="block">Close</span>
       </button>
       <Dialog.Panel>
-        <div className="fixed left-1/2 top-1/2 z-50 mx-auto block max-h-[calc(100%-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-gray-50 bg-neutral-900 p-6 sm:w-full">
-          <h2 className="text-xl font-bold text-white">Withdraw Unbonded TNKR</h2>
+        <div className="fixed left-1/2 top-1/2 z-50 mx-auto block w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-gray-50 bg-neutral-900 p-4 sm:w-full">
+          <h2 className="text-md font-bold text-white w-[calc(100%-2rem)] max-w-lg truncate">Claim Unbonded TNKR</h2>
 
           <div className="mt-4 flex flex-col justify-between gap-4">
             {unbondingInfo.map(({ amount, unlockIn }) => {
@@ -150,13 +151,15 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
               );
             })}
 
-            <button
+            <Button
+              mini={true}
+              variant="primary"
               onClick={handleUnbond}
               className="inline-flex w-full justify-center rounded-md border border-transparent bg-amber-400 py-2 px-4 text-sm font-bold text-neutral-900 shadow-sm transition-colors hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
               disabled={disableUnbonding}
             >
-              {disableUnbonding ? 'Please come back later!' : 'Withdraw unbonded TNKR'}
-            </button>
+              {disableUnbonding ? 'Please come back later!' : 'Claim unbonded TNKR'}
+            </Button>
           </div>
         </div>
       </Dialog.Panel>

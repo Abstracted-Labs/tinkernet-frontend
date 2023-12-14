@@ -555,7 +555,7 @@ const Overview = () => {
         {selectedAccount && <div className="flex flex-row w-full md:w-auto gap-2 justify-between mb-4 z-1">
           <Button
             onClick={handleUnbondTokens}
-            disabled={!hasUnbondedTokens}
+            // disabled={!hasUnbondedTokens}
             variant="secondary">
             Claim Unbonded TNKR
           </Button>
