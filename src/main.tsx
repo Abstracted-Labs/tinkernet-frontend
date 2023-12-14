@@ -20,6 +20,7 @@ import { Toaster } from "react-hot-toast";
 import ApiProvider from "./providers/api";
 import Layout from "./components/Layout";
 import Modals from "./modals";
+import Overview from "./routes/overview";
 
 const wsClient = createWSClient({
   url: "wss://squid.subsquid.io/ocif-squid/graphql",
@@ -54,8 +55,11 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <Modals />
 
           <Routes>
-            <Route index element={<Navigate to="staking" replace={true} />} />
+            <Route index element={<Navigate to="overview" replace={true} />} />
+
             <Route path="/" element={<Layout />}>
+              <Route path="overview" element={<Overview />} />
+
               <Route path="claim" element={<Claim />} />
 
               <Route path="xtransfer" element={<XTransfer />} />

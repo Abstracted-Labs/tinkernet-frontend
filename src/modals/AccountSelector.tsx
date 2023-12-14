@@ -7,6 +7,7 @@ import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import Identicon from '@polkadot/react-identicon';
 import { stringShorten } from "@polkadot/util";
 import { capitalizeFirst } from "../utils/capitalizeFirst";
+import { getWalletIcon } from "../utils/getWalletIcon";
 
 const AccountSelector = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
@@ -43,7 +44,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
 
   return (
     <Dialog open={isOpen} onClose={closeModal}>
-      <Dialog.Overlay className="fixed inset-0 z-40 h-screen w-full bg-neutral-900/40 backdrop-blur-md" />
+      <Dialog.Overlay className="fixed inset-0 z-50 h-screen w-full bg-neutral-900/40 backdrop-blur-md" />
       <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">
         <XMarkIcon className="h-5 w-5" />
         <span className="block">Close</span>
@@ -53,7 +54,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
           <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] md:w-[530px] h-[472px] bg-tinkerGrey rounded-xl space-y-4 p-8">
             <h2 className="text-md font-bold text-white fixed bg-tinkerGrey w-[calc(100%-2rem)] max-w-lg pb-4">Select your Wallet</h2>
             <ul className="w-full h-80 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto mb-10 pt-8 pr-4">
-              {accounts.map((account, index) => {
+              {accounts.filter(account => getWalletIcon(account.meta?.source) !== undefined).map((account, index) => {
                 return (
                   <li
                     role="menuitem"
@@ -73,8 +74,11 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
                       <Identicon value={account.address} size={47} theme="substrate" />
                     </div>
                     <div className="flex flex-col gap-0">
-                      <div className="flex flex-row gap-2 items-center">
-                        <span className="text-xxs text-ellipsis">{capitalizeFirst(account.meta?.source)}</span>
+                      <div className="flex flex-row gap-1 items-center">
+                        {typeof getWalletIcon(account.meta?.source) === 'undefined' ?
+                          <span className="text-xxs text-ellipsis">{account.meta?.source}</span> :
+                          <img src={getWalletIcon(account.meta?.source)} alt={account.meta?.source} className="w-4 h-4 mr-1" />
+                        }
                         <span className="text-md font-normal text-ellipsis">{capitalizeFirst(account.meta?.name)}</span>
                       </div>
                       <span className="block overflow-hidden text-ellipsis text-xs md:text-sm  text-gray-500">

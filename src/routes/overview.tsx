@@ -14,108 +14,12 @@ import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { StakesInfo } from "./claim";
 import ProjectCard from "../components/ProjectCard";
-import MetricDashboard from "../components/MetricDashboard";
+import StakingDashboard from "../components/MetricDashboard";
 import Button from "../components/Button";
 import { loadProjectCores } from '../utils/stakingServices';
+import { StakingCore, CoreEraStakedInfoType, UserStakedInfoType, ChainPropertiesType, TotalUserStakedData, StakedType, BalanceType, LockedType, CoreEraStakeType, LedgerType, TotalRewardsClaimedSubscription, TotalRewardsClaimedQuery } from "./staking";
 
-export const TotalRewardsClaimedQuery = `
-  query totalRewardsClaimed($accountId: String!) {
-    stakers(where: {account_eq: $accountId}) {
-      latestClaimBlock
-      totalRewards
-    }
-  }
-`;
-
-export const TotalRewardsClaimedSubscription = `
-  subscription totalRewardsClaimed($accountId: String!) {
-    stakers(where: {account_eq: $accountId}) {
-      latestClaimBlock
-      totalRewards
-    }
-  }
-`;
-
-export type StakingCore = {
-  key: number;
-  account: string;
-  metadata: {
-    name: string;
-    description: string;
-    image: string;
-  };
-};
-
-export type TotalUserStakedData = { [key: number]: BigNumber | undefined; };
-
-export type BalanceType = {
-  nonce: string;
-  consumers: string;
-  providers: string;
-  sufficients: string;
-  data: {
-    free: string;
-    reserved: string;
-    frozen: string;
-  };
-};
-
-export type CoreEraStakedInfoType = {
-  coreId: number;
-  account: string;
-  total: string;
-  numberOfStakers: number;
-  rewardClaimed: boolean;
-  active: boolean;
-};
-
-export type CoreEraStakeType = {
-  total: string;
-  numberOfStakers: number;
-  rewardClaimed: boolean;
-  active: boolean;
-};
-
-export type UnclaimedErasType = {
-  cores: { coreId: number; earliestEra: number; }[];
-  total: number;
-};
-
-export type UserStakedInfoType = {
-  coreId: number;
-  era: number;
-  staked: BigNumber;
-};
-
-export type ChainPropertiesType = {
-  maxStakersPerCore: number;
-  inflationErasPerYear: number;
-};
-
-export type LedgerType = {
-  locked: number;
-  unbondingInfo: {
-    unlockingChunks: {
-      amount: number;
-      unlockEra: number;
-    }[];
-  };
-};
-
-export type LockedType = { locked: string; };
-
-export type StakedType = { staked: string; };
-
-export type CorePrimitiveType = {
-  account: string;
-  metadata: {
-    name: string;
-    description: string;
-    image: string;
-  };
-};
-
-const Staking = () => {
+const Overview = () => {
   const api = useApi();
   const descriptionRef = useRef<HTMLDivElement | null>(null);
   const setOpenModal = useModal((state) => state.setOpenModal);
@@ -619,40 +523,41 @@ const Staking = () => {
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <h2 className="lg:text-xl font-bold my-3">
-          <span>Staking</span>
+          <span>Overview</span>
         </h2>
-        {/* {selectedAccount && <div className="flex flex-col md:flex-row gap-4 items-start justify-between float-right">
+        {selectedAccount && <div className="flex flex-row w-full md:w-auto gap-2 justify-between mb-4 z-1">
           <Button
             onClick={handleUnbondTokens}
             disabled={!hasUnbondedTokens}
             variant="secondary">
-            Withdraw Unbonded TNKR
+            Withdraw TNKR
           </Button>
           <Button
             onClick={handleClaimAll}
             disabled={unclaimedEras.total === 0 || isWaiting}
             variant="primary">
-            Redeem Staking Rewards
+            Redeem Rewards
           </Button>
-        </div>} */}
+        </div>}
       </div>
       {selectedAccount &&
         currentStakingEra &&
         // totalUserStaked &&
         unclaimedEras ? (
         <>
-          <MetricDashboard
+          <StakingDashboard
             aggregateStaked={aggregateStaked || new BigNumber(0)}
             totalUserStaked={totalUserStaked || new BigNumber(0)}
-            totalSupply={totalSupply || new BigNumber(0)}
-            totalStaked={totalStaked || new BigNumber(0)}
-            totalClaimed={undefined}
-            currentStakingEra={undefined}
-            currentBlock={undefined}
-            nextEraBlock={undefined}
-            blocksPerEra={undefined}
-            unclaimedEras={undefined}
+            totalSupply={undefined}
+            totalStaked={undefined}
+            totalClaimed={totalClaimed || new BigNumber(0)}
+            currentStakingEra={currentStakingEra || 0}
+            currentBlock={currentBlock}
+            nextEraBlock={nextEraBlock}
+            blocksPerEra={blocksPerEra}
+            unclaimedEras={unclaimedEras}
           />
+
           {/* <div>
             {selectedAccount ? (
               <button
@@ -665,7 +570,7 @@ const Staking = () => {
             ) : null}
           </div> */}
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {isDataLoaded ? stakingCores.map((core: StakingCore) => {
               const coreInfo = coreInfoData[core.key];
               const userStaked = totalUserStakedData[core.key];
@@ -686,7 +591,7 @@ const Staking = () => {
                 </div>
               );
             }) : <LoadingSpinner />}
-          </div>
+          </div> */}
         </>
       ) : <div className="text-center">
         <h5 className="text-2xl font-bold text-white">
@@ -700,4 +605,4 @@ const Staking = () => {
   );
 };
 
-export default Staking;
+export default Overview;

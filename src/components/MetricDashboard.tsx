@@ -11,7 +11,7 @@ import CurrentEraIcon from '../assets/current-era-icon.svg';
 import CompletionRateIcon from '../assets/completion-rate-icon.svg';
 import AggregateStakedIcon from '../assets/aggregate-staked-icon.svg';
 
-interface StakingDashboardProps {
+interface MetricDashboardProps {
   aggregateStaked: BigNumber | undefined; // Required for total TNKR supply staked
   totalUserStaked: BigNumber | undefined; // Required for my total stake
   totalSupply: BigNumber | undefined; // Required for projected annual DAO rewards
@@ -24,7 +24,7 @@ interface StakingDashboardProps {
   blocksPerEra: number | undefined;
 }
 
-const StakingDashboard = (props: StakingDashboardProps) => {
+const MetricDashboard = (props: MetricDashboardProps) => {
   const {
     aggregateStaked,
     totalUserStaked,
@@ -42,7 +42,7 @@ const StakingDashboard = (props: StakingDashboardProps) => {
     <div
       className="relative overflow-x-auto w-full rounded-xl shadow flex flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4 mb-4">
 
-      {totalUserStaked !== undefined && <DashboardCard cardTitle="My Total Stake" iconSrc={MyStakeIcon}>
+      {totalUserStaked !== undefined && <DashboardCard cardTitle="My Staked TNKR" iconSrc={MyStakeIcon}>
         {formatBalance(totalUserStaked.toString(), {
           decimals: 12,
           withUnit: 'TNKR',
@@ -64,18 +64,20 @@ const StakingDashboard = (props: StakingDashboardProps) => {
         %
       </DashboardCard>}
 
+      {aggregateStaked !== undefined && <DashboardCard
+        cardTitle="Total TNKR Supply"
+        iconSrc={AggregateStakedIcon}
+        leading="leading-tight"
+      >
+        {formatBalance(aggregateStaked.toString(), {
+          decimals: 12,
+          withUnit: false,
+          forceUnit: "-",
+        }) || "0"}
+      </DashboardCard>}
+
       {aggregateStaked !== undefined && totalStaked !== undefined && <DashboardCard
-        cardTitle={
-          <>
-            {"Staked TNKR of"}
-            <br />
-            {formatBalance(aggregateStaked.toString(), {
-              decimals: 12,
-              withUnit: false,
-              forceUnit: "-",
-            }) || "0"} Total Supply
-          </>
-        }
+        cardTitle="Staked TNKR of Total Supply"
         iconSrc={AggregateStakedIcon}
         leading="leading-tight"
       >
@@ -128,4 +130,4 @@ const StakingDashboard = (props: StakingDashboardProps) => {
   );
 };
 
-export default StakingDashboard;
+export default MetricDashboard;
