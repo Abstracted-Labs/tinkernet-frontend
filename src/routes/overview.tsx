@@ -12,12 +12,13 @@ import { useQuery, useSubscription } from "urql";
 import { Codec } from "@polkadot/types/types";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import { UnsubscribePromise } from "@polkadot/api/types";
-import { StakesInfo } from "./claim";
+import { StakesInfo, VestingData, VestingSchedule } from "./claim";
 import ProjectCard from "../components/ProjectCard";
-import StakingDashboard from "../components/MetricDashboard";
+import MetricDashboard from "../components/MetricDashboard";
 import Button from "../components/Button";
 import { loadProjectCores } from '../utils/stakingServices';
-import { StakingCore, CoreEraStakedInfoType, UserStakedInfoType, ChainPropertiesType, TotalUserStakedData, StakedType, BalanceType, LockedType, CoreEraStakeType, LedgerType, TotalRewardsClaimedSubscription, TotalRewardsClaimedQuery } from "./staking";
+import { StakingCore, CoreEraStakedInfoType, UserStakedInfoType, ChainPropertiesType, TotalUserStakedData, StakedType, BalanceType, LockedType, CoreEraStakeType, LedgerType, TotalRewardsClaimedSubscription, TotalRewardsClaimedQuery, RewardQueryType } from "./staking";
+import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 
 const Overview = () => {
   const api = useApi();
@@ -42,6 +43,7 @@ const Overview = () => {
   const [isLoading, setLoading] = useState(true);
   const [isWaiting, setWaiting] = useState(false);
   const [isDataLoaded, setDataLoaded] = useState(false);
+  const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
   const [chainProperties, setChainProperties] = useState<ChainPropertiesType>();
   const [currentBlock, setCurrentBlock] = useState<number>(0);
@@ -49,6 +51,7 @@ const Overview = () => {
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
   const [coreInfoData, setCoreInfoData] = useState<{ [key: number]: CoreEraStakedInfoType | undefined; }>({});
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
+  const [vestingSummary, setVestingSummary] = useState<VestingData | null>(null);
 
   const [rewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -265,19 +268,37 @@ const Overview = () => {
     setAvailableBalance(currentBalance);
   };
 
+  const loadVestingBalance = async (selectedAccount: InjectedAccountWithMeta | null) => {
+    if (!selectedAccount) return;
+    try {
+      const results = await fetchSystemData(selectedAccount, api);
+      if (!results) {
+        console.error("Failed to fetch data");
+        return;
+      }
+      const vestingSchedules = results[1] as unknown as VestingSchedule[];
+      const vestingData = calculateVestingData(results, vestingSchedules);
+
+      setVestingSummary(vestingData);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const loadDashboardData = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       toast.loading("Loading staking cores...");
 
       if (selectedAccount) {
         await loadAccountInfo(selectedAccount);
+        await loadCores();
+        await loadStakingConstants();
+        await loadCurrentEraAndStake();
+        await loadTotalSupply();
+        await loadAggregateStaked();
+        await loadCoreEraStakeInfo(stakingCores);
+        await loadVestingBalance(selectedAccount);
       }
-      await loadCores();
-      await loadStakingConstants();
-      await loadCurrentEraAndStake();
-      await loadTotalSupply();
-      await loadAggregateStaked();
-      await loadCoreEraStakeInfo(stakingCores);
 
       toast.dismiss();
     } catch (error) {
@@ -423,15 +444,17 @@ const Overview = () => {
     },
     (
       _: unknown,
-      result: { stakers: { latestClaimBlock: number; totalRewards: string; }[]; }
+      result: { stakers: RewardQueryType[]; }
     ) => {
       if (result.stakers.length === 0) return;
 
       if (!result.stakers[0].totalRewards) return;
 
       const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
-
       setTotalClaimed(totalClaimed);
+
+      const totalUnclaimed = new BigNumber(result.stakers[0].totalUnclaimed);
+      setTotalUnclaimed(totalUnclaimed);
     }
   );
 
@@ -507,8 +530,12 @@ const Overview = () => {
     const rewardsClaimed = new BigNumber(
       rewardsClaimedQuery.data.stakers[0].totalRewards
     );
-
     setTotalClaimed(rewardsClaimed);
+
+    const totalUnclaimed = new BigNumber(
+      rewardsClaimedQuery.data.stakers[0].totalUnclaimed
+    );
+    setTotalUnclaimed(totalUnclaimed);
   }, [selectedAccount, rewardsClaimedQuery]);
 
   if (isLoading) {
@@ -530,26 +557,28 @@ const Overview = () => {
             onClick={handleUnbondTokens}
             disabled={!hasUnbondedTokens}
             variant="secondary">
-            Withdraw TNKR
+            Claim Unbonded TNKR
           </Button>
           <Button
             onClick={handleClaimAll}
             disabled={unclaimedEras.total === 0 || isWaiting}
             variant="primary">
-            Redeem Rewards
+            Redeem Era Rewards
           </Button>
         </div>}
       </div>
       {selectedAccount &&
         currentStakingEra &&
-        // totalUserStaked &&
         unclaimedEras ? (
         <>
-          <StakingDashboard
+          <MetricDashboard
+            vestingBalance={vestingSummary?.vestedRemaining}
+            availableBalance={availableBalance || new BigNumber(0)}
             aggregateStaked={aggregateStaked || new BigNumber(0)}
             totalUserStaked={totalUserStaked || new BigNumber(0)}
             totalSupply={undefined}
             totalStaked={undefined}
+            totalUnclaimed={totalUnclaimed || new BigNumber(0)}
             totalClaimed={totalClaimed || new BigNumber(0)}
             currentStakingEra={currentStakingEra || 0}
             currentBlock={currentBlock}

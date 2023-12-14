@@ -61,16 +61,16 @@ const Header = () => {
 
           <div className="flex items-center gap-4 text-xs lg:text-md">
             <Link to="/overview">
-              <span className="truncate text-white">Overview</span>
+              <span className="truncate text-white">Account Overview</span>
             </Link>
             <Link to="/staking">
-              <span className="truncate text-white">Staking</span>
+              <span className="truncate text-white">DAO Staking</span>
             </Link>
             <Link to="/claim">
-              <span className="truncate text-white">Claim</span>
+              <span className="truncate text-white">Claim Vesting</span>
             </Link>
-            <Link to="/xtransfer">
-              <span className="truncate text-white">X-Transfer</span>
+            <Link to="/transfer">
+              <span className="truncate text-white">Asset Transfers</span>
             </Link>
           </div>
         </div>

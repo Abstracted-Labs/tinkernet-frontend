@@ -11,7 +11,7 @@ import {
 import { createClient as createWSClient } from "graphql-ws";
 
 import Claim from "./routes/claim";
-import XTransfer from "./routes/xtransfer";
+import Transfer from "./routes/xtransfer";
 import Staking from "./routes/staking";
 import NotFound from "./routes/not-found";
 
@@ -23,11 +23,11 @@ import Modals from "./modals";
 import Overview from "./routes/overview";
 
 const wsClient = createWSClient({
-  url: "wss://squid.subsquid.io/ocif-squid/graphql",
+  url: "wss://squid.subsquid.io/ocif-squid/v/v3/graphql",
 });
 
 const client = new Client({
-  url: "https://squid.subsquid.io/ocif-squid/graphql",
+  url: "https://squid.subsquid.io/ocif-squid/v/v3/graphql",
   exchanges: [
     cacheExchange,
     fetchExchange,
@@ -62,7 +62,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 
               <Route path="claim" element={<Claim />} />
 
-              <Route path="xtransfer" element={<XTransfer />} />
+              <Route path="transfer" element={<Transfer />} />
 
               <Route path="staking" element={<Staking />} />
 

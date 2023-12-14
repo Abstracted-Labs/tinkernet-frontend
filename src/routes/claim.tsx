@@ -67,7 +67,7 @@ export type StakeInfo = { era: string; staked: string; }[];
 
 export type StakesInfo = { stakes: StakeInfo; };
 
-const Home = () => {
+const Claim = () => {
   const totalInitialVestment = useRef("0");
   const { selectedAccount } = useAccount(
     (state) => ({ selectedAccount: state.selectedAccount }),
@@ -323,4 +323,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Claim;

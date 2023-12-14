@@ -18,11 +18,14 @@ import MetricDashboard from "../components/MetricDashboard";
 import Button from "../components/Button";
 import { loadProjectCores } from '../utils/stakingServices';
 
+export type RewardQueryType = { latestClaimBlock: number; totalRewards: string; totalUnclaimed: string; };
+
 export const TotalRewardsClaimedQuery = `
   query totalRewardsClaimed($accountId: String!) {
     stakers(where: {account_eq: $accountId}) {
       latestClaimBlock
       totalRewards
+      totalUnclaimed
     }
   }
 `;
@@ -32,6 +35,7 @@ export const TotalRewardsClaimedSubscription = `
     stakers(where: {account_eq: $accountId}) {
       latestClaimBlock
       totalRewards
+      totalUnclaimed
     }
   }
 `;
@@ -519,14 +523,13 @@ const Staking = () => {
     },
     (
       _: unknown,
-      result: { stakers: { latestClaimBlock: number; totalRewards: string; }[]; }
+      result: { stakers: RewardQueryType[]; }
     ) => {
       if (result.stakers.length === 0) return;
 
       if (!result.stakers[0].totalRewards) return;
 
       const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
-
       setTotalClaimed(totalClaimed);
     }
   );
@@ -621,31 +624,17 @@ const Staking = () => {
         <h2 className="lg:text-xl font-bold my-3">
           <span>Staking</span>
         </h2>
-        {/* {selectedAccount && <div className="flex flex-col md:flex-row gap-4 items-start justify-between float-right">
-          <Button
-            onClick={handleUnbondTokens}
-            disabled={!hasUnbondedTokens}
-            variant="secondary">
-            Withdraw Unbonded TNKR
-          </Button>
-          <Button
-            onClick={handleClaimAll}
-            disabled={unclaimedEras.total === 0 || isWaiting}
-            variant="primary">
-            Redeem Staking Rewards
-          </Button>
-        </div>} */}
       </div>
-      {selectedAccount &&
-        currentStakingEra &&
-        // totalUserStaked &&
-        unclaimedEras ? (
+      {selectedAccount ? (
         <>
           <MetricDashboard
+            vestingBalance={undefined}
+            availableBalance={undefined}
             aggregateStaked={aggregateStaked || new BigNumber(0)}
             totalUserStaked={totalUserStaked || new BigNumber(0)}
             totalSupply={totalSupply || new BigNumber(0)}
             totalStaked={totalStaked || new BigNumber(0)}
+            totalUnclaimed={undefined}
             totalClaimed={undefined}
             currentStakingEra={undefined}
             currentBlock={undefined}

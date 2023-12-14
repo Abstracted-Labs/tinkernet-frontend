@@ -41,7 +41,7 @@ const currency = {
 
 type Currency = (typeof currency)[keyof typeof currency];
 
-const XTransfer = () => {
+const Transfer = () => {
   const chainInfoLedger = getChainInfo();
   const { createApi } = useRPC();
   const { selectedAccount } = useAccount(
@@ -672,4 +672,4 @@ const XTransfer = () => {
   );
 };
 
-export default XTransfer;
+export default Transfer;
