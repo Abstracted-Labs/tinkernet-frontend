@@ -6,6 +6,7 @@ const modalName = {
   REGISTER_PROJECT: "REGISTER_PROJECT",
   UNBOND_TOKENS: "UNBOND_TOKENS",
   READ_MORE: "READ_MORE",
+  MEMBERS: "MEMBERS",
 } as const;
 
 type ModalName = (typeof modalName)[keyof typeof modalName];

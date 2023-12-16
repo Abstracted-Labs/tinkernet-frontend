@@ -9,14 +9,15 @@ import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 import { useQuery, useSubscription } from "urql";
-import { Codec } from "@polkadot/types/types";
+import { AnyJson, Codec } from "@polkadot/types/types";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { StakesInfo } from "./claim";
 import ProjectCard from "../components/ProjectCard";
 import MetricDashboard from "../components/MetricDashboard";
 import Button from "../components/Button";
-import { loadProjectCores } from '../utils/stakingServices';
+import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
+import { StakedDaoType } from "./overview";
 
 export type RewardQueryType = { latestClaimBlock: number; totalRewards: string; totalUnclaimed: string; };
 
@@ -119,6 +120,18 @@ export type CorePrimitiveType = {
   };
 };
 
+export function getTotalUserStaked(userStakedInfo: UserStakedInfoType[], core: StakingCore) {
+  return !!userStakedInfo && userStakedInfo.find(
+    (info) => info.coreId === core.key
+  )?.staked;
+}
+
+export function getCoreInfo(coreEraStakeInfo: CoreEraStakedInfoType[], core: StakingCore) {
+  return !!coreEraStakeInfo && coreEraStakeInfo.find(
+    (info) => info.account === core.account
+  );
+}
+
 const Staking = () => {
   const api = useApi();
   const descriptionRef = useRef<HTMLDivElement | null>(null);
@@ -149,6 +162,7 @@ const Staking = () => {
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
   const [coreInfoData, setCoreInfoData] = useState<{ [key: number]: CoreEraStakedInfoType | undefined; }>({});
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
+  const [stakedDaos, setStakedDaos] = useState<StakedDaoType[]>([]);
 
   const [rewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -255,20 +269,24 @@ const Staking = () => {
             const unclaimedEarliest = info.stakes.reduce((p, v) => p.era < v.era ? p : v).era;
             if (parseInt(unclaimedEarliest) < currentStakingEra) {
               const unclaimed = unclaimedEras;
-              const cores = unclaimed.cores.filter((value) => {
-                return value.coreId === stakingCore.key;
-              });
+              const core = unclaimed.cores.find(value => value.coreId === stakingCore.key);
 
-              cores.push({
-                coreId: stakingCore.key,
-                earliestEra: parseInt(unclaimedEarliest),
-              });
+              if (core) {
+                // Update the earliestEra of the existing core
+                core.earliestEra = parseInt(unclaimedEarliest);
+              } else {
+                // Add a new core
+                unclaimed.cores.push({
+                  coreId: stakingCore.key,
+                  earliestEra: parseInt(unclaimedEarliest),
+                });
+              }
 
               let total = unclaimed.total;
               total = currentStakingEra - parseInt(unclaimedEarliest);
 
               setUnclaimedEras({
-                cores,
+                cores: unclaimed.cores,
                 total,
               });
             } else {
@@ -363,6 +381,12 @@ const Staking = () => {
     const currentBalance = new BigNumber(balance.data.free).minus(new BigNumber(locked.locked));
 
     setAvailableBalance(currentBalance);
+  };
+
+  const loadDaos = async () => {
+    if (!selectedAccount) return;
+    const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, totalUserStakedData, api);
+    setStakedDaos(daos);
   };
 
   const loadDashboardData = async (selectedAccount: InjectedAccountWithMeta | null) => {
@@ -499,17 +523,12 @@ const Staking = () => {
     });
   };
 
-  function getTotalUserStaked(userStakedInfo: UserStakedInfoType[], core: StakingCore) {
-    return !!userStakedInfo && userStakedInfo.find(
-      (info) => info.coreId === core.key
-    )?.staked;
-  }
-
-  function getCoreInfo(coreEraStakeInfo: CoreEraStakedInfoType[], core: StakingCore) {
-    return !!coreEraStakeInfo && coreEraStakeInfo.find(
-      (info) => info.account === core.account
-    );
-  }
+  const toggleViewMembers = (core: StakingCore, members: AnyJson[]) => {
+    setOpenModal({
+      name: modalName.MEMBERS,
+      metadata: { ...core.metadata, members },
+    });
+  };
 
   useSubscription(
     {
@@ -548,6 +567,12 @@ const Staking = () => {
   useEffect(() => {
     loadDashboardData(selectedAccount);
   }, [selectedAccount, api]);
+
+  useEffect(() => {
+    if (!selectedAccount) return;
+    if (!stakingCores) return;
+    loadDaos();
+  }, [selectedAccount, stakingCores, totalUserStakedData, api]);
 
   useEffect(() => {
     let isMounted = true;
@@ -662,11 +687,13 @@ const Staking = () => {
               return (
                 <div className="relative" key={core.key}>
                   <ProjectCard
+                    members={stakedDaos.find((dao) => dao.key === core.key)?.members as AnyJson[] || []}
                     core={core}
                     totalUserStaked={userStaked}
                     coreInfo={coreInfo}
                     handleManageStaking={handleManageStaking}
                     toggleExpanded={toggleReadMore}
+                    toggleViewMembers={toggleViewMembers}
                     chainProperties={chainProperties}
                     availableBalance={availableBalance}
                     descriptionRef={descriptionRef}

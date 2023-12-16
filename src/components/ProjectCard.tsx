@@ -9,6 +9,7 @@ import TotalStakersIcon from '../assets/total-stakers-icon.svg';
 import TotalStakedIcon from '../assets/total-staked-icon.svg';
 import MyProjectStakeIcon from '../assets/my-project-stake-icon.svg';
 import Avatar from './Avatar';
+import { AnyJson } from '@polkadot/types/types';
 
 export interface ProjectCardProps {
   core: StakingCore;
@@ -23,7 +24,9 @@ export interface ProjectCardProps {
   }) => void;
   descriptionRef: RefObject<HTMLDivElement>;
   toggleExpanded: (core: StakingCore) => void;
+  toggleViewMembers: (core: StakingCore, members: AnyJson[]) => void;
   selectedAccount: InjectedAccountWithMeta | null;
+  members: AnyJson[];
 }
 
 const ProjectCard = (props: ProjectCardProps) => {
@@ -36,13 +39,19 @@ const ProjectCard = (props: ProjectCardProps) => {
     handleManageStaking,
     descriptionRef,
     toggleExpanded,
+    toggleViewMembers,
     selectedAccount,
+    members,
   } = props;
   const [isHovered, setIsHovered] = useState(false);
 
   const handleReadMore = (core: StakingCore) => {
     setIsHovered(!isHovered);
     toggleExpanded(core);
+  };
+
+  const handleViewMembers = (core: StakingCore, members: AnyJson[]) => {
+    toggleViewMembers(core, members);
   };
 
   return (
@@ -52,9 +61,12 @@ const ProjectCard = (props: ProjectCardProps) => {
       <div className='p-8 h-96 flex flex-col justify-between'>
         <div className="flex items-center space-x-4">
           <Avatar src={core.metadata.image} alt="Project Image" />
-          <h4 className="font-bold text-white text-[18px] text-center tracking-[0] leading-[normal]">
-            {core.metadata.name}
-          </h4>
+          <div className="flex flex-col items-start gap-1 justify-start">
+            <h4 className="font-bold text-white text-[18px] text-center tracking-[0] leading-none">
+              {core.metadata.name}
+            </h4>
+            <span onClick={() => handleViewMembers(core, members)} className="text-xs text-tinkerTextGrey hover:text-tinkerYellow cursor-pointer">Members: {members ? members.length : 0}</span>
+          </div>
         </div>
         <div ref={descriptionRef} className={`relative bg-tinkerDarkGrey rounded-lg p-4 h-28 hover:cursor-pointer`}
           onMouseEnter={() => setIsHovered(true)}

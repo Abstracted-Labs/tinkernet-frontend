@@ -4,6 +4,7 @@ import RegisterProject from "./RegisterProject";
 import UnbondTokens from "./UnbondTokens";
 import ReadMore from "./ReadMore";
 import AccountSelector from "./AccountSelector";
+import ViewMembers from "./ViewMembers";
 
 const Modals = () => {
   const { openModal } = useModal((state) => ({
@@ -21,6 +22,8 @@ const Modals = () => {
       <UnbondTokens isOpen={openModal === modalName.UNBOND_TOKENS} />
 
       <ReadMore isOpen={openModal === modalName.READ_MORE} />
+
+      <ViewMembers isOpen={openModal === modalName.MEMBERS} />
     </>
   );
 };

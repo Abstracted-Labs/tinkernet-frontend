@@ -41,7 +41,7 @@ const Header = () => {
   }, [selectedAccount, api]);
 
   return (
-    <nav className="fixed flex flex-row w-full z-50 justify-between bg-black bg-opacity-50 backdrop-blur-sm">
+    <nav className="fixed flex flex-row w-full z-[49] justify-between bg-black bg-opacity-50 backdrop-blur-sm">
       <div className="w-full flex flex-row justify-between gap-8 p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <div className="flex-shrink-0">
@@ -59,7 +59,7 @@ const Header = () => {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4 text-xs lg:text-md">
+          {/* <div className="flex items-center gap-4 text-xs lg:text-md">
             <Link to="/overview">
               <span className="truncate text-white">Account Overview</span>
             </Link>
@@ -72,7 +72,7 @@ const Header = () => {
             <Link to="/transfer">
               <span className="truncate text-white">Asset Transfers</span>
             </Link>
-          </div>
+          </div> */}
         </div>
 
         <div className="flex items-center gap-4 md:mx-0">
