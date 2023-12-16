@@ -45,12 +45,12 @@ const ProjectCard = (props: ProjectCardProps) => {
   } = props;
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleReadMore = (core: StakingCore) => {
+  const handleReadMore = () => {
     setIsHovered(!isHovered);
     toggleExpanded(core);
   };
 
-  const handleViewMembers = (core: StakingCore, members: AnyJson[]) => {
+  const handleViewMembers = () => {
     toggleViewMembers(core, members);
   };
 
@@ -65,13 +65,13 @@ const ProjectCard = (props: ProjectCardProps) => {
             <h4 className="font-bold text-white text-[18px] text-center tracking-[0] leading-none">
               {core.metadata.name}
             </h4>
-            <span onClick={() => handleViewMembers(core, members)} className="text-xs text-tinkerTextGrey hover:text-tinkerYellow cursor-pointer">Members: {members ? members.length : 0}</span>
+            <span onClick={handleViewMembers} className="text-xs text-tinkerTextGrey hover:text-tinkerYellow cursor-pointer">Members: {members ? members.length : 0}</span>
           </div>
         </div>
         <div ref={descriptionRef} className={`relative bg-tinkerDarkGrey rounded-lg p-4 h-28 hover:cursor-pointer`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={() => handleReadMore(core)}>
+          onClick={handleReadMore}>
           <div className={`absolute inset-0 flex justify-center items-center font-normal text-tinkerYellow text-[12px] tracking-[0] leading-[normal] ${ isHovered ? 'opacity-100' : 'opacity-0' } transition duration-100 z-10 pointer-events-none`}>
             Show More
           </div>
