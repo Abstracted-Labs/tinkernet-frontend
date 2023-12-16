@@ -16,7 +16,7 @@ const useConnect = () => {
   );
 
   const handleConnect = async () => {
-    const extensions = await web3Enable("GitArch");
+    const extensions = await web3Enable("Tinkernet");
 
     if (extensions.length === 0) {
       return;
