@@ -41,7 +41,7 @@ const Footer = () => {
   return (
     <footer>
       <div className="flex flex-col items-center justify-between py-4 px-8">
-        <div className="flex justify-center space-x-3">
+        <div className="flex justify-center space-x-3 my-2">
           {navigation.map((item) => (
             <a
               key={item.name}
@@ -55,7 +55,7 @@ const Footer = () => {
             </a>
           ))}
         </div>
-        <div className="mt-2">
+        <div className="my-2">
           <p className="text-center text-xxs leading-none text-neutral-400">
             &copy; {new Date().getFullYear()} - {new Date().getFullYear() + 1} The InvArch Association. All rights reserved.
           </p>

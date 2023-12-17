@@ -60,9 +60,9 @@ const LoginButton = () => {
     onMouseEnter={() => setIsHovered(true)}
     onMouseLeave={() => setIsHovered(false)}
   >
-    <span className="px-3">
+    <div className="px-3 flex-grow">
       {selectedAccount ? (
-        <span className="flex flex-row justify-between items-center gap-2 md:gap-5">
+        <div className="flex flex-row justify-between items-center gap-2 md:gap-5">
           <span className="flex font-bold">
             {stringShorten(selectedAccount.meta.name || selectedAccount.address, 4)}
           </span>
@@ -78,11 +78,11 @@ const LoginButton = () => {
                 : null}
             </span>
           </span>
-        </span>
+        </div>
       ) : (
         <>Log In</>
       )}
-    </span>
+    </div>
   </Button>;
 };
 
