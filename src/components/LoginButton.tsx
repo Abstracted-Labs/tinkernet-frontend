@@ -54,27 +54,29 @@ const LoginButton = () => {
     variant="primary"
     group={selectedAccount !== null}
     groupId="disconnect"
-    groupLabel={selectedAccount ? <div className="lg:w-10 lg:h-10 w-8 h-8 p-3 flex items-center justify-center"><img src={DisconnectIcon} alt="Disconnect" /></div> : null}
+    groupLabel={selectedAccount ? <div className="lg:w-10 lg:h-10 w-8 h-8 p-3 flex  flex-row items-center justify-center"><img src={DisconnectIcon} alt="Disconnect" /></div> : null}
     groupCallback={onDisconnect}
     onClick={handleConnect}
     onMouseEnter={() => setIsHovered(true)}
     onMouseLeave={() => setIsHovered(false)}
   >
-    <span className="p-4">
+    <span className="px-3">
       {selectedAccount ? (
-        <span className="flex flex-row justify-between items-center gap-3">
-          <span>
+        <span className="flex flex-row justify-between items-center gap-2 md:gap-5">
+          <span className="flex font-bold">
             {stringShorten(selectedAccount.meta.name || selectedAccount.address, 4)}
           </span>
           <span className="flex flex-row items-center gap-1">
             <img className="lg:w-3 lg:h-3 fill-tinkerYellow" src={isHovered ? TinkerBlackIcon : TinkerYellowIcon} alt="tnkr icon" />
-            {balance
-              ? ` ${ formatBalance(balance.toString(), {
-                decimals: 12,
-                withUnit: false,
-                forceUnit: "-",
-              }) }`
-              : null}
+            <span className="truncate">
+              {balance
+                ? ` ${ formatBalance(balance.toString(), {
+                  decimals: 12,
+                  withUnit: false,
+                  forceUnit: "-",
+                }) }`
+                : null}
+            </span>
           </span>
         </span>
       ) : (

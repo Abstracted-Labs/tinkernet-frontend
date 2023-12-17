@@ -1,9 +1,8 @@
 import { Outlet } from "react-router-dom";
-
-import Footer from "./Footer";
 import Header from "./Header";
 
 import pattern from "../../assets/pattern.svg";
+import SideNav from "./SideNav";
 
 const Layout = () => {
   return (
@@ -19,13 +18,14 @@ const Layout = () => {
       }}
     >
 
-      <Header />
+      {/* <Header /> */}
 
-      <main className="relative py-8 text-white tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto">
-        <Outlet />
-      </main>
-
-      <Footer />
+      <div className="flex flex-row overflow-y-auto">
+        <SideNav />
+        <main className="relative text-white tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto overflow-x-hidden">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };

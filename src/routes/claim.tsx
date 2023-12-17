@@ -237,7 +237,7 @@ const Claim = () => {
 
   return (
     <div className="relative flex flex-row items-center justify-center overflow-hidden">
-      <div className="z-10 w-full p-4 sm:max-w-3xl mt-10">
+      <div className="z-10 w-full p-4 sm:max-w-3xl mt-10 md:mt-0">
         <h2 className="lg:text-xl font-bold my-3">
           <span>Claim</span>
         </h2>

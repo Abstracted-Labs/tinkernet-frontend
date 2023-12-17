@@ -413,7 +413,7 @@ const Transfer = () => {
   }, [pair.from, pair.to]);
 
   return (
-    <div className="relative flex flex-col mt-10 items-center justify-start overflow-hidden">
+    <div className="relative flex flex-col mt-10 md:mt-0 items-center justify-start overflow-hidden">
       <div className="z-10 w-full p-4 sm:max-w-2xl">
         <h2 className="lg:text-xl font-bold my-3">
           <span>X-Transfer</span>
