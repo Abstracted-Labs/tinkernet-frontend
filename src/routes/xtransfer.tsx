@@ -413,10 +413,10 @@ const Transfer = () => {
   }, [pair.from, pair.to]);
 
   return (
-    <div className="relative flex flex-col mt-10 md:mt-0 items-center justify-start overflow-hidden">
+    <div className="relative w-full flex flex-col mt-14 md:mt-0 items-center justify-start overflow-hidden">
       <div className="z-10 w-full p-4 sm:max-w-2xl">
         <h2 className="lg:text-xl font-bold my-3">
-          <span>X-Transfer</span>
+          <span>Asset Transfers</span>
         </h2>
 
         {!selectedAccount ? (
@@ -437,7 +437,7 @@ const Transfer = () => {
         ) : null}
 
         {!isLoading && selectedAccount ? (
-          <div className="overflow-hidden rounded-md border border-neutral-50 backdrop-blur-sm shadow">
+          <div className="overflow-hidden w-full rounded-md border border-neutral-50 backdrop-blur-sm shadow">
             <div className="border-b border-neutral-50 p-4">
               <div className="flex flex-row items-center justify-around gap-4">
                 <div className="flex flex-col items-center">

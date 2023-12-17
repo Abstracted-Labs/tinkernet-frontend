@@ -18,11 +18,15 @@ const Layout = () => {
       }}
     >
 
-      {/* <Header /> */}
+      <div className="block md:hidden">
+        <Header />
+      </div>
 
       <div className="flex flex-row overflow-y-auto">
-        <SideNav />
-        <main className="relative text-white tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto overflow-x-hidden">
+        <div className="hidden md:block">
+          <SideNav />
+        </div>
+        <main className="w-full relative text-white tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto overflow-x-hidden">
           <Outlet />
         </main>
       </div>

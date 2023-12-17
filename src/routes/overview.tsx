@@ -590,26 +590,30 @@ const Overview = () => {
   }
 
   return (
-    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-10 md:mt-0">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
+      <div className="flex flex-col md:flex-row md:justify-between items-start">
         <h2 className="lg:text-xl font-bold my-3">
-          <span>Overview</span>
+          <span>Account Overview</span>
         </h2>
-        {selectedAccount && <div className="flex flex-row w-full md:w-auto gap-2 items-center justify-between mb-4 z-1">
+        {selectedAccount && <div className="flex flex-row w-full md:w-auto gap-2 items-center justify-start mb-4 z-1">
           <Button
+            mini
             onClick={handleUnbondTokens}
             disabled={isWaiting}
             variant="secondary">
             Claim Unbonded TNKR
           </Button>
           <Button
+            mini
             onClick={handleClaimAll}
             disabled={unclaimedEras.total === 0 || isWaiting}
             variant="primary">
             Claim TNKR Rewards
           </Button>
-          <div className="flex flex-col gap-0 items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-100">
-            <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestake(bool)} />
+          <div className="flex flex-col gap-0 items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
+            <div className="flex-grow">
+              <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestake(bool)} />
+            </div>
             <span className="text-xxs text-gray-300 relative bottom-1">Auto-Restake</span>
           </div>
         </div>}

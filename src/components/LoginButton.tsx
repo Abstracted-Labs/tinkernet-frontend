@@ -54,15 +54,15 @@ const LoginButton = () => {
     variant="primary"
     group={selectedAccount !== null}
     groupId="disconnect"
-    groupLabel={selectedAccount ? <div className="lg:w-10 lg:h-10 w-8 h-8 p-3 flex  flex-row items-center justify-center"><img src={DisconnectIcon} alt="Disconnect" /></div> : null}
+    groupLabel={selectedAccount ? <div className="lg:w-10 lg:h-10 w-8 h-8 p-3 flex flex-row items-center justify-center"><img src={DisconnectIcon} alt="Disconnect" /></div> : null}
     groupCallback={onDisconnect}
     onClick={handleConnect}
     onMouseEnter={() => setIsHovered(true)}
     onMouseLeave={() => setIsHovered(false)}
   >
-    <div className="px-3 flex-grow">
+    <div className="flex-grow">
       {selectedAccount ? (
-        <div className="flex flex-row justify-between items-center gap-2 md:gap-5">
+        <div className="flex flex-row justify-between items-center gap-5">
           <span className="flex font-bold">
             {stringShorten(selectedAccount.meta.name || selectedAccount.address, 4)}
           </span>
