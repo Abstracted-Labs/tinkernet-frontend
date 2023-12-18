@@ -610,7 +610,7 @@ const Overview = () => {
             variant="primary">
             Claim TNKR Rewards
           </Button>
-          <div className="flex flex-col gap-0 items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
+          <div className="flex flex-col items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
             <div className="flex-grow">
               <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestake(bool)} />
             </div>

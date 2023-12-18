@@ -57,7 +57,7 @@ const SideNav = (props: SideNavProps) => {
             >
               <div className="flex items-center">
                 <img
-                  className="w-5 h-auto inline-block mr-4 fill-current text-black hover:text-tinkerYellow transition-colors duration-200"
+                  className="w-5 h-auto inline-block mr-4"
                   src={link.icon}
                   alt="icon"
                 />
