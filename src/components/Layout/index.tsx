@@ -1,13 +1,19 @@
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
-
 import pattern from "../../assets/pattern.svg";
 import SideNav from "./SideNav";
+import { useState } from "react";
 
 const Layout = () => {
+  const [navOpen, setNavOpen] = useState(false);
+
+  const handleNavOpen = (bool: boolean) => {
+    setNavOpen(bool);
+  };
+
   return (
     <div
-      className="bg-neutral-900 h-screen overflow-y-hidden flex flex-col justify-between"
+      className="bg-neutral-900 h-screen overflow-y-hidden flex flex-col justify-start"
       aria-hidden="true"
       style={{
         backgroundImage: `url(${ pattern })`,
@@ -19,7 +25,10 @@ const Layout = () => {
     >
 
       <div className="block md:hidden">
-        <Header />
+        <Header isNavOpen={navOpen} navOpen={handleNavOpen} />
+        <div className={`relative z-[48] transform ${ navOpen ? "translate-x-0" : "-translate-x-full" } transition-transform duration-200 ease-in-out`}>
+          <div className="absolute w-screen"><SideNav navOpen={handleNavOpen} /></div>
+        </div>
       </div>
 
       <div className="flex flex-row overflow-y-auto">

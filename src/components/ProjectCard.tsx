@@ -62,7 +62,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         <div className="flex items-center space-x-4">
           <Avatar src={core.metadata.image} alt="Project Image" />
           <div className="flex flex-col items-start gap-1 justify-start">
-            <h4 className="font-bold text-white text-[18px] text-center tracking-[0] leading-none">
+            <h4 className="font-bold text-white text-[18px] text-left tracking-[0] leading-none">
               {core.metadata.name}
             </h4>
             <span onClick={handleViewMembers} className="text-xs text-tinkerTextGrey hover:text-tinkerYellow cursor-pointer">Members: {members ? members.length : 0}</span>

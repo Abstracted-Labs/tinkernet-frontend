@@ -644,7 +644,7 @@ const Staking = () => {
   }
 
   return (
-    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
+    <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <h2 className="lg:text-xl font-bold my-3">
           <span>DAO Staking</span>

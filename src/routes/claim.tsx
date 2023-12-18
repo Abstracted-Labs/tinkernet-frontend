@@ -236,8 +236,8 @@ const Claim = () => {
   }, [selectedAccount]);
 
   return (
-    <div className="relative flex flex-row items-center justify-center overflow-hidden">
-      <div className="z-10 w-full p-4 sm:max-w-3xl mt-14 md:mt-0">
+    <div className="overflow-hidden mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
+      <div className="z-10 w-full sm:max-w-3xl">
         <h2 className="lg:text-xl font-bold my-3">
           <span>Claim Vesting</span>
         </h2>
@@ -265,14 +265,16 @@ const Claim = () => {
                 <span className="text-2xl font-bold text-white">
                   {vestingSummary.vestedClaimable}
                 </span>
-                <Button
-                  variant="primary"
-                  type="button"
-                  onClick={() => handleClaim(selectedAccount)}
-                  disabled={vestingSummary.vestedClaimable === "0" || isClaimWaiting}
-                >
-                  {vestingSummary.vestedClaimable === "0" ? 'Nothing to Claim' : 'Claim Now'}
-                </Button>
+                <div>
+                  <Button
+                    variant="primary"
+                    type="button"
+                    onClick={() => handleClaim(selectedAccount)}
+                    disabled={vestingSummary.vestedClaimable === "0" || isClaimWaiting}
+                  >
+                    {vestingSummary.vestedClaimable === "0" ? 'Nothing to Claim' : 'Claim Now'}
+                  </Button>
+                </div>
               </div>
 
               <div className="flex flex-col p-6">

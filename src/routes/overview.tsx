@@ -590,9 +590,9 @@ const Overview = () => {
   }
 
   return (
-    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
+    <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
       <div className="flex flex-col md:flex-row md:justify-between items-start">
-        <h2 className="lg:text-xl font-bold my-3">
+        <h2 className="lg:text-xl font-bold leading-none mt-3">
           <span>Account Overview</span>
         </h2>
         {selectedAccount && <div className="flex flex-row w-full md:w-auto gap-2 items-center justify-start mb-4 z-1">
