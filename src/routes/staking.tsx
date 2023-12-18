@@ -699,10 +699,10 @@ const Staking = () => {
           </div>
         </>
       ) : <div className="text-center">
-        <h5 className="text-2xl font-bold text-white">
+        <h5 className="text-sm font-bold text-white">
           Wallet not connected
         </h5>
-        <p className="mt-8 text-lg text-white">
+        <p className="mt-2 text-xs text-white">
           Connect your wallet to view your staking information.
         </p>
       </div>}

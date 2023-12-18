@@ -120,7 +120,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
           : '0 TNKR'}
       </DashboardCard>}
 
-      {totalClaimed !== undefined && <DashboardCard cardTitle="Redeemed Rewards" iconSrc={ClaimableRewardsIcon}>
+      {totalClaimed !== undefined && <DashboardCard cardTitle="Claimed Rewards" iconSrc={ClaimableRewardsIcon}>
         {totalClaimed ? formatBalance(totalClaimed.toString(), {
           decimals: 12,
           withUnit: 'TNKR',
@@ -128,7 +128,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         }) : "0"}
       </DashboardCard>}
 
-      {totalUnclaimed !== undefined && <DashboardCard cardTitle="Unredeemed Rewards" iconSrc={AggregateStakedIcon}>
+      {totalUnclaimed !== undefined && <DashboardCard cardTitle="Unclaimed Rewards" iconSrc={AggregateStakedIcon}>
         {totalUnclaimed ? formatBalance(totalUnclaimed.toString(), {
           decimals: 12,
           withUnit: 'TNKR',
@@ -136,7 +136,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         }) : "0"}
       </DashboardCard>}
 
-      {unclaimedEras !== undefined && <DashboardCard cardTitle="Unredeemed Eras" iconSrc={UnclaimedErasIcon}>
+      {unclaimedEras !== undefined && <DashboardCard cardTitle="Unclaimed Eras" iconSrc={UnclaimedErasIcon}>
         {unclaimedEras ? unclaimedEras.total : 0}
       </DashboardCard>}
 

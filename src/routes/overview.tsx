@@ -2,7 +2,7 @@ import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
@@ -20,7 +20,6 @@ import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
 import { StakingCore, CoreEraStakedInfoType, UserStakedInfoType, ChainPropertiesType, TotalUserStakedData, StakedType, BalanceType, LockedType, CoreEraStakeType, LedgerType, TotalRewardsClaimedSubscription, TotalRewardsClaimedQuery, RewardQueryType, getCoreInfo, getTotalUserStaked } from "./staking";
 import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import OnOffSwitch from "../components/Switch";
-import { formatBalance } from "@polkadot/util";
 
 export type StakedDaoType = StakingCore & { members?: AnyJson; };
 
@@ -58,6 +57,7 @@ const Overview = () => {
   const [vestingSummary, setVestingSummary] = useState<VestingData | null>(null);
   const [enableAutoRestake, setEnableAutoRestake] = useState<boolean>(false);
   const [stakedDaos, setStakedDaos] = useState<StakedDaoType[]>([]);
+  const [existentialDeposit, setExistentialDeposit] = useState<BigNumber>(new BigNumber(0));
 
   const [rewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -223,7 +223,9 @@ const Overview = () => {
     const blocksPerEra = api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
     const maxStakersPerCore = api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
     const inflationErasPerYear = api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
+    const existentialDeposit = api.consts.balances.existentialDeposit.toPrimitive() as number;
 
+    setExistentialDeposit(new BigNumber(existentialDeposit));
     setBlocksPerEra(blocksPerEra);
     setChainProperties({ maxStakersPerCore, inflationErasPerYear });
   };
@@ -377,14 +379,16 @@ const Overview = () => {
   };
 
   const handleClaimAll = async () => {
-    if (!selectedAccount) return;
-
-    if (!unclaimedEras) return;
-
-    if (!currentStakingEra) return;
+    if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
 
     try {
       toast.loading("Claiming...");
+
+      if (disableClaiming) {
+        toast.dismiss();
+        toast.error("Can only claim when unclaimed TNKR is greater than the existential deposit");
+        return;
+      }
 
       await web3Enable("Tinkernet");
 
@@ -498,6 +502,10 @@ const Overview = () => {
       metadata: { ...core.metadata, members },
     });
   };
+
+  const disableClaiming = useMemo(() => {
+    return unclaimedEras.total === 0 || isWaiting;
+  }, [unclaimedEras, isWaiting]);
 
   useSubscription(
     {
@@ -621,8 +629,8 @@ const Overview = () => {
 
   return (
     <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
-      <div className="flex flex-col md:flex-row md:justify-between items-start">
-        <h2 className="lg:text-xl font-bold leading-none mt-3 flex flex-row items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <h2 className="lg:text-xl font-bold leading-none my-3 flex flex-row items-center gap-4">
           <span>Account Overview</span>
           <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
         </h2>
@@ -638,7 +646,7 @@ const Overview = () => {
           <Button
             mini
             onClick={handleClaimAll}
-            disabled={unclaimedEras.total === 0 || isWaiting}
+            disabled={disableClaiming}
             variant="primary">
             Claim TNKR Rewards
           </Button>
@@ -708,10 +716,10 @@ const Overview = () => {
           </div>
         </>
       ) : <div className="text-center">
-        <h5 className="text-2xl font-bold text-white">
+        <h5 className="text-sm font-bold text-white">
           Wallet not connected
         </h5>
-        <p className="mt-8 text-lg text-white">
+        <p className="mt-2 text-xs text-white">
           Connect your wallet to access your account overview.
         </p>
       </div>}

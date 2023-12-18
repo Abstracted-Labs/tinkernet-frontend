@@ -237,7 +237,7 @@ const Claim = () => {
 
   return (
     <div className="overflow-hidden mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
-      <div className="z-10 w-full sm:max-w-3xl">
+      <div className="z-10 w-full">
         <h2 className="lg:text-xl font-bold flex flex-row items-center gap-4 my-3">
           <span>Claim Vesting</span>
           <span>{isBalanceLoading ? <LoadingSpinner /> : null}</span>
@@ -245,10 +245,10 @@ const Claim = () => {
 
         {!selectedAccount ? (
           <div className="text-center">
-            <h5 className="text-2xl font-bold text-white">
+            <h5 className="text-sm font-bold text-white">
               Wallet not connected
             </h5>
-            <p className="mt-8 text-lg text-white">
+            <p className="mt-2 text-xs text-white">
               Connect your wallet to claim any vested tokens.
             </p>
           </div>
