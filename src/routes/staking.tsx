@@ -635,21 +635,15 @@ const Staking = () => {
     setTotalClaimed(rewardsClaimed);
   }, [selectedAccount, rewardsClaimedQuery]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
   return (
     <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-        <h2 className="lg:text-xl font-bold my-3">
+        <h2 className="lg:text-xl font-bold my-3 flex flex-row items-center gap-4">
           <span>DAO Staking</span>
+          <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
         </h2>
       </div>
+
       {selectedAccount ? (
         <>
           <MetricDashboard

@@ -415,8 +415,9 @@ const Transfer = () => {
   return (
     <div className="overflow-hidden mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
       <div className="z-10 w-full sm:max-w-2xl">
-        <h2 className="lg:text-xl font-bold my-3">
+        <h2 className="lg:text-xl font-bold my-3 flex flex-row items-center gap-4">
           <span>Asset Transfers</span>
+          <span>{isLoading ? <LoadingSpinner /> : null}</span>
         </h2>
 
         {!selectedAccount ? (
@@ -427,12 +428,6 @@ const Transfer = () => {
             <p className="mt-8 text-lg text-white">
               You can connect your wallet to use x-transfer.
             </p>
-          </div>
-        ) : null}
-
-        {isLoading ? (
-          <div className="flex items-center justify-center">
-            <LoadingSpinner />
           </div>
         ) : null}
 

@@ -238,8 +238,9 @@ const Claim = () => {
   return (
     <div className="overflow-hidden mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
       <div className="z-10 w-full sm:max-w-3xl">
-        <h2 className="lg:text-xl font-bold my-3">
+        <h2 className="lg:text-xl font-bold flex flex-row items-center gap-4 my-3">
           <span>Claim Vesting</span>
+          <span>{isBalanceLoading ? <LoadingSpinner /> : null}</span>
         </h2>
 
         {!selectedAccount ? (
@@ -252,8 +253,6 @@ const Claim = () => {
             </p>
           </div>
         ) : null}
-
-        {isBalanceLoading ? <LoadingSpinner /> : null}
 
         {!isBalanceLoading && selectedAccount && vestingSummary ? (
           <div className="overflow-hidden rounded-md border border-gray-50 backdrop-blur-sm shadow">

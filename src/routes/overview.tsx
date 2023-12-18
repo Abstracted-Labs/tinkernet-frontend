@@ -20,6 +20,7 @@ import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
 import { StakingCore, CoreEraStakedInfoType, UserStakedInfoType, ChainPropertiesType, TotalUserStakedData, StakedType, BalanceType, LockedType, CoreEraStakeType, LedgerType, TotalRewardsClaimedSubscription, TotalRewardsClaimedQuery, RewardQueryType, getCoreInfo, getTotalUserStaked } from "./staking";
 import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import OnOffSwitch from "../components/Switch";
+import { formatBalance } from "@polkadot/util";
 
 export type StakedDaoType = StakingCore & { members?: AnyJson; };
 
@@ -337,7 +338,7 @@ const Overview = () => {
     });
   };
 
-  const handleAutoRestake = (bool: boolean) => {
+  const handleAutoRestakeSwitch = (bool: boolean) => {
     // use toasts to show if auto-restake is enabled or disabled
     if (bool) {
       toast.success("Auto-restake enabled");
@@ -346,6 +347,33 @@ const Overview = () => {
     }
     // save the value to local storage
     localStorage.setItem("autoRestake", JSON.stringify(bool));
+  };
+
+  const handleRestakingLogic = () => {
+    // grab the total unclaimed rewards and account for the existential deposit
+    const unclaimedMinusED = new BigNumber(totalUnclaimed);
+
+    // Check if unclaimedMinusED is a valid number
+    if (isNaN(unclaimedMinusED.toNumber())) {
+      console.error("Invalid unclaimedMinusED");
+      return;
+    }
+
+    if (unclaimedMinusED.toNumber() <= 0) {
+      console.error("unclaimedMinusED must be greater than 0");
+      return;
+    }
+
+    // Check if stakedDaos.length is a valid number and not zero to avoid division by zero
+    if (isNaN(stakedDaos.length) || stakedDaos.length === 0) {
+      console.error("Invalid stakedDaos.length");
+      return;
+    }
+
+    // divide unclaimedMinusED by the number of stakedDaos the user is part of
+    const unclaimedPerCore = unclaimedMinusED.div(stakedDaos.length);
+
+    return unclaimedPerCore;
   };
 
   const handleClaimAll = async () => {
@@ -367,28 +395,38 @@ const Overview = () => {
       const uniqueCores = [
         ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
       ];
-
+      console.log("uniqueCores", uniqueCores);
       for (const core of uniqueCores) {
         if (!core?.earliestEra) continue;
 
-        if (typeof currentStakingEra === 'number' && core && typeof core.earliestEra === 'number') {
-          if (core.earliestEra <= currentStakingEra) {
-            const iterations = currentStakingEra - core.earliestEra;
-            for (let i = 0; i < iterations; i++) {
-              batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
-              console.log("pushed core: ", core.coreId);
-            }
-          } else {
-            console.error("core.earliestEra is greater than currentStakingEra");
+        const localEarliestEra = core.earliestEra; // Create a local copy of core.earliestEra
+
+        if (typeof currentStakingEra === 'number' && core && typeof localEarliestEra === 'number') {
+          for (let i = 0; i < currentStakingEra - localEarliestEra; i++) {
+            batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
           }
         } else {
-          console.error("currentStakingEra, core, or core.earliestEra is undefined or not a number");
+          console.error("currentStakingEra, core, or localEarliestEra is undefined or not a number");
         }
+
+        console.log("utility.batch", batch);
       }
 
-      console.log("batch: ", batch);
-      console.log("uniqueCores: ", uniqueCores);
-      console.log("unclaimedEras: ", unclaimedEras);
+      if (enableAutoRestake) {
+        for (const core of uniqueCores) {
+          if (!core?.earliestEra) continue;
+
+          // using the restaking logic, calculate the amount to restake
+          const restakeAmount = handleRestakingLogic();
+          // Check if restakeAmount is not zero
+          if (restakeAmount && !restakeAmount.isZero()) {
+            // Convert restakeAmount to an integer string
+            const restakeAmountInteger = restakeAmount.integerValue().toString();
+            // push restake tx to the batch
+            batch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
+          }
+        }
+      }
 
       await api.tx.utility.batch(batch).signAndSend(
         selectedAccount.address,
@@ -581,20 +619,14 @@ const Overview = () => {
     setTotalUnclaimed(totalUnclaimed);
   }, [selectedAccount, rewardsClaimedQuery]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
   return (
     <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
       <div className="flex flex-col md:flex-row md:justify-between items-start">
-        <h2 className="lg:text-xl font-bold leading-none mt-3">
+        <h2 className="lg:text-xl font-bold leading-none mt-3 flex flex-row items-center gap-4">
           <span>Account Overview</span>
+          <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
         </h2>
+
         {selectedAccount && <div className="flex flex-row w-full md:w-auto gap-2 items-center justify-start mb-4 z-1">
           <Button
             mini
@@ -612,7 +644,7 @@ const Overview = () => {
           </Button>
           <div className="flex flex-col items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
             <div className="flex-grow">
-              <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestake(bool)} />
+              <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestakeSwitch(bool)} />
             </div>
             <span className="text-xxs text-gray-300 relative bottom-1">Auto-Restake</span>
           </div>
