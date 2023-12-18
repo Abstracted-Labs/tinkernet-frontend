@@ -32,7 +32,7 @@ const SideNav = (props: SideNavProps) => {
   }, []);
 
   return (
-    <div className="side-nav flex flex-col items-center justify-between bg-black bg-opacity-50 backdrop-blur-sm h-screen">
+    <div className="side-nav flex flex-col items-center justify-between bg-black bg-opacity-70 backdrop-blur-sm h-screen">
       <div className="mt-7 flex-grow flex flex-col items-center w-full">
         <NavLink to="/overview" className="flex items-center justify-center w-full relative right-1 invisible md:visible">
           <img
