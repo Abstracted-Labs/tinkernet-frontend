@@ -413,7 +413,7 @@ const Transfer = () => {
   }, [pair.from, pair.to]);
 
   return (
-    <div className="overflow-hidden mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0">
+    <div className="overflow-hidden mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="z-10 w-full">
         <h2 className="lg:text-xl font-bold my-3 flex flex-row items-center gap-4">
           <span>Asset Transfers</span>
