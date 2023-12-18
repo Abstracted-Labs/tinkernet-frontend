@@ -3,6 +3,10 @@ import logoFull from "../../assets/logo-full.svg";
 import Footer from "./Footer";
 import LoginButton from "../LoginButton";
 import { useEffect } from "react";
+import ClaimNavIcon from "../../assets/claim-nav-icon.svg";
+import TransferNavIcon from "../../assets/transfer-nav-icon.svg";
+import StakingNavIcon from "../../assets/staking-nav-icon.svg";
+import OverviewNavIcon from "../../assets/overview-nav-icon.svg";
 
 export interface SideNavProps {
   navOpen?: (bool: boolean) => void;
@@ -10,10 +14,10 @@ export interface SideNavProps {
 }
 
 const navLinks = [
-  { path: "/overview", name: "Account Overview" },
-  { path: "/staking", name: "DAO Staking" },
-  { path: "/claim", name: "Claim Vesting" },
-  { path: "/transfer", name: "Asset Transfers" },
+  { path: "/overview", name: "Account Overview", icon: OverviewNavIcon },
+  { path: "/staking", name: "DAO Staking", icon: StakingNavIcon },
+  { path: "/claim", name: "Claim Vesting", icon: ClaimNavIcon },
+  { path: "/transfer", name: "Asset Transfers", icon: TransferNavIcon },
 ];
 
 const SideNav = (props: SideNavProps) => {
@@ -51,7 +55,14 @@ const SideNav = (props: SideNavProps) => {
                 isActive ? 'truncate text-white bg-tinkerYellow bg-opacity-25 border-l border-tinkerYellow border-l-4 w-full h-16 pl-6 text-sm flex flex-col justify-center hover:text-tinkerYellow' : 'truncate text-white w-full h-16 pl-7 text-sm flex flex-col justify-center hover:text-tinkerYellow'
               }
             >
-              {link.name}
+              <div className="flex items-center">
+                <img
+                  className="w-5 h-auto inline-block mr-4 fill-current text-black hover:text-tinkerYellow transition-colors duration-200"
+                  src={link.icon}
+                  alt="icon"
+                />
+                {link.name}
+              </div>
             </NavLink>
           ))}
         </div>
