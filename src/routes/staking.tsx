@@ -703,7 +703,7 @@ const Staking = () => {
           Wallet not connected
         </h5>
         <p className="mt-8 text-lg text-white">
-          You can connect your wallet to access your staking information.
+          Connect your wallet to view your staking information.
         </p>
       </div>}
     </div>

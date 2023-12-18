@@ -426,7 +426,7 @@ const Transfer = () => {
               Wallet not connected
             </h5>
             <p className="mt-8 text-lg text-white">
-              You can connect your wallet to use x-transfer.
+              Connect your wallet to transfer assets.
             </p>
           </div>
         ) : null}

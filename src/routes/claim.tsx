@@ -249,7 +249,7 @@ const Claim = () => {
               Wallet not connected
             </h5>
             <p className="mt-8 text-lg text-white">
-              You can connect your wallet to claim your vested tokens.
+              Connect your wallet to claim any vested tokens.
             </p>
           </div>
         ) : null}
