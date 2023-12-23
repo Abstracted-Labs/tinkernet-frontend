@@ -98,8 +98,6 @@ const DaoList = () => {
 
   const loadDashboardData = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
-      toast.loading("Loading staking cores...");
-
       if (selectedAccount) {
         await Promise.all([
           loadAccountInfo(selectedAccount),
@@ -108,11 +106,11 @@ const DaoList = () => {
         ]);
       }
 
-      toast.dismiss();
     } catch (error) {
-      toast.dismiss();
-      setLoading(false);
       toast.error(`${ error }`);
+    } finally {
+      setLoading(false);
+      setDataLoaded(true);
     }
   };
 
@@ -239,9 +237,6 @@ const DaoList = () => {
           }
           return prevState;
         });
-
-        setDataLoaded(true);
-        setLoading(false);
       }
     })();
 
@@ -280,31 +275,35 @@ const DaoList = () => {
     };
   }, [selectedAccount, api, stakingCores]);
 
+  if (isLoading || !isDataLoaded) {
+    return <div className='flex items-center justify-center'>
+      <LoadingSpinner />
+    </div>;
+  }
+
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {!isLoading && isDataLoaded
-        ? stakingCores.map((core: StakingCore) => {
-          const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);
-          const userStaked = totalUserStakedData[core.key];
-          return (
-            <div className="relative" key={core.key}>
-              <ProjectCard
-                members={stakedDaos.find((dao) => dao.key === core.key)?.members as AnyJson[] || []}
-                core={core}
-                totalUserStaked={userStaked}
-                coreInfo={coreInfo}
-                handleManageStaking={handleManageStaking}
-                toggleExpanded={toggleReadMore}
-                toggleViewMembers={toggleViewMembers}
-                chainProperties={chainProperties}
-                availableBalance={availableBalance}
-                descriptionRef={descriptionRef}
-                selectedAccount={selectedAccount}
-              />
-            </div>
-          );
-        })
-        : <LoadingSpinner />}
+      {stakingCores.map((core: StakingCore) => {
+        const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);
+        const userStaked = totalUserStakedData[core.key];
+        return (
+          <div className="relative" key={core.key}>
+            <ProjectCard
+              members={stakedDaos.find((dao) => dao.key === core.key)?.members as AnyJson[] || []}
+              core={core}
+              totalUserStaked={userStaked}
+              coreInfo={coreInfo}
+              handleManageStaking={handleManageStaking}
+              toggleExpanded={toggleReadMore}
+              toggleViewMembers={toggleViewMembers}
+              chainProperties={chainProperties}
+              availableBalance={availableBalance}
+              descriptionRef={descriptionRef}
+              selectedAccount={selectedAccount}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };

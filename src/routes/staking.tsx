@@ -279,13 +279,12 @@ const Staking = () => {
           loadAggregateStaked()
         ]);
       }
-
-      toast.dismiss();
     } catch (error) {
       toast.dismiss();
-      setLoading(false);
       toast.error(`${ error }`);
     } finally {
+      toast.dismiss();
+      toast.success('Loaded');
       setLoading(false);
       setDataLoaded(true);
     }

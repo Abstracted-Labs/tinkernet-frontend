@@ -145,6 +145,7 @@ const Claim = () => {
     setBalanceLoading(true);
 
     try {
+      toast.loading("Loading balances...");
       await loadStakedTNKR(selectedAccount);
       const results = await fetchSystemData(selectedAccount, api);
       if (!results) {

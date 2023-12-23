@@ -231,18 +231,22 @@ const Overview = () => {
       toast.loading("Loading staking cores...");
 
       if (selectedAccount) {
-        await loadAccountInfo(selectedAccount);
-        await loadCores();
-        await loadStakingConstants();
-        await loadAggregateStaked();
-        await loadVestingBalance(selectedAccount);
+        await Promise.all([
+          loadAccountInfo(selectedAccount),
+          loadCores(),
+          loadStakingConstants(),
+          loadAggregateStaked(),
+          loadVestingBalance(selectedAccount)
+        ]);
       }
-
-      toast.dismiss();
     } catch (error) {
       toast.dismiss();
-      setLoading(false);
       toast.error(`${ error }`);
+    } finally {
+      toast.dismiss();
+      toast.success("Loaded");
+      setLoading(false);
+      setDataLoaded(true);
     }
   };
 
@@ -483,9 +487,6 @@ const Overview = () => {
           }
           return prevState;
         });
-
-        setDataLoaded(true);
-        setLoading(false);
       }
     })();
 

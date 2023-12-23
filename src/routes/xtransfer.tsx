@@ -178,6 +178,9 @@ const Transfer = () => {
       toast.error("Failed to load balances");
 
       console.error(error);
+    } finally {
+      toast.dismiss();
+      toast.success("Balances loaded");
     }
   };
 
@@ -417,7 +420,7 @@ const Transfer = () => {
       <div className="z-10 w-full">
         <h2 className="lg:text-xl font-bold my-3 flex flex-row items-center gap-4">
           <span>Asset Transfers</span>
-          <span>{isLoading ? <LoadingSpinner /> : null}</span>
+          <span>{isLoading || isWaiting ? <LoadingSpinner /> : null}</span>
         </h2>
 
         {!selectedAccount ? (
