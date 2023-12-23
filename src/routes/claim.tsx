@@ -13,6 +13,7 @@ import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import useApi from "../hooks/useApi";
 import Button from "../components/Button";
 import { calculateVestingSchedule, calculateVestingData, fetchSystemData } from "../utils/vestingServices";
+import { loadProjectCores } from "../utils/stakingServices";
 
 export type SystemAccount = Struct & {
   data: {
@@ -95,17 +96,9 @@ const Claim = () => {
   const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       const currentEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
-      const stakingCores = (await api.query.ocifStaking.registeredCore.entries()).map(([{ args: [key] }, core]) => {
-        const coreData = core.toPrimitive() as CoreDataType;
-        const coreKey = key.toPrimitive() as number;
+      const stakingCores = await loadProjectCores(api);
 
-        return {
-          key: coreKey,
-          ...coreData,
-        };
-      });
-
-      if (selectedAccount) {
+      if (selectedAccount && stakingCores) {
         const userStakeInfo: { coreId: number; era: number; staked: BigNumber; }[] = [];
         let unclaimedCores = { cores: [] as { coreId: number; earliestEra: number; }[], total: 0 };
 

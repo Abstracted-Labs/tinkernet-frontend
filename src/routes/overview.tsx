@@ -2,7 +2,7 @@ import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
@@ -13,30 +13,24 @@ import { AnyJson, Codec } from "@polkadot/types/types";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { StakesInfo, VestingData, VestingSchedule } from "./claim";
-import ProjectCard from "../components/ProjectCard";
 import MetricDashboard from "../components/MetricDashboard";
 import Button from "../components/Button";
 import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
-import { StakingCore, CoreEraStakedInfoType, UserStakedInfoType, ChainPropertiesType, TotalUserStakedData, StakedType, BalanceType, LockedType, CoreEraStakeType, LedgerType, TotalRewardsClaimedSubscription, TotalRewardsClaimedQuery, RewardQueryType, getCoreInfo, getTotalUserStaked } from "./staking";
+import { StakingCore, CoreEraStakeInfoType, UserStakedInfoType, TotalUserStakedData, BalanceType, LockedType, TotalRewardsClaimedSubscription, TotalRewardsClaimedQuery, RewardQueryType, TotalRewardsCoreClaimedQuery, getCoreInfo, getTotalUserStaked } from "./staking";
 import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import OnOffSwitch from "../components/Switch";
+import DaoList from "../components/DaoList";
 
 export type StakedDaoType = StakingCore & { members?: AnyJson; };
 
 const Overview = () => {
   const api = useApi();
-  const descriptionRef = useRef<HTMLDivElement | null>(null);
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
-  const [hasUnbondedTokens, setHasUnbondedTokens] = useState(false);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
-  const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakedInfoType[]>([]);
+  const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<Partial<CoreEraStakeInfoType>[]>([]);
   const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>();
-  const [totalStaked, setTotalStaked] = useState<BigNumber>();
-  const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
-  >([]);
-  const [totalSupply, setTotalSupply] = useState<BigNumber>();
   const [aggregateStaked, setAggregateStaked] = useState<BigNumber>();
   const [unclaimedEras, setUnclaimedEras] = useState<{
     cores: { coreId: number; earliestEra: number; }[];
@@ -48,16 +42,15 @@ const Overview = () => {
   const [isDataLoaded, setDataLoaded] = useState(false);
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
-  const [chainProperties, setChainProperties] = useState<ChainPropertiesType>();
   const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [nextEraBlock, setNextEraBlock] = useState<number>(0);
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
-  const [coreInfoData, setCoreInfoData] = useState<{ [key: number]: CoreEraStakedInfoType | undefined; }>({});
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
+  const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
+  >([]);
   const [vestingSummary, setVestingSummary] = useState<VestingData | null>(null);
   const [enableAutoRestake, setEnableAutoRestake] = useState<boolean>(false);
   const [stakedDaos, setStakedDaos] = useState<StakedDaoType[]>([]);
-  const [existentialDeposit, setExistentialDeposit] = useState<BigNumber>(new BigNumber(0));
 
   const [rewardsClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -68,6 +61,11 @@ const Overview = () => {
     },
 
     pause: !selectedAccount,
+  });
+
+  const [rewardsCoreClaimedQuery] = useQuery({
+    query: TotalRewardsCoreClaimedQuery,
+    variables: {}
   });
 
   const setupSubscriptions = ({
@@ -90,14 +88,7 @@ const Overview = () => {
     let generalEraInfo;
 
     if (currentStakingEra > 0) {
-      generalEraInfo = api.query.ocifStaking.generalEraInfo(
-        currentStakingEra,
-        (c: Codec) => {
-          const stakingInfo = c.toPrimitive() as StakedType;
-
-          setTotalStaked(new BigNumber(stakingInfo.staked));
-        }
-      );
+      generalEraInfo = api.query.ocifStaking.generalEraInfo(currentStakingEra);
     }
 
     // Staking current era subscription
@@ -105,17 +96,7 @@ const Overview = () => {
       setCurrentStakingEra(era.toPrimitive() as number);
     });
 
-    const account = api.query.system.account(
-      selectedAccount.address,
-      async (account) => {
-        const balance = account.toPrimitive() as BalanceType;
-        const locked = (
-          await api.query.ocifStaking.ledger(selectedAccount.address)
-        ).toPrimitive() as LockedType;
-        const availableTNKR = new BigNumber(balance.data.free).minus(new BigNumber(locked.locked));
-        setAvailableBalance(availableTNKR);
-      }
-    );
+    const account = api.query.system.account(selectedAccount.address);
 
     const unsubs = [blocks, nextEraStartingBlock, currentEra, account];
 
@@ -123,97 +104,72 @@ const Overview = () => {
       unsubs.push(generalEraInfo);
     }
 
-    // Core era stake + Use era stake subscriptions
-    const coreEraStakeInfoMap: Map<
-      number, CoreEraStakedInfoType> = new Map();
-
     const userStakedInfoMap: Map<
       number, UserStakedInfoType
     > = new Map();
 
-    for (const stakingCore of stakingCores) {
-      api.query.ocifStaking.coreEraStake(
-        stakingCore.key,
-        currentStakingEra,
-        (c: Codec) => {
-          const coreEraStake = c.toPrimitive() as CoreEraStakeType;
+    if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
+      for (const stakingCore of stakingCores) {
+        api.query.ocifStaking.generalStakerInfo(
+          stakingCore.key,
+          selectedAccount.address,
+          (generalStakerInfo: Codec) => {
+            const info = generalStakerInfo.toPrimitive() as StakesInfo;
+            if (info.stakes.length > 0) {
+              const unclaimedEarliest = info.stakes.reduce((p, v) => parseInt(p.era) < parseInt(v.era) ? p : v).era;
+              if (parseInt(unclaimedEarliest) < currentStakingEra) {
+                const unclaimed = unclaimedEras;
+                const unclaimedCore = unclaimed.cores.find(value => value.coreId === stakingCore.key);
 
-          coreEraStakeInfoMap.set(stakingCore.key, {
-            coreId: stakingCore.key,
-            account: stakingCore.account,
-            ...coreEraStake,
-          });
+                if (unclaimedCore) {
+                  // Update the earliestEra of the existing core
+                  unclaimedCore.earliestEra = parseInt(unclaimedEarliest);
+                } else {
+                  // Add a new core
+                  unclaimed.cores.push({
+                    coreId: stakingCore.key,
+                    earliestEra: parseInt(unclaimedEarliest),
+                  });
+                }
 
-          if (Array.from(coreEraStakeInfoMap.values()).length > 0) {
-            setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
-          }
-        }
-      );
+                let total = unclaimed.total;
+                total = currentStakingEra - parseInt(unclaimedEarliest);
 
-      api.query.ocifStaking.ledger(selectedAccount.address, (c: Codec) => {
-        const ledger = c.toPrimitive() as LedgerType;
-        setHasUnbondedTokens(ledger.unbondingInfo.unlockingChunks.length > 0);
-      });
-
-      api.query.ocifStaking.generalStakerInfo(
-        stakingCore.key,
-        selectedAccount.address,
-        (generalStakerInfo: Codec) => {
-          const info = generalStakerInfo.toPrimitive() as StakesInfo;
-          if (info.stakes.length > 0) {
-            const unclaimedEarliest = info.stakes.reduce((p, v) => parseInt(p.era) < parseInt(v.era) ? p : v).era;
-            if (parseInt(unclaimedEarliest) < currentStakingEra) {
-              const unclaimed = unclaimedEras;
-              const unclaimedCore = unclaimed.cores.find(value => value.coreId === stakingCore.key);
-
-              if (unclaimedCore) {
-                // Update the earliestEra of the existing core
-                unclaimedCore.earliestEra = parseInt(unclaimedEarliest);
-              } else {
-                // Add a new core
-                unclaimed.cores.push({
-                  coreId: stakingCore.key,
-                  earliestEra: parseInt(unclaimedEarliest),
+                setUnclaimedEras({
+                  cores: unclaimed.cores,
+                  total,
                 });
+              } else {
+                setUnclaimedEras((unclaimedEras) => ({
+                  ...unclaimedEras,
+                  total: 0,
+                }));
               }
 
-              let total = unclaimed.total;
-              total = currentStakingEra - parseInt(unclaimedEarliest);
-              setUnclaimedEras({
-                cores: unclaimed.cores,
-                total,
+              const latestInfo = info.stakes.at(-1);
+
+              if (!latestInfo) {
+                return;
+              }
+
+              userStakedInfoMap.set(stakingCore.key, {
+                coreId: stakingCore.key,
+                era: parseInt(latestInfo.era),
+                staked: new BigNumber(latestInfo.staked),
               });
-            } else {
-              setUnclaimedEras((unclaimedEras) => ({
-                ...unclaimedEras,
-                total: 0,
-              }));
-            }
 
-            const latestInfo = info.stakes.at(-1);
+              if (Array.from(userStakedInfoMap.values()).length != 0) {
+                const newTotalStaked = Array.from(
+                  userStakedInfoMap.values()
+                ).reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
 
-            if (!latestInfo) {
-              return;
-            }
-
-            userStakedInfoMap.set(stakingCore.key, {
-              coreId: stakingCore.key,
-              era: parseInt(latestInfo.era),
-              staked: new BigNumber(latestInfo.staked),
-            });
-
-            if (Array.from(userStakedInfoMap.values()).length != 0) {
-              setUserStakedInfo(Array.from(userStakedInfoMap.values()));
-
-              const newTotalStaked = Array.from(
-                userStakedInfoMap.values()
-              ).reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
-
-              setTotalUserStaked(newTotalStaked);
+                setTotalUserStaked(newTotalStaked);
+                setUserStakedInfo(Array.from(userStakedInfoMap.values()));
+              }
             }
           }
-        }
-      );
+        );
+      }
     }
 
     return unsubs as UnsubscribePromise[];
@@ -221,27 +177,7 @@ const Overview = () => {
 
   const loadStakingConstants = async () => {
     const blocksPerEra = api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
-    const maxStakersPerCore = api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
-    const inflationErasPerYear = api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
-    const existentialDeposit = api.consts.balances.existentialDeposit.toPrimitive() as number;
-
-    setExistentialDeposit(new BigNumber(existentialDeposit));
     setBlocksPerEra(blocksPerEra);
-    setChainProperties({ maxStakersPerCore, inflationErasPerYear });
-  };
-
-  const loadCurrentEraAndStake = async () => {
-    const currentStakingEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
-    const generalEraInfo = (await api.query.ocifStaking.generalEraInfo(currentStakingEra)).toPrimitive() as StakedType;
-    const totalStaked = new BigNumber(generalEraInfo.staked);
-
-    setCurrentStakingEra(currentStakingEra);
-    setTotalStaked(totalStaked);
-  };
-
-  const loadTotalSupply = async () => {
-    const supply = (await api.query.balances.totalIssuance()).toPrimitive() as string;
-    setTotalSupply(new BigNumber(supply));
   };
 
   const loadAggregateStaked = async () => {
@@ -250,24 +186,18 @@ const Overview = () => {
     setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
   };
 
+  const loadDaos = async () => {
+    if (!selectedAccount) return;
+    const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, totalUserStakedData, api);
+    setStakedDaos(daos);
+  };
+
   const loadCores = async () => {
     const cores = await loadProjectCores(api);
 
     if (cores) {
       setStakingCores(cores);
     }
-  };
-
-  const loadCoreEraStakeInfo = async (stakingCores: StakingCore[]) => {
-    const coreEraStakeInfo: CoreEraStakedInfoType[] = [];
-
-    for (const stakingCore of stakingCores) {
-      const coreEraStake = (await api.query.ocifStaking.coreEraStake(stakingCore.key, currentStakingEra)).toPrimitive() as CoreEraStakeType;
-
-      coreEraStakeInfo.push({ coreId: stakingCore.key, account: stakingCore.account, ...coreEraStake });
-    }
-
-    setCoreEraStakeInfo(coreEraStakeInfo);
   };
 
   const loadAccountInfo = async (selectedAccount: InjectedAccountWithMeta) => {
@@ -296,12 +226,6 @@ const Overview = () => {
     }
   };
 
-  const loadDaos = async () => {
-    if (!selectedAccount) return;
-    const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, totalUserStakedData, api);
-    setStakedDaos(daos);
-  };
-
   const loadDashboardData = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       toast.loading("Loading staking cores...");
@@ -310,10 +234,7 @@ const Overview = () => {
         await loadAccountInfo(selectedAccount);
         await loadCores();
         await loadStakingConstants();
-        await loadCurrentEraAndStake();
-        await loadTotalSupply();
         await loadAggregateStaked();
-        await loadCoreEraStakeInfo(stakingCores);
         await loadVestingBalance(selectedAccount);
       }
 
@@ -323,21 +244,6 @@ const Overview = () => {
       setLoading(false);
       toast.error(`${ error }`);
     }
-  };
-
-  const handleManageStaking = async ({
-    core,
-    totalUserStaked,
-    availableBalance,
-  }: {
-    core: StakingCore;
-    totalUserStaked: BigNumber;
-    availableBalance: BigNumber;
-  }) => {
-    setOpenModal({
-      name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalUserStaked, availableBalance, stakingCores, totalUserStakedData },
-    });
   };
 
   const handleAutoRestakeSwitch = (bool: boolean) => {
@@ -399,7 +305,7 @@ const Overview = () => {
       const uniqueCores = [
         ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
       ];
-      console.log("uniqueCores", uniqueCores);
+
       for (const core of uniqueCores) {
         if (!core?.earliestEra) continue;
 
@@ -483,26 +389,6 @@ const Overview = () => {
     });
   };
 
-  const handleRegisterProject = async () => {
-    setOpenModal({
-      name: modalName.REGISTER_PROJECT,
-    });
-  };
-
-  const toggleReadMore = (core: StakingCore) => {
-    setOpenModal({
-      name: modalName.READ_MORE,
-      metadata: core.metadata,
-    });
-  };
-
-  const toggleViewMembers = (core: StakingCore, members: AnyJson[]) => {
-    setOpenModal({
-      name: modalName.MEMBERS,
-      metadata: { ...core.metadata, members },
-    });
-  };
-
   const disableClaiming = useMemo(() => {
     return unclaimedEras.total === 0 || isWaiting;
   }, [unclaimedEras, isWaiting]);
@@ -542,17 +428,6 @@ const Overview = () => {
   }, []);
 
   useEffect(() => {
-    let unsubs: UnsubscribePromise[] = [];
-    if (selectedAccount) {
-      unsubs = setupSubscriptions({ selectedAccount });
-    }
-
-    return () => {
-      unsubs.forEach(async (unsub) => (await unsub)());
-    };
-  }, [selectedAccount, api, stakingCores]);
-
-  useEffect(() => {
     loadDashboardData(selectedAccount);
   }, [selectedAccount, api]);
 
@@ -563,10 +438,24 @@ const Overview = () => {
   }, [selectedAccount, stakingCores, totalUserStakedData, api]);
 
   useEffect(() => {
+    if (!rewardsClaimedQuery.data?.stakers?.length || !selectedAccount) return;
+
+    const rewardsClaimed = new BigNumber(
+      rewardsClaimedQuery.data.stakers[0].totalRewards
+    );
+    setTotalClaimed(rewardsClaimed);
+
+    const totalUnclaimed = new BigNumber(
+      rewardsClaimedQuery.data.stakers[0].totalUnclaimed
+    );
+    setTotalUnclaimed(totalUnclaimed);
+  }, [selectedAccount, rewardsClaimedQuery]);
+
+  useEffect(() => {
     let isMounted = true;
 
     (async () => {
-      const coreInfoResults: { [key: number]: CoreEraStakedInfoType | undefined; } = {};
+      const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
       const totalUserStakedResults: { [key: number]: BigNumber | undefined; } = {};
 
       for (const core of stakingCores) {
@@ -587,14 +476,6 @@ const Overview = () => {
       }
 
       if (isMounted) {
-        setCoreInfoData(prevState => {
-          const newState = { ...prevState, ...coreInfoResults };
-          if (JSON.stringify(newState) !== JSON.stringify(prevState)) {
-            return newState;
-          }
-          return prevState;
-        });
-
         setTotalUserStakedData(prevState => {
           const newState = { ...prevState, ...totalUserStakedResults };
           if (JSON.stringify(newState) !== JSON.stringify(prevState)) {
@@ -614,18 +495,34 @@ const Overview = () => {
   }, [stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   useEffect(() => {
-    if (!rewardsClaimedQuery.data?.stakers?.length) return;
+    if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
 
-    const rewardsClaimed = new BigNumber(
-      rewardsClaimedQuery.data.stakers[0].totalRewards
-    );
-    setTotalClaimed(rewardsClaimed);
+    let coreEraStakeInfoMap: CoreEraStakeInfoType[] = [];
+    coreEraStakeInfoMap = rewardsCoreClaimedQuery.data.cores.filter((core: CoreEraStakeInfoType) => {
+      return !coreEraStakeInfoMap.some((item: CoreEraStakeInfoType) => item.coreId === core.coreId);
+    });
 
-    const totalUnclaimed = new BigNumber(
-      rewardsClaimedQuery.data.stakers[0].totalUnclaimed
-    );
-    setTotalUnclaimed(totalUnclaimed);
-  }, [selectedAccount, rewardsClaimedQuery]);
+    setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
+  }, [stakingCores, rewardsCoreClaimedQuery]);
+
+  useEffect(() => {
+    let unsubs: UnsubscribePromise[] = [];
+    if (selectedAccount) {
+      unsubs = setupSubscriptions({ selectedAccount });
+    }
+
+    return () => {
+      unsubs.forEach((unsub: UnsubscribePromise) => {
+        if (unsub) {
+          unsub.then(unsubFunc => {
+            if (typeof unsubFunc === 'function') {
+              unsubFunc();
+            }
+          });
+        }
+      });
+    };
+  }, [selectedAccount, api, stakingCores]);
 
   return (
     <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
@@ -678,42 +575,7 @@ const Overview = () => {
             unclaimedEras={unclaimedEras}
           />
 
-          {/* <div>
-            {selectedAccount ? (
-              <button
-                type="button"
-                onClick={handleRegisterProject}
-                className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-40"
-              >
-                Register Project
-              </button>
-            ) : null}
-          </div> */}
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {isDataLoaded ? stakingCores.map((core: StakingCore) => {
-              const coreInfo = coreInfoData[core.key];
-              const userStaked = totalUserStakedData[core.key];
-
-              return (
-                <div className="relative" key={core.key}>
-                  <ProjectCard
-                    members={stakedDaos.find((dao) => dao.key === core.key)?.members as AnyJson[] || []}
-                    core={core}
-                    totalUserStaked={userStaked}
-                    coreInfo={coreInfo}
-                    handleManageStaking={handleManageStaking}
-                    toggleExpanded={toggleReadMore}
-                    toggleViewMembers={toggleViewMembers}
-                    chainProperties={chainProperties}
-                    availableBalance={availableBalance}
-                    descriptionRef={descriptionRef}
-                    selectedAccount={selectedAccount}
-                  />
-                </div>
-              );
-            }) : <LoadingSpinner />}
-          </div>
+          <DaoList />
         </>
       ) : <div className="text-center">
         <h5 className="text-sm font-bold text-white">

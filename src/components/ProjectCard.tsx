@@ -3,7 +3,7 @@ import { BigNumber } from 'bignumber.js';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
 import { formatBalance } from '@polkadot/util';
 import toast from 'react-hot-toast';
-import { StakingCore, CoreEraStakedInfoType, ChainPropertiesType } from '../routes/staking';
+import { StakingCore, CoreEraStakeInfoType, ChainPropertiesType } from '../routes/staking';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import TotalStakersIcon from '../assets/total-stakers-icon.svg';
 import TotalStakedIcon from '../assets/total-staked-icon.svg';
@@ -14,7 +14,7 @@ import { AnyJson } from '@polkadot/types/types';
 export interface ProjectCardProps {
   core: StakingCore;
   totalUserStaked: BigNumber | undefined;
-  coreInfo: CoreEraStakedInfoType | undefined;
+  coreInfo: Partial<CoreEraStakeInfoType> | undefined;
   chainProperties: ChainPropertiesType | undefined;
   availableBalance: BigNumber | undefined;
   handleManageStaking: (args: {
@@ -114,12 +114,16 @@ const ProjectCard = (props: ProjectCardProps) => {
               </div>
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal]">
-              {formatBalance(coreInfo?.total.toString(), {
-                decimals: 12,
-                withUnit: false,
-                forceUnit: "-",
-              }).slice(0, -2)}{" "}
-              TNKR
+              {coreInfo?.totalRewards
+                ? `${ formatBalance(
+                  coreInfo?.totalRewards.toString(),
+                  {
+                    decimals: 12,
+                    withUnit: false,
+                    forceUnit: "-",
+                  }
+                ).slice(0, -2) } TNKR`
+                : '--'}
             </div>
           </div>
           <div className="flex justify-between items-center">

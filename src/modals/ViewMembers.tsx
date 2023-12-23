@@ -38,8 +38,8 @@ const ViewMembers = (props: ViewMembersProps) => {
   }, [metadata]);
 
   if (!localMetadata) return null;
+
   const { name, members, image } = localMetadata;
-  console.log(name, members, image);
 
   if (!name || !members || !image) return null;
 
