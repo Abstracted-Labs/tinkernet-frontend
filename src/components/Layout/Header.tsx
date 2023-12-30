@@ -35,9 +35,9 @@ const Header = (props: SideNavProps) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 md:mx-0">
+        <div className="flex items-center gap-2 md:mx-0">
           <LoginButton />
-          <Button variant="secondary" className="p-1" mini onClick={handleClick}>
+          <Button variant="secondary" className="p-0 block" mini onClick={handleClick}>
             <img src={!open ? MenuIcon : CloseIcon} alt="Menu" className="w-3 h-3" />
           </Button>
         </div>
