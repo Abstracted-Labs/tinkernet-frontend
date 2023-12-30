@@ -13,10 +13,8 @@ import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import Button from "../components/Button";
 
 const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
-  const { setOpenModal } = useModal(
-    (state) => ({
-      setOpenModal: state.setOpenModal,
-    }),
+  const { closeCurrentModal } = useModal(
+    (state) => state,
     shallow
   );
   const [unbondingInfo, setUnbondingInfo] = useState<
@@ -72,7 +70,7 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
         })
       );
 
-      setOpenModal({ name: null });
+      closeCurrentModal();
     } catch (error) {
       toast.dismiss();
 
@@ -122,7 +120,7 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
   }, [isOpen]);
 
   return (
-    <Dialog open={isOpen} onClose={() => setOpenModal({ name: null })}>
+    <Dialog open={isOpen} onClose={closeCurrentModal}>
       <Dialog.Overlay className="fixed inset-0 z-50 h-screen w-full bg-neutral-900/40 backdrop-blur-md" />
 
       <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">

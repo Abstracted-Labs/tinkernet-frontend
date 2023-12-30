@@ -12,7 +12,7 @@ import { shallow } from "zustand/shallow";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
-import useModal, { Metadata } from "../stores/modals";
+import useModal, { Metadata, ModalState, modalName } from "../stores/modals";
 import classNames from "../utils/classNames";
 import Input from "../components/Input";
 import Button from "../components/Button";
@@ -46,13 +46,12 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
   const [altBalance, isAltBalance] = useState<boolean>(false);
   const [coreStakedBalance, setCoreStakedBalance] = useState<string>("0");
-  const { setOpenModal, metadata } = useModal(
-    (state) => ({
-      setOpenModal: state.setOpenModal,
-      metadata: state.metadata,
-    }),
+  const { closeCurrentModal, openModals } = useModal<ModalState>(
+    (state) => state,
     shallow
   );
+  const targetModal = openModals.find(modal => modal.name === modalName.MANAGE_STAKING);
+  const metadata = targetModal ? targetModal.metadata : undefined;
   const initialSelectedCore = useRef<Metadata | undefined>(metadata);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const stakeForm = useForm<z.infer<typeof schema>>({
@@ -184,7 +183,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       toast.dismiss();
       toast.error(`${ error }`);
     } finally {
-      setOpenModal({ name: null });
+      closeCurrentModal();
     }
   });
 
@@ -256,7 +255,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       toast.dismiss();
       toast.error("Failed to unstake");
     } finally {
-      setOpenModal({ name: null });
+      closeCurrentModal();
     }
   });
 
@@ -374,7 +373,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   });
 
   return (
-    <Dialog open={isOpen} onClose={() => setOpenModal({ name: null })}>
+    <Dialog open={isOpen} onClose={closeCurrentModal}>
       <Dialog.Overlay className="fixed inset-0 z-[49] h-screen w-full bg-neutral-900/40 backdrop-blur-md" />
 
       <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">

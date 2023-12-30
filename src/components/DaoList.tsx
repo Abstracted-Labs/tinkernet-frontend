@@ -15,9 +15,13 @@ import { UnsubscribePromise } from '@polkadot/api/types';
 import { StakesInfo } from '../routes/claim';
 import useModal, { modalName } from '../stores/modals';
 
-const DaoList = () => {
+interface DaoListProps { mini: boolean; }
+
+const DaoList = (props: DaoListProps) => {
+  const { mini } = props;
   const api = useApi();
   const descriptionRef = useRef<HTMLDivElement | null>(null);
+  const projectCardRef = useRef<HTMLDivElement | null>(null);
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const [isLoading, setLoading] = useState(true);
@@ -48,6 +52,15 @@ const DaoList = () => {
     setOpenModal({
       name: modalName.READ_MORE,
       metadata: core.metadata,
+    });
+  };
+
+  const handleViewDetails = (mini: boolean, children?: JSX.Element) => {
+    if (!mini || !children) return;
+    console.log('handleViewDetails', mini, children);
+    setOpenModal({
+      name: modalName.VIEW_DETAILS,
+      metadata: { children },
     });
   };
 
@@ -157,6 +170,7 @@ const DaoList = () => {
         const coreEraStake = coreEraStakeInfo.find(info => info.coreId === stakingCore.key);
 
         if (coreEraStake) {
+          console.log('coreEraStake', coreEraStake);
           coreEraStakeInfoMap.set(stakingCore.key, {
             ...coreEraStake,
           });
@@ -286,21 +300,28 @@ const DaoList = () => {
       {stakingCores.map((core: StakingCore) => {
         const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);
         const userStaked = totalUserStakedData[core.key];
+
+        const projectCard = (minified: boolean) => (
+          <ProjectCard
+            mini={minified}
+            members={stakedDaos.find((dao) => dao.key === core.key)?.members as AnyJson[] || []}
+            core={core}
+            totalUserStaked={userStaked}
+            coreInfo={coreInfo}
+            handleManageStaking={handleManageStaking}
+            handleViewDetails={(mini) => handleViewDetails(mini, projectCard(false))}
+            toggleExpanded={toggleReadMore}
+            toggleViewMembers={toggleViewMembers}
+            chainProperties={chainProperties}
+            availableBalance={availableBalance}
+            descriptionRef={minified ? projectCardRef : descriptionRef}
+            selectedAccount={selectedAccount}
+          />
+        );
+
         return (
           <div className="relative" key={core.key}>
-            <ProjectCard
-              members={stakedDaos.find((dao) => dao.key === core.key)?.members as AnyJson[] || []}
-              core={core}
-              totalUserStaked={userStaked}
-              coreInfo={coreInfo}
-              handleManageStaking={handleManageStaking}
-              toggleExpanded={toggleReadMore}
-              toggleViewMembers={toggleViewMembers}
-              chainProperties={chainProperties}
-              availableBalance={availableBalance}
-              descriptionRef={descriptionRef}
-              selectedAccount={selectedAccount}
-            />
+            {projectCard(mini)}
           </div>
         );
       })}

@@ -1,4 +1,4 @@
-import { RefObject, useState } from 'react';
+import { RefObject, useEffect, useState } from 'react';
 import { BigNumber } from 'bignumber.js';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
 import { formatBalance } from '@polkadot/util';
@@ -10,6 +10,8 @@ import TotalStakedIcon from '../assets/total-staked-icon.svg';
 import MyProjectStakeIcon from '../assets/my-project-stake-icon.svg';
 import Avatar from './Avatar';
 import { AnyJson } from '@polkadot/types/types';
+import useApi from '../hooks/useApi';
+import { formatNumberShorthand } from '../utils/formatNumber';
 
 export interface ProjectCardProps {
   core: StakingCore;
@@ -22,12 +24,16 @@ export interface ProjectCardProps {
     totalUserStaked: BigNumber;
     availableBalance: BigNumber;
   }) => void;
+  handleViewDetails?: (mini: boolean) => void;
   descriptionRef: RefObject<HTMLDivElement>;
   toggleExpanded: (core: StakingCore) => void;
   toggleViewMembers: (core: StakingCore, members: AnyJson[]) => void;
   selectedAccount: InjectedAccountWithMeta | null;
   members: AnyJson[];
+  mini: boolean;
 }
+
+const STAT_UNDERLINE = 'pb-2 border-b border-b-[#2B2C30]';
 
 const ProjectCard = (props: ProjectCardProps) => {
   const {
@@ -37,13 +43,19 @@ const ProjectCard = (props: ProjectCardProps) => {
     chainProperties,
     availableBalance,
     handleManageStaking,
+    handleViewDetails,
     descriptionRef,
     toggleExpanded,
     toggleViewMembers,
     selectedAccount,
     members,
+    mini
   } = props;
   const [isHovered, setIsHovered] = useState(false);
+  const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber("0"));
+  const [minStakeReward, setMinStakeReward] = useState<BigNumber>(new BigNumber("0"));
+  const [minSupportMet, setMinSupportMet] = useState<boolean>(false);
+  const api = useApi();
 
   const handleReadMore = () => {
     setIsHovered(!isHovered);
@@ -54,21 +66,72 @@ const ProjectCard = (props: ProjectCardProps) => {
     toggleViewMembers(core, members);
   };
 
+  const loadAggregateStaked = async () => {
+    const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
+    const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
+    setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
+  };
+
+  const loadStakeRewardMinimum = () => {
+    const minStakeReward = api.consts.ocifStaking.stakeThresholdForActiveCore.toPrimitive() as string;
+    setMinStakeReward(new BigNumber(minStakeReward));
+  };
+
+  const calcMinSupportMet = () => {
+    if (minStakeReward.isLessThan(coreInfo?.totalStaked || new BigNumber("0"))) {
+      setMinSupportMet(true);
+    } else {
+      setMinSupportMet(false);
+    }
+  };
+
+  const handleClick = () => {
+    const parsedTotalStaked = totalUserStaked || new BigNumber("0");
+
+    const parsedAvailableBalance = availableBalance && availableBalance.isNegative()
+      ? new BigNumber("0")
+      : availableBalance || new BigNumber("0");
+
+    if (handleViewDetails && mini) {
+      handleViewDetails(mini);
+      return;
+    }
+
+    handleManageStaking({
+      core,
+      totalUserStaked: parsedTotalStaked,
+      availableBalance: parsedAvailableBalance,
+    });
+  };
+
+  useEffect(() => {
+    loadAggregateStaked();
+    loadStakeRewardMinimum();
+  }, []);
+
+  useEffect(() => {
+    calcMinSupportMet();
+  }, [minStakeReward, coreInfo?.totalStaked]);
+
   return (
     <div
       key={core.account}
       className="flex flex-col justify-between w-full bg-tinkerGrey rounded-xl space-y-4">
-      <div className='p-8 h-96 flex flex-col justify-between'>
+      <div className={`relative p-8 flex flex-col gap-6 justify-start ${ mini ? 'h-44' : 'h-96' }`}>
+
+        {/* Avatar, Name, Members */}
         <div className="flex items-center space-x-4">
           <Avatar src={core.metadata.image} alt="Project Image" />
           <div className="flex flex-col items-start gap-1 justify-start">
             <h4 className="font-bold text-white text-[18px] text-left tracking-[0] leading-none">
               {core.metadata.name}
             </h4>
-            <span onClick={handleViewMembers} className="text-xs text-tinkerTextGrey hover:text-tinkerYellow cursor-pointer">Members: {members ? members.length : 0}</span>
+            {!mini ? <span onClick={handleViewMembers} className="text-xs text-tinkerTextGrey hover:text-tinkerYellow cursor-pointer">Members: {members ? members.length : 0}</span> : null}
           </div>
         </div>
-        <div ref={descriptionRef} className={`relative bg-tinkerDarkGrey rounded-lg p-4 h-28 hover:cursor-pointer`}
+
+        {/* Description */}
+        {!mini ? <div ref={descriptionRef} className={`relative bg-tinkerDarkGrey rounded-lg p-4 h-28 hover:cursor-pointer`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleReadMore}>
@@ -78,9 +141,12 @@ const ProjectCard = (props: ProjectCardProps) => {
           <p className={`font-normal text-white text-[14px] tracking-[0] leading-[18px] line-clamp-4 gradient-bottom hover:text-opacity-20`}>
             {core.metadata.description}
           </p>
-        </div>
-        <div className="grid grid-cols-1 gap-2">
-          <div className="flex justify-between items-center pb-2 border-b border-b-[#2B2C30]">
+        </div> : null}
+
+        <div className={`relative stats-section grid grid-cols-1 gap-2 ${ !mini ? 'tinker-scrollbar scrollbar scrollbar-thin pr-4 overflow-y-scroll' : '' }`}>
+
+          {/* Total Stakers */}
+          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
             <div className='flex flex-row items-center gap-2'>
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={TotalStakersIcon} alt="Total Stakers Icon" />
@@ -103,8 +169,10 @@ const ProjectCard = (props: ProjectCardProps) => {
               ) : null}
               <span>{coreInfo?.numberOfStakers}</span>
             </div>
-          </div>
-          <div className="flex justify-between items-center pb-2 border-b border-b-[#2B2C30]">
+          </div> : null}
+
+          {/* Total Staked */}
+          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
             <div className='flex flex-row items-center gap-2'>
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={TotalStakedIcon} alt="Total Staked Icon" />
@@ -113,10 +181,10 @@ const ProjectCard = (props: ProjectCardProps) => {
                 Total Staked
               </div>
             </div>
-            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal]">
-              {coreInfo?.totalRewards
+            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+              {coreInfo?.totalStaked
                 ? `${ formatBalance(
-                  coreInfo?.totalRewards.toString(),
+                  coreInfo?.totalStaked.toString(),
                   {
                     decimals: 12,
                     withUnit: false,
@@ -125,8 +193,10 @@ const ProjectCard = (props: ProjectCardProps) => {
                 ).slice(0, -2) } TNKR`
                 : '--'}
             </div>
-          </div>
-          <div className="flex justify-between items-center">
+          </div> : null}
+
+          {/* My Stake */}
+          <div className={`stats flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}>
             <div className='flex flex-row items-center gap-2'>
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
                 <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
@@ -135,7 +205,7 @@ const ProjectCard = (props: ProjectCardProps) => {
                 My Stake
               </div>
             </div>
-            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal]">
+            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {totalUserStaked
                 ? `${ formatBalance(
                   totalUserStaked.toString(),
@@ -148,32 +218,108 @@ const ProjectCard = (props: ProjectCardProps) => {
                 : '--'}
             </div>
           </div>
+
+          {/* Total Rewards */}
+          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+            <div className='flex flex-row items-center gap-2'>
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+                <img src={TotalStakedIcon} alt="Total Staked Icon" />
+              </div>
+              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+                Total Rewards
+              </div>
+            </div>
+            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+              {coreInfo?.totalRewards
+                ? `${ formatBalance(
+                  coreInfo?.totalRewards.toString(),
+                  {
+                    decimals: 12,
+                    withUnit: false,
+                    forceUnit: "-",
+                  }
+                ).slice(0, -2) } TNKR`
+                : '--'}
+            </div>
+          </div> : null}
+
+          {/* Unclaimed Rewards */}
+          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+            <div className='flex flex-row items-center gap-2'>
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+                <img src={TotalStakedIcon} alt="Total Staked Icon" />
+              </div>
+              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+                Unclaimed Rewards
+              </div>
+            </div>
+            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+              {coreInfo?.totalUnclaimed
+                ? `${ formatBalance(
+                  coreInfo?.totalUnclaimed.toString(),
+                  {
+                    decimals: 12,
+                    withUnit: false,
+                    forceUnit: "-",
+                  }
+                ).slice(0, -2) } TNKR`
+                : '--'}
+            </div>
+          </div> : null}
+
+          {/* Support Share */}
+          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+            <div className='flex flex-row items-center gap-2'>
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+                <img src={TotalStakedIcon} alt="Total Staked Icon" />
+              </div>
+              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+                Support Share
+              </div>
+            </div>
+            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+              {coreInfo?.totalStaked && aggregateStaked
+                ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(aggregateStaked).toFixed(2) }%`
+                : '--'}
+            </div>
+          </div> : null}
+
+          {/* Minimum Support */}
+          {!mini ? <div className="stats flex justify-between items-center">
+            <div className='flex flex-row items-center gap-2'>
+              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+                <img src={TotalStakedIcon} alt="Total Staked Icon" />
+              </div>
+              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+                Min. Support Met
+              </div>
+            </div>
+            <div className="text-white font-normal text-[12px] text-right tracking-[0] leading-[normal] truncate">
+              <span className={`${ minSupportMet ? 'text-green-400' : 'text-red-400' }`}>
+                {coreInfo?.totalStaked && minStakeReward
+                  ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) }/${ formatBalance(minStakeReward.toString(), {
+                    decimals: 12,
+                    withUnit: false,
+                    forceUnit: '-',
+                    withZero: false
+                  }) }`
+                  : '--'}
+              </span> TNKR
+            </div>
+          </div> : null}
         </div>
       </div>
       {selectedAccount ? (
         <div className='relative' style={{ margin: 0 }}>
           <button type="button" className="bg-tinkerYellow bg-opacity-20 hover:bg-opacity-100 text-tinkerYellow hover:text-black w-full rounded-bl-xl rounded-br-xl p-4 transition duration-100 disabled:cursor-not-allowed disabled:bg-opacity-20 focus:outline-none disabled:hover:bg-opacity-20 disabled:text-black disabled:text-opacity-40"
-            onClick={() => {
-              const parsedTotalStaked =
-                totalUserStaked || new BigNumber("0");
-
-              const parsedAvailableBalance = availableBalance && availableBalance.isNegative()
-                ? new BigNumber("0")
-                : availableBalance || new BigNumber("0");
-
-              handleManageStaking({
-                core,
-                totalUserStaked: parsedTotalStaked,
-                availableBalance: parsedAvailableBalance,
-              });
-            }}
+            onClick={handleClick}
             disabled={
               (coreInfo?.numberOfStakers || 0) >=
               (chainProperties?.maxStakersPerCore || 0) &&
               !totalUserStaked
             }>
             <span className="font-base text-[16px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
-              Manage Staking
+              {!mini ? 'Manage Staking' : 'View Details'}
             </span>
           </button>
         </div>

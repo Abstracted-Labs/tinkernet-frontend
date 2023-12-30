@@ -1,7 +1,7 @@
 import { Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { shallow } from "zustand/shallow";
-import useModal, { Metadata, ModalState } from "../stores/modals";
+import useModal, { Metadata, ModalState, modalName } from "../stores/modals";
 import { useEffect, useState } from "react";
 import Avatar from "../components/Avatar";
 import { AnyJson } from "@polkadot/types/types";
@@ -17,14 +17,16 @@ interface ViewMembersMetadata extends Metadata {
 
 const ViewMembers = (props: ViewMembersProps) => {
   const { isOpen } = props;
-  const { setOpenModal, metadata } = useModal<ModalState>(
+  const { closeCurrentModal, openModals } = useModal<ModalState>(
     (state) => state,
     shallow
   );
   const [localMetadata, setLocalMetadata] = useState<ViewMembersMetadata | null>(null);
+  const targetModal = openModals.find(modal => modal.name === modalName.MEMBERS);
+  const metadata = targetModal ? targetModal.metadata : undefined;
 
   function closeModal() {
-    setOpenModal({ name: null });
+    closeCurrentModal();
   }
 
   useEffect(() => {

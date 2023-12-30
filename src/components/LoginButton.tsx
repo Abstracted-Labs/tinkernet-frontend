@@ -16,7 +16,7 @@ const LoginButton = () => {
   const [isHovered, setIsHovered] = useState(false);
   const { handleConnect } = useConnect();
   const api = useApi();
-  const setOpenModal = useModal((state) => state.setOpenModal);
+  const closeCurrentModal = useModal((state) => state.closeCurrentModal);
   const { selectedAccount, setSelectedAccount } = useAccount(
     (state) => ({
       selectedAccount: state.selectedAccount,
@@ -27,7 +27,7 @@ const LoginButton = () => {
 
   const onDisconnect = () => {
     setSelectedAccount(null);
-    setOpenModal({ name: null });
+    closeCurrentModal();
   };
 
   const loadBalance = async () => {

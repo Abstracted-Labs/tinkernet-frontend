@@ -11,6 +11,8 @@ import { StakesInfo } from "./claim";
 import MetricDashboard from "../components/MetricDashboard";
 import { loadProjectCores } from '../utils/stakingServices';
 import DaoList from "../components/DaoList";
+import Button from "../components/Button";
+import useModal, { modalName } from "../stores/modals";
 
 export type UnsubFunction = () => Promise<void>;
 
@@ -42,6 +44,7 @@ export const TotalRewardsCoreClaimedQuery = `
       latestClaimBlock
       totalRewards
       totalUnclaimed
+      totalStaked
       coreId
       numberOfStakers
     }
@@ -54,6 +57,7 @@ export const TotalRewardsCoreClaimedSubscription = `
       latestClaimBlock
       totalRewards
       totalUnclaimed
+      totalStaked
       coreId
       numberOfStakers
     }
@@ -89,13 +93,7 @@ export type CoreEraStakeInfoType = {
   account: string;
   totalRewards: string;
   totalUnclaimed: string;
-  numberOfStakers: number;
-  rewardClaimed: boolean;
-  active: boolean;
-};
-
-export type CoreEraStakeType = {
-  total: string;
+  totalStaked: string;
   numberOfStakers: number;
   rewardClaimed: boolean;
   active: boolean;
@@ -154,6 +152,7 @@ export function getCoreInfo(coreEraStakeInfo: (CoreEraStakeInfoType | Partial<Co
 
 const Staking = () => {
   const api = useApi();
+  const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
@@ -290,6 +289,12 @@ const Staking = () => {
     }
   };
 
+  const handleRegisterProject = async () => {
+    setOpenModal({
+      name: modalName.REGISTER_PROJECT,
+    });
+  };
+
   useEffect(() => {
     loadDashboardData(selectedAccount);
   }, [selectedAccount, api]);
@@ -316,10 +321,20 @@ const Staking = () => {
   return (
     <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-        <h2 className="lg:text-xl font-bold my-3 flex flex-row items-center gap-4">
+        <h2 className="lg:text-xl font-bold leading-none my-3 flex flex-row items-center gap-4">
           <span>DAO Staking</span>
           <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
         </h2>
+
+        {selectedAccount && <div className="flex flex-row w-full md:w-auto gap-2 items-center justify-start z-1">
+          <Button
+            mini
+            onClick={handleRegisterProject}
+            disabled={isLoading}
+            variant="primary">
+            Register New DAO
+          </Button>
+        </div>}
       </div>
 
       {selectedAccount ? (
@@ -339,19 +354,8 @@ const Staking = () => {
             blocksPerEra={undefined}
             unclaimedEras={undefined}
           />
-          {/* <div>
-            {selectedAccount ? (
-              <button
-                type="button"
-                onClick={handleRegisterProject}
-                className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-40"
-              >
-                Register Project
-              </button>
-            ) : null}
-          </div> */}
 
-          <DaoList />
+          <DaoList mini={false} />
         </>
       ) : <div className="text-center">
         <h5 className="text-sm font-bold text-white">

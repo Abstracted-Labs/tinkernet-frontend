@@ -74,7 +74,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
           totalStaked &&
           totalStaked.toNumber() > 0
           ? totalSupply
-            .times(4) // 4 eras per year
+            .times(4) // Annualize
             .dividedBy(totalStaked) // Total supply / total staked
             .decimalPlaces(2)
             .toString()
@@ -83,7 +83,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
       </DashboardCard>}
 
       {aggregateStaked !== undefined && <DashboardCard
-        cardTitle="Total TNKR Supply"
+        cardTitle="Total Active TNKR Supply"
         iconSrc={AggregateStakedIcon}
         leading="leading-tight"
       >
@@ -99,7 +99,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         iconSrc={AggregateStakedIcon}
         leading="leading-tight"
       >
-        {totalStaked && totalStaked.toNumber() > 0 && aggregateStaked && aggregateStaked.toNumber() > 0 ? totalStaked.dividedBy(aggregateStaked).times(100).toFixed(2) : 0}%
+        {totalStaked && totalStaked.toNumber() > 0 && aggregateStaked && aggregateStaked.toNumber() > 0 ? totalStaked.times(100).dividedBy(aggregateStaked).toFixed(2) : 0}%
       </DashboardCard>}
 
       {totalSupply !== undefined && <DashboardCard cardTitle="Projected Annual DAO Rewards" iconSrc={AnnualRewardIcon}>

@@ -7,6 +7,7 @@ const modalName = {
   UNBOND_TOKENS: "UNBOND_TOKENS",
   READ_MORE: "READ_MORE",
   MEMBERS: "MEMBERS",
+  VIEW_DETAILS: "VIEW_DETAILS",
 } as const;
 
 type ModalName = (typeof modalName)[keyof typeof modalName];
@@ -14,12 +15,9 @@ type ModalName = (typeof modalName)[keyof typeof modalName];
 type Metadata = Record<string, unknown>;
 
 type ModalState = {
-  openModal: ModalName | null;
-  setOpenModal: ({
-    name,
-    metadata,
-  }: ModalType) => void;
-  metadata?: Metadata;
+  openModals: ModalType[];
+  setOpenModal: (modal: ModalType) => void;
+  closeCurrentModal: () => void;
 };
 
 type ModalType = {
@@ -28,16 +26,20 @@ type ModalType = {
 };
 
 const useModal = createWithEqualityFn<ModalState>()((set) => ({
-  openModal: null,
-  metadata: undefined,
+  openModals: [],
   setOpenModal: (modal) => {
     if (!modal) {
-      set({}, true);
-
       return;
     }
 
-    set(() => ({ openModal: modal.name, metadata: modal.metadata }));
+    set((state) => ({ openModals: [...state.openModals, modal] }));
+  },
+  closeCurrentModal: () => {
+    set((state) => {
+      const newOpenModals = [...state.openModals];
+      newOpenModals.pop();
+      return { openModals: newOpenModals };
+    });
   },
 }));
 

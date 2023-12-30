@@ -9,7 +9,6 @@ import {
   Client,
 } from "urql";
 import { createClient as createWSClient } from "graphql-ws";
-
 import Claim from "./routes/claim";
 import Transfer from "./routes/xtransfer";
 import Staking from "./routes/staking";

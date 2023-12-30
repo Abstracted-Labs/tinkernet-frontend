@@ -11,7 +11,7 @@ import { getWalletIcon } from "../utils/getWalletIcon";
 
 const AccountSelector = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
-  const setOpenModal = useModal((state) => state.setOpenModal);
+  const closeCurrentModal = useModal((state) => state.closeCurrentModal);
 
   const { selectedAccount, accounts, setSelectedAccount } = useAccount(
     (state) => ({
@@ -22,24 +22,24 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
     shallow
   );
 
-  function closeModal() {
-    setOpenModal({ name: null });
-  }
+  const closeModal = () => {
+    closeCurrentModal();
+  };
 
-  async function handleAccountSelection(
+  const handleAccountSelection = async (
     account: InjectedAccountWithMeta | null
-  ) {
+  ) => {
     if (!account) {
       setSelectedAccount(null);
 
-      setOpenModal({ name: null });
+      closeCurrentModal();
 
       return;
     }
 
     setSelectedAccount(account);
 
-    setOpenModal({ name: null });
+    closeCurrentModal();
   };
 
   return (
