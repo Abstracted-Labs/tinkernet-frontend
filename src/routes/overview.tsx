@@ -552,7 +552,7 @@ const Overview = () => {
             <div className="flex-grow">
               <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestakeSwitch(bool)} />
             </div>
-            <span className="text-xxs text-gray-300 relative bottom-1">Auto-Restake</span>
+            <span className="text-[.5rem] text-gray-300 relative bottom-1">Auto-Restake</span>
           </div>
         </div>}
       </div>
