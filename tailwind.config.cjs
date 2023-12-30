@@ -18,7 +18,7 @@ module.exports = {
         sans: [ "InterVariable", ...defaultTheme.fontFamily.sans ],
       },
       fontSize: {
-        'xxs': '0.5rem',
+        'xxs': '0.7rem',
       },
       keyframes: {
         colorChange: {
