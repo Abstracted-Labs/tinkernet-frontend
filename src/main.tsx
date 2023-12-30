@@ -21,13 +21,13 @@ import Modals from "./modals";
 import Overview from "./routes/overview";
 
 const wsClient = createWSClient({
-  // url: "wss://squid.subsquid.io/ocif-squid/v/v3/graphql",
-  url: "ws://localhost:4350/graphql",
+  url: "wss://squid.subsquid.io/ocif-squid/v/v3/graphql",
+  // url: "ws://localhost:4350/graphql",
 });
 
 const client = new Client({
-  // url: "https://squid.subsquid.io/ocif-squid/v/v3/graphql",
-  url: "http://localhost:4350/graphql",
+  url: "https://squid.subsquid.io/ocif-squid/v/v3/graphql",
+  // url: "http://localhost:4350/graphql",
   exchanges: [
     cacheExchange,
     fetchExchange,
