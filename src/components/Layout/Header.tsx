@@ -27,7 +27,7 @@ const Header = (props: SideNavProps) => {
           <div className="flex-shrink-0">
             <Link to="/">
               <img
-                className="h-6 w-auto lock"
+                className="h-4 md:h-6 w-auto lock"
                 src={logoFull}
                 alt="Tinkernet Logo"
               />
