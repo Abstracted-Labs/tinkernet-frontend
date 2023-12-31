@@ -49,7 +49,7 @@ const Dropdown = memo(function Dropdown<T extends { name: string; }>({ initialVa
   return (
     <div className='flex-grow'>
       <Listbox value={optionSelected} onChange={handleSelect}>
-        <Listbox.Button className={`relative rounded-md w-full h-[45px] py-2 px-3 text-white text-xs leading-tight bg-tinkerGrey border-transparent focus:outline-none focus:ring-0 focus:border-tinkerYellow hover:bg-tinkerYellow hover:bg-opacity-20`}>
+        <Listbox.Button className={`relative rounded-md w-full h-[45px] py-2 px-3 text-white text-sm leading-tight bg-tinkerGrey border-transparent focus:outline-none focus:ring-0 focus:border-tinkerYellow hover:bg-tinkerYellow hover:bg-opacity-20`}>
           {({ value, open }) => {
             let displayValue;
             if (value && typeof value === 'object' && 'props' in value && value.props.children) {

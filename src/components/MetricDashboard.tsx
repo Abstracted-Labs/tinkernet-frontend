@@ -46,7 +46,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
 
   return (
     <div
-      className="relative overflow-x-auto w-full rounded-xl shadow flex flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4 mb-4">
+      className="relative overflow-x-auto rounded-xl shadow flex lg:flex-wrap flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4 mb-4">
 
       {availableBalance !== undefined && <DashboardCard cardTitle="Available Balance" iconSrc={AggregateStakedIcon}>
         {formatBalance(availableBalance.toString(), {
@@ -68,7 +68,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         {vestingBalance.toString() || "0 TNKR"}
       </DashboardCard>}
 
-      {totalSupply !== undefined && totalStaked !== undefined && <DashboardCard cardTitle="Individual Staking APY" iconSrc={StakingApyIcon}>
+      {totalSupply !== undefined && totalStaked !== undefined && <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
         {totalSupply &&
           totalSupply.toNumber() > 0 &&
           totalStaked &&
@@ -95,7 +95,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
       </DashboardCard>}
 
       {aggregateStaked !== undefined && totalStaked !== undefined && <DashboardCard
-        cardTitle="Staked TNKR of Total Supply"
+        cardTitle="Total TNKR Staked (%)"
         iconSrc={AggregateStakedIcon}
         leading="leading-tight"
       >

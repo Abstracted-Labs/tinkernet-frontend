@@ -1,6 +1,5 @@
 import { web3Accounts, web3Enable } from "@polkadot/extension-dapp";
 import { shallow } from "zustand/shallow";
-
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 
@@ -19,6 +18,8 @@ const useConnect = () => {
     const extensions = await web3Enable("Tinkernet");
 
     if (extensions.length === 0) {
+      setOpenModal({ name: modalName.USE_NOVA });
+
       return;
     }
 
@@ -27,6 +28,8 @@ const useConnect = () => {
     setAccounts(accounts);
 
     if (accounts.length === 0) {
+      setOpenModal({ name: modalName.USE_NOVA });
+
       return;
     }
 

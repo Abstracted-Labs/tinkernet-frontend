@@ -6,6 +6,7 @@ import ReadMore from "./ReadMore";
 import AccountSelector from "./AccountSelector";
 import ViewMembers from "./ViewMembers";
 import ViewDetails from "./ViewDetails";
+import UseNovaWallet from "./UseNovaWallet";
 
 const Modals = () => {
   const { openModals } = useModal((state) => ({
@@ -31,6 +32,8 @@ const Modals = () => {
             return <ViewMembers key={modal.name} isOpen={isOpen} />;
           case modalName.VIEW_DETAILS:
             return <ViewDetails key={modal.name} isOpen={isOpen} />;
+          case modalName.USE_NOVA:
+            return <UseNovaWallet key={modal.name} isOpen={isOpen} />;
           default:
             return null;
         }

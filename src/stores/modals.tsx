@@ -8,6 +8,7 @@ const modalName = {
   READ_MORE: "READ_MORE",
   MEMBERS: "MEMBERS",
   VIEW_DETAILS: "VIEW_DETAILS",
+  USE_NOVA: "USE_NOVA",
 } as const;
 
 type ModalName = (typeof modalName)[keyof typeof modalName];

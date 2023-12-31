@@ -24,7 +24,7 @@ import Dropdown from "../components/Dropdown";
 
 const RPC_PROVIDER_BASILISK = "wss://basilisk-rpc.dwellir.com";
 
-const MINI_BUTTON_STYLE = "cursor-pointer bg-white hover:bg-tinkerYellow text-black py-1 px-2 rounded-lg text-xxs font-medium";
+const MINI_BUTTON_STYLE = "cursor-pointer bg-white hover:bg-tinkerYellow text-black py-2 px-3 rounded-lg text-xs font-medium";
 
 type SystemAccount = Struct & {
   data: {
@@ -482,7 +482,7 @@ const Transfer = () => {
                   }}
                 >
                   {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
-                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-xs">
+                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-sm">
                       {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
                       <span>{chain.name}</span>
                     </span>
@@ -511,7 +511,7 @@ const Transfer = () => {
                   }}
                 >
                   {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
-                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-xs">
+                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-sm">
                       {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
                       <span>{chain.name}</span>
                     </span>
