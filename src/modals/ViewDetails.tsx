@@ -34,8 +34,6 @@ const ViewDetails = (props: ViewDetailsProps) => {
     };
   }, [metadata]);
 
-  console.log('localMetadata', metadata, localMetadata);
-
   if (!localMetadata) return null;
 
   const { children } = localMetadata;

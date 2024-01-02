@@ -37,6 +37,11 @@ const useModal = createWithEqualityFn<ModalState>()((set) => ({
   },
   closeCurrentModal: () => {
     set((state) => {
+      if (!state.openModals || state.openModals.length === 0) {
+        console.log('No open modals to close');
+        return state;
+      }
+
       const newOpenModals = [...state.openModals];
       newOpenModals.pop();
       return { openModals: newOpenModals };

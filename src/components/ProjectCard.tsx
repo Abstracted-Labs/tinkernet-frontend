@@ -1,7 +1,6 @@
 import { RefObject, useEffect, useState } from 'react';
 import { BigNumber } from 'bignumber.js';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
-import { formatBalance } from '@polkadot/util';
 import toast from 'react-hot-toast';
 import { StakingCore, CoreEraStakeInfoType, ChainPropertiesType } from '../routes/staking';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
@@ -38,7 +37,7 @@ const STAT_UNDERLINE = 'pb-2 border-b border-b-[#2B2C30]';
 const ProjectCard = (props: ProjectCardProps) => {
   const {
     core,
-    totalUserStaked,
+    totalUserStaked: totalStaked,
     coreInfo,
     chainProperties,
     availableBalance,
@@ -55,6 +54,7 @@ const ProjectCard = (props: ProjectCardProps) => {
   const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber("0"));
   const [minStakeReward, setMinStakeReward] = useState<BigNumber>(new BigNumber("0"));
   const [minSupportMet, setMinSupportMet] = useState<boolean>(false);
+  const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>(new BigNumber("0"));
   const api = useApi();
 
   const handleReadMore = () => {
@@ -112,6 +112,12 @@ const ProjectCard = (props: ProjectCardProps) => {
   useEffect(() => {
     calcMinSupportMet();
   }, [minStakeReward, coreInfo?.totalStaked]);
+
+  useEffect(() => {
+    if (totalStaked) {
+      setTotalUserStaked(totalStaked);
+    }
+  }, [totalStaked]);
 
   return (
     <div
@@ -183,14 +189,7 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {coreInfo?.totalStaked
-                ? `${ formatBalance(
-                  coreInfo?.totalStaked.toString(),
-                  {
-                    decimals: 12,
-                    withUnit: false,
-                    forceUnit: "-",
-                  }
-                ).slice(0, -2) } TNKR`
+                ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) } TNKR`
                 : '--'}
             </div>
           </div> : null}
@@ -207,14 +206,7 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {totalUserStaked
-                ? `${ formatBalance(
-                  totalUserStaked.toString(),
-                  {
-                    decimals: 12,
-                    withUnit: false,
-                    forceUnit: "-",
-                  }
-                ).slice(0, -2) } TNKR`
+                ? `${ formatNumberShorthand(parseFloat(totalUserStaked.toString()) / Math.pow(10, 12)) } TNKR`
                 : '--'}
             </div>
           </div>
@@ -231,14 +223,7 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {coreInfo?.totalRewards
-                ? `${ formatBalance(
-                  coreInfo?.totalRewards.toString(),
-                  {
-                    decimals: 12,
-                    withUnit: false,
-                    forceUnit: "-",
-                  }
-                ).slice(0, -2) } TNKR`
+                ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalRewards.toString()) / Math.pow(10, 12)) } TNKR`
                 : '--'}
             </div>
           </div> : null}
@@ -255,14 +240,7 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {coreInfo?.totalUnclaimed
-                ? `${ formatBalance(
-                  coreInfo?.totalUnclaimed.toString(),
-                  {
-                    decimals: 12,
-                    withUnit: false,
-                    forceUnit: "-",
-                  }
-                ).slice(0, -2) } TNKR`
+                ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalUnclaimed.toString()) / Math.pow(10, 12)) } TNKR`
                 : '--'}
             </div>
           </div> : null}
@@ -297,12 +275,7 @@ const ProjectCard = (props: ProjectCardProps) => {
             <div className="text-white font-normal text-[12px] text-right tracking-[0] leading-[normal] truncate">
               <span className={`${ minSupportMet ? 'text-green-400' : 'text-red-400' }`}>
                 {coreInfo?.totalStaked && minStakeReward
-                  ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) }/${ formatBalance(minStakeReward.toString(), {
-                    decimals: 12,
-                    withUnit: false,
-                    forceUnit: '-',
-                    withZero: false
-                  }) }`
+                  ? `${ minSupportMet ? '25K' : formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) }/${ formatNumberShorthand(parseFloat(minStakeReward.toString()) / Math.pow(10, 12)) }`
                   : '--'}
               </span> TNKR
             </div>
