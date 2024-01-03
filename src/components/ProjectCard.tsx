@@ -11,7 +11,6 @@ import Avatar from './Avatar';
 import { AnyJson } from '@polkadot/types/types';
 import useApi from '../hooks/useApi';
 import { formatNumberShorthand } from '../utils/formatNumber';
-
 export interface ProjectCardProps {
   core: StakingCore;
   totalUserStaked: BigNumber | undefined;
@@ -57,12 +56,16 @@ const ProjectCard = (props: ProjectCardProps) => {
   const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>(new BigNumber("0"));
   const api = useApi();
 
-  const handleReadMore = () => {
+  const handleReadMore = (event: React.MouseEvent) => {
+    event.stopPropagation();
+
     setIsHovered(!isHovered);
     toggleExpanded(core);
   };
 
-  const handleViewMembers = () => {
+  const handleViewMembers = (event: React.MouseEvent) => {
+    event.stopPropagation();
+
     toggleViewMembers(core, members);
   };
 
@@ -85,7 +88,9 @@ const ProjectCard = (props: ProjectCardProps) => {
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (event: React.MouseEvent) => {
+    event.stopPropagation();
+
     const parsedTotalStaked = totalUserStaked || new BigNumber("0");
 
     const parsedAvailableBalance = availableBalance && availableBalance.isNegative()

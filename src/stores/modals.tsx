@@ -29,11 +29,20 @@ type ModalType = {
 const useModal = createWithEqualityFn<ModalState>()((set) => ({
   openModals: [],
   setOpenModal: (modal) => {
-    if (!modal) {
-      return;
-    }
+    set((state) => {
+      if (modal) {
+        // Check if the modal is already open
+        if (state.openModals.some(openModal => openModal.name === modal.name)) {
+          console.log('Modal is already open');
+          return state;
+        }
 
-    set((state) => ({ openModals: [...state.openModals, modal] }));
+        // If the modal is not already open, add it to the openModals array
+        return { ...state, openModals: [...state.openModals, modal] };
+      }
+
+      return state;
+    });
   },
   closeCurrentModal: () => {
     set((state) => {
@@ -42,8 +51,7 @@ const useModal = createWithEqualityFn<ModalState>()((set) => ({
         return state;
       }
 
-      const newOpenModals = [...state.openModals];
-      newOpenModals.pop();
+      const newOpenModals = state.openModals.slice(0, state.openModals.length - 1);
       return { openModals: newOpenModals };
     });
   },

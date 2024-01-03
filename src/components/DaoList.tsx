@@ -102,13 +102,8 @@ const DaoList = (props: DaoListProps) => {
       const coreInfo = getCoreInfo(coreEraStakeInfo, core);
       const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
 
-      if (typeof coreInfo !== 'undefined') {
-        coreInfoResults[core.key] = coreInfo;
-      }
-
-      if (typeof totalUserStaked !== 'undefined') {
-        totalUserStakedResults[core.key] = totalUserStaked;
-      }
+      coreInfoResults[core.key] = coreInfo;
+      totalUserStakedResults[core.key] = totalUserStaked;
     }
 
     setTotalUserStakedData(prevState => ({ ...prevState, ...totalUserStakedResults }));

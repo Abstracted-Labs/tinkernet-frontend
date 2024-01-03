@@ -13,30 +13,22 @@ const Modals = () => {
     openModals: state.openModals,
   }));
 
+  const modalComponents = {
+    [modalName.SELECT_ACCOUNT]: AccountSelector,
+    [modalName.MANAGE_STAKING]: ManageStaking,
+    [modalName.REGISTER_PROJECT]: RegisterProject,
+    [modalName.UNBOND_TOKENS]: UnbondTokens,
+    [modalName.READ_MORE]: ReadMore,
+    [modalName.MEMBERS]: ViewMembers,
+    [modalName.VIEW_DETAILS]: ViewDetails,
+    [modalName.USE_NOVA]: UseNovaWallet,
+  };
+
   return (
     <>
       {openModals.map((modal, index) => {
-        const isOpen = index === openModals.length - 1;
-        switch (modal.name) {
-          case modalName.SELECT_ACCOUNT:
-            return <AccountSelector key={modal.name} isOpen={isOpen} />;
-          case modalName.MANAGE_STAKING:
-            return <ManageStaking key={modal.name} isOpen={isOpen} />;
-          case modalName.REGISTER_PROJECT:
-            return <RegisterProject key={modal.name} isOpen={isOpen} />;
-          case modalName.UNBOND_TOKENS:
-            return <UnbondTokens key={modal.name} isOpen={isOpen} />;
-          case modalName.READ_MORE:
-            return <ReadMore key={modal.name} isOpen={isOpen} />;
-          case modalName.MEMBERS:
-            return <ViewMembers key={modal.name} isOpen={isOpen} />;
-          case modalName.VIEW_DETAILS:
-            return <ViewDetails key={modal.name} isOpen={isOpen} />;
-          case modalName.USE_NOVA:
-            return <UseNovaWallet key={modal.name} isOpen={isOpen} />;
-          default:
-            return null;
-        }
+        const Component = modalComponents[modal.name as keyof typeof modalComponents];
+        return Component ? <Component key={modal.name} isOpen={index === openModals.length - 1} /> : null;
       })}
     </>
   );

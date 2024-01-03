@@ -186,6 +186,23 @@ const Overview = () => {
     setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
   };
 
+  const loadTotalUserStaked = async () => {
+    if (!selectedAccount) return;
+
+    const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
+    const totalUserStakedResults: { [key: number]: BigNumber | undefined; } = {};
+
+    for (const core of stakingCores) {
+      const coreInfo = getCoreInfo(coreEraStakeInfo, core);
+      const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
+
+      coreInfoResults[core.key] = coreInfo;
+      totalUserStakedResults[core.key] = totalUserStaked;
+    }
+
+    setTotalUserStakedData(prevState => ({ ...prevState, ...totalUserStakedResults }));
+  };
+
   const loadDaos = async () => {
     if (!selectedAccount) return;
     const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, totalUserStakedData, api);
@@ -456,44 +473,8 @@ const Overview = () => {
   }, [selectedAccount, rewardsClaimedQuery]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    (async () => {
-      const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
-      const totalUserStakedResults: { [key: number]: BigNumber | undefined; } = {};
-
-      for (const core of stakingCores) {
-        if (!isMounted) {
-          break;
-        }
-
-        const coreInfo = getCoreInfo(coreEraStakeInfo, core);
-        const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
-
-        if (typeof coreInfo !== 'undefined') {
-          coreInfoResults[core.key] = coreInfo;
-        }
-
-        if (typeof totalUserStaked !== 'undefined') {
-          totalUserStakedResults[core.key] = totalUserStaked;
-        }
-      }
-
-      if (isMounted) {
-        setTotalUserStakedData(prevState => {
-          const newState = { ...prevState, ...totalUserStakedResults };
-          if (JSON.stringify(newState) !== JSON.stringify(prevState)) {
-            return newState;
-          }
-          return prevState;
-        });
-      }
-    })();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [stakingCores, coreEraStakeInfo, userStakedInfo]);
+    loadTotalUserStaked();
+  }, [selectedAccount, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   useEffect(() => {
     if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
