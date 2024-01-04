@@ -18,6 +18,8 @@ import { useQuery, useSubscription } from "urql";
 import { StakedDaoType } from "./overview";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import OnOffSwitch from "../components/Switch";
+import { autoRestake } from "../utils/autoRestake";
 
 export type UnsubFunction = () => Promise<void>;
 
@@ -400,6 +402,12 @@ const Staking = () => {
     });
   };
 
+  const handleAutoRestakeSwitch = (bool: boolean) => {
+    if (autoRestake) {
+      autoRestake(bool);
+    }
+  };
+
   const handleRestakingLogic = () => {
     // grab the total unclaimed rewards and account for the existential deposit
     const unclaimedMinusED = new BigNumber(totalUnclaimed);
@@ -641,7 +649,7 @@ const Staking = () => {
               Register New DAO
             </Button>
           </div>
-          <div>
+          <div className="flex flex-row items-center gap-1">
             <Button
               mini
               onClick={handleClaimAll}
@@ -649,6 +657,12 @@ const Staking = () => {
               variant="primary">
               Claim TNKR Rewards
             </Button>
+            <div className="flex flex-col items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
+              <div className="flex-grow">
+                <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestakeSwitch(bool)} />
+              </div>
+              <span className="text-[.5rem] text-gray-300 relative bottom-1">Auto-Restake</span>
+            </div>
           </div>
         </div>}
       </div>

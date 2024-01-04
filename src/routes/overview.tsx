@@ -18,7 +18,6 @@ import Button from "../components/Button";
 import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
 import { StakingCore, CoreEraStakeInfoType, UserStakedInfoType, TotalUserStakedData, BalanceType, LockedType, TotalRewardsClaimedSubscription, TotalRewardsClaimedQuery, RewardQueryType, TotalRewardsCoreClaimedQuery, getCoreInfo, getTotalUserStaked } from "./staking";
 import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
-import OnOffSwitch from "../components/Switch";
 import DaoList from "../components/DaoList";
 
 export type StakedDaoType = StakingCore & { members?: AnyJson; };
@@ -262,17 +261,6 @@ const Overview = () => {
       setLoading(false);
       setDataLoaded(true);
     }
-  };
-
-  const handleAutoRestakeSwitch = (bool: boolean) => {
-    // use toasts to show if auto-restake is enabled or disabled
-    if (bool) {
-      toast.success("Auto-restake enabled");
-    } else {
-      toast.error("Auto-restake disabled");
-    }
-    // save the value to local storage
-    localStorage.setItem("autoRestake", JSON.stringify(bool));
   };
 
   const handleRestakingLogic = () => {
@@ -529,12 +517,6 @@ const Overview = () => {
               variant="primary">
               Claim TNKR Rewards
             </Button>
-            <div className="flex flex-col items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
-              <div className="flex-grow">
-                <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestakeSwitch(bool)} />
-              </div>
-              <span className="text-[.5rem] text-gray-300 relative bottom-1">Auto-Restake</span>
-            </div>
           </div>
         </div>}
       </div>
