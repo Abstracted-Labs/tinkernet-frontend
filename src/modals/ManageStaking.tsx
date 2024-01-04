@@ -18,6 +18,7 @@ import Input from "../components/Input";
 import Button from "../components/Button";
 import { StakingCore, TotalUserStakedData } from "../routes/staking";
 import Dropdown from "../components/Dropdown";
+import { BG_GRADIENT } from "../utils/consts";
 
 export interface SelectedCoreInfo extends Metadata {
   id: number;
@@ -374,16 +375,15 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
   return (
     <Dialog open={isOpen} onClose={closeCurrentModal}>
-      <Dialog.Overlay className="fixed inset-0 z-[49] h-screen w-full bg-neutral-900/40 backdrop-blur-md" />
-
+      <Dialog.Overlay className="fixed inset-0 z-[49] h-screen w-full bg-black/10 backdrop-blur-md" />
       <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">
         <XMarkIcon className="h-5 w-5" />
         <span className="block">Close</span>
       </button>
       <Dialog.Panel>
         <>
-          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] h-[430px] md:h-[380px] bg-tinkerDarkGrey rounded-xl space-y-4 p-8">
-            <h2 className="text-md font-bold text-white  bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg truncate">Manage Staking for {(initialSelectedCore.current?.metadata as { name: string; })?.name}</h2>
+          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
+            <h2 className="text-md font-bold text-white bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg truncate">Manage Staking for {(initialSelectedCore.current?.metadata as { name: string; })?.name}</h2>
 
             <div className="flex flex-col justify-between gap-4">
               <div className="flex flex-row justify-around gap-4 sm:flex-auto mb-4">
@@ -555,7 +555,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
               </div>
             </div>
           </div>
-          <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] md:w-[550px] h-[450px] md:h-[400px] rounded-xl border-[30px] border-tinkerGrey border-opacity-50" />
         </>
       </Dialog.Panel>
     </Dialog >

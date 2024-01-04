@@ -9,7 +9,8 @@ import useApi from "../hooks/useApi";
 import useConnect from "../hooks/useConnect";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
-import { stringShorten, formatBalance } from "@polkadot/util";
+import { stringShorten } from "@polkadot/util";
+import { formatBalanceToTwoDecimals } from "../utils/formatNumber";
 
 const LoginButton = () => {
   const [balance, setBalance] = useState<BigNumber>();
@@ -49,6 +50,8 @@ const LoginButton = () => {
     loadBalance();
   }, [selectedAccount, api]);
 
+  const formattedBalance = balance ? formatBalanceToTwoDecimals(balance) : 0;
+
   return <Button
     mini
     variant="primary"
@@ -69,13 +72,7 @@ const LoginButton = () => {
           <span className="flex flex-row items-center gap-1">
             <img className="lg:w-3 lg:h-3 fill-tinkerYellow" src={isHovered ? TinkerBlackIcon : TinkerYellowIcon} alt="tnkr icon" />
             <span className="truncate">
-              {balance
-                ? ` ${ formatBalance(balance.toString(), {
-                  decimals: 12,
-                  withUnit: false,
-                  forceUnit: "-",
-                }) }`
-                : null}
+              {formattedBalance} TNKR
             </span>
           </span>
         </div>

@@ -1,3 +1,5 @@
+import BigNumber from "bignumber.js";
+
 export const formatNumberShorthand = (num: number) => {
   if (num > 999 && num <= 999999) {
     const formattedNum = (num / 1000).toFixed(1);
@@ -16,4 +18,14 @@ export const formatNumberShorthand = (num: number) => {
     }
     return formattedNum;
   }
+};
+
+export const formatBalanceToTwoDecimals = (balance: BigNumber) => {
+  const balanceWithDecimals = balance.dividedBy(new BigNumber(10).pow(12)).toString();
+  const parts = balanceWithDecimals.split('.');
+  if (parts[1] && parts[1].length > 2) {
+    parts[1] = parts[1].substring(0, 2);
+  }
+  const formattedNumber = parseFloat(parts.join('.')).toLocaleString('en');
+  return formattedNumber;
 };

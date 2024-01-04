@@ -251,13 +251,15 @@ const Claim = () => {
         {!isBalanceLoading && selectedAccount && vestingSummary ? (
           <div className="overflow-hidden rounded-md border border-gray-50 backdrop-blur-sm shadow">
             <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
-              <div className="flex flex-col justify-start p-6">
-                <span className="text-lg font-normal text-white">
-                  Ready to Claim
-                </span>
-                <span className="text-2xl font-bold text-white">
-                  {vestingSummary.vestedClaimable}
-                </span>
+              <div className="flex flex-col-reverse sm:flex-col justify-between p-6 gap-4">
+                <div className="flex flex-col">
+                  <span className="text-lg font-normal text-white">
+                    Ready to Claim
+                  </span>
+                  <span className="text-2xl font-bold text-white">
+                    {vestingSummary.vestedClaimable}
+                  </span>
+                </div>
                 <div>
                   <Button
                     variant="primary"

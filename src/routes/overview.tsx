@@ -514,26 +514,30 @@ const Overview = () => {
           <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
         </h2>
 
-        {selectedAccount && <div className="flex flex-row w-full md:w-auto gap-2 items-center justify-start z-1">
-          <Button
-            mini
-            onClick={handleUnbondTokens}
-            disabled={isWaiting}
-            variant="secondary">
-            Claim Unbonded TNKR
-          </Button>
-          <Button
-            mini
-            onClick={handleClaimAll}
-            disabled={disableClaiming}
-            variant="primary">
-            Claim TNKR Rewards
-          </Button>
-          <div className="flex flex-col items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
-            <div className="flex-grow">
-              <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestakeSwitch(bool)} />
+        {selectedAccount && <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 items-stretch md:items-center justify-start z-1">
+          <div>
+            <Button
+              mini
+              onClick={handleUnbondTokens}
+              disabled={isWaiting}
+              variant="secondary">
+              Claim Unbonded TNKR
+            </Button>
+          </div>
+          <div className="flex flex-row items-center gap-1">
+            <Button
+              mini
+              onClick={handleClaimAll}
+              disabled={disableClaiming}
+              variant="primary">
+              Claim TNKR Rewards
+            </Button>
+            <div className="flex flex-col items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
+              <div className="flex-grow">
+                <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestakeSwitch(bool)} />
+              </div>
+              <span className="text-[.5rem] text-gray-300 relative bottom-1">Auto-Restake</span>
             </div>
-            <span className="text-[.5rem] text-gray-300 relative bottom-1">Auto-Restake</span>
           </div>
         </div>}
       </div>

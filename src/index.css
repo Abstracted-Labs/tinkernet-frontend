@@ -19,7 +19,7 @@ html {
   }
 
   .tinker-scrollbar::-webkit-scrollbar-track, .tinker-scrollbar::-webkit-scrollbar-track:hover {
-    background: #16171b;
+    background: #141414;
   }
 
   .tinker-scrollbar::-webkit-scrollbar-thumb {
@@ -37,7 +37,7 @@ html {
     right: 0;
     height: 100%; /* Adjust this value to control the height of the gradient */
     border-radius: 0.5rem;
-    background: linear-gradient(to top, #171717 0%, transparent 100%);
+    background: linear-gradient(to top, #141414 0%, transparent 100%);
   }
 }
  

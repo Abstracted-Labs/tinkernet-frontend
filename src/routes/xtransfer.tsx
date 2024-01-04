@@ -594,7 +594,7 @@ const Transfer = () => {
               {pair.from === currency.BASILISK &&
                 pair.to === currency.TINKERNET ? (
                 <div className="flex flex-col gap-4 mt-3">
-                  <div className="flex flex-row items-start justify-between gap-4">
+                  <div className="flex flex-col md:flex-row items-stretch justify-between gap-4">
                     <div>
                       <label
                         htmlFor="amount"
@@ -609,7 +609,7 @@ const Transfer = () => {
                           id="amount"
                           disabled={balanceInBasilisk.toNumber() === 0}
                           onChange={(e) => handleChangedAmount(e.target.value)} />
-                        <div className="flex flex-row justify-between mt-2 gap-2">
+                        <div className="flex flex-row justify-start mt-2 gap-2">
                           <span className={MINI_BUTTON_STYLE} onClick={balanceBSX25}>25%</span>
                           <span className={MINI_BUTTON_STYLE} onClick={balanceBSX50}>50%</span>
                           <span className={MINI_BUTTON_STYLE} onClick={balanceBSX75}>75%</span>

@@ -10,6 +10,7 @@ import AnnualRewardIcon from '../assets/annual-reward-icon.svg';
 import CurrentEraIcon from '../assets/current-era-icon.svg';
 import CompletionRateIcon from '../assets/completion-rate-icon.svg';
 import AggregateStakedIcon from '../assets/aggregate-staked-icon.svg';
+import { formatBalanceToTwoDecimals } from '../utils/formatNumber';
 
 interface MetricDashboardProps {
   vestingBalance: string | undefined;
@@ -49,23 +50,15 @@ const MetricDashboard = (props: MetricDashboardProps) => {
       className="relative overflow-x-auto rounded-xl shadow flex lg:flex-wrap flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4 mb-4">
 
       {availableBalance !== undefined && <DashboardCard cardTitle="Available Balance" iconSrc={AggregateStakedIcon}>
-        {formatBalance(availableBalance.toString(), {
-          decimals: 12,
-          withUnit: 'TNKR',
-          forceUnit: "-",
-        }) || "0 TNKR"}
+        {availableBalance ? `${ formatBalanceToTwoDecimals(availableBalance) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
       {totalUserStaked !== undefined && <DashboardCard cardTitle="My Staked TNKR" iconSrc={MyStakeIcon}>
-        {formatBalance(totalUserStaked.toString(), {
-          decimals: 12,
-          withUnit: 'TNKR',
-          forceUnit: "-",
-        }) || "0 TNKR"}
+        {totalUserStaked ? `${ formatBalanceToTwoDecimals(totalUserStaked) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
       {vestingBalance !== undefined && <DashboardCard cardTitle="My Vesting TNKR" iconSrc={AnnualRewardIcon}>
-        {vestingBalance.toString() || "0 TNKR"}
+        {vestingBalance ? `${ formatBalanceToTwoDecimals(new BigNumber(vestingBalance)) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
       {totalSupply !== undefined && totalStaked !== undefined && <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
@@ -87,11 +80,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         iconSrc={AggregateStakedIcon}
         leading="leading-tight"
       >
-        {formatBalance(aggregateStaked.toString(), {
-          decimals: 12,
-          withUnit: false,
-          forceUnit: "-",
-        }) || "0"}
+        {aggregateStaked ? `${ formatBalanceToTwoDecimals(aggregateStaked) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
       {aggregateStaked !== undefined && totalStaked !== undefined && <DashboardCard
@@ -104,36 +93,22 @@ const MetricDashboard = (props: MetricDashboardProps) => {
 
       {totalSupply !== undefined && <DashboardCard cardTitle="Projected Annual DAO Rewards" iconSrc={AnnualRewardIcon}>
         {totalSupply && totalSupply.toNumber() > 0
-          ? formatBalance(
+          ? `${ formatBalanceToTwoDecimals(
             totalSupply
               .dividedBy(1000000000000)
               .times(0.06)
               .times(10 ** 12) // Convert to smallest unit
               .integerValue() // Ensure it's an integer
-              .toFixed(),
-            {
-              decimals: 12,
-              withUnit: 'TNKR',
-              forceUnit: '-',
-            }
-          )
+          ) } TNKR`
           : '0 TNKR'}
       </DashboardCard>}
 
       {totalClaimed !== undefined && <DashboardCard cardTitle="Claimed Rewards" iconSrc={ClaimableRewardsIcon}>
-        {totalClaimed ? formatBalance(totalClaimed.toString(), {
-          decimals: 12,
-          withUnit: 'TNKR',
-          forceUnit: "-",
-        }) : "0"}
+        {totalClaimed ? `${ formatBalanceToTwoDecimals(totalClaimed) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
       {totalUnclaimed !== undefined && <DashboardCard cardTitle="Unclaimed Rewards" iconSrc={AggregateStakedIcon}>
-        {totalUnclaimed ? formatBalance(totalUnclaimed.toString(), {
-          decimals: 12,
-          withUnit: 'TNKR',
-          forceUnit: "-",
-        }) : "0"}
+        {totalUnclaimed ? `${ formatBalanceToTwoDecimals(totalUnclaimed) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
       {unclaimedEras !== undefined && <DashboardCard cardTitle="Unclaimed Eras" iconSrc={UnclaimedErasIcon}>

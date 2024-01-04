@@ -12,6 +12,8 @@ import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
 import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import Button from "../components/Button";
+import { BG_GRADIENT } from "../utils/consts";
 
 const schema = z
   .object({
@@ -151,14 +153,14 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
   return (
     <Dialog open={isOpen} onClose={closeCurrentModal}>
       <>
-        <Dialog.Overlay className="fixed inset-0 z-[49] h-screen w-full bg-neutral-900/40 backdrop-blur-md" />
+        <Dialog.Overlay className="fixed inset-0 z-[49] h-screen w-full bg-black/10 backdrop-blur-md" />
         <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">
           <XMarkIcon className="h-5 w-5" />
           <span className="block">Close</span>
         </button>
         <Dialog.Panel>
           <>
-            <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] bg-tinkerDarkGrey rounded-xl space-y-4 p-8">
+            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] bg-tinkerGrey rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
               {/* <div className="flex flex-row gap-4">
                 <div className="relative w-full flex flex-col gap-4 overflow-hidden rounded-md border border-gray-50 bg-neutral-900 p-6 sm:flex-row">
                   <div className="flex w-full flex-col gap-4">
@@ -298,13 +300,10 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
               <p className="text-white text-sm">
                 Thank you for your interest in registering your new DAO community with InvArch! We are currently working on a better way to onboard new projects, so please bear with us.<br /><br />In the meantime, you can fill out this form to register your project (when it becomes available). To be eligible, you need to have a Saturn Gateway multisig address. You can learn more about Saturn Gateway <a target="_blank" className="text-tinkerYellow hover:underline underline-offset-2" rel="noreferrer" href="https://invarch.medium.com/the-saturn-sdk-c46b4e40f46e">here</a>.
               </p>
-              <button className="flex justify-center items-center w-full h-[46px] bg-tinkerGrey rounded-[10px] text-white hover:bg-tinkerYellow hover:text-black" onClick={closeModal}>
-                <span className="font-normal text-[16px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
-                  Close
-                </span>
-              </button>
+              <div>
+                <Button variant="secondary" mini onClick={closeModal}>Close</Button>
+              </div>
             </div>
-            <div className="fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[49] w-[370px] h-[492px] rounded-xl border-[30px] border-tinkerGrey border-opacity-50" />
           </>
         </Dialog.Panel>
       </>

@@ -11,6 +11,8 @@ import Avatar from './Avatar';
 import { AnyJson } from '@polkadot/types/types';
 import useApi from '../hooks/useApi';
 import { formatNumberShorthand } from '../utils/formatNumber';
+import Button from './Button';
+import { BG_GRADIENT } from '../utils/consts';
 export interface ProjectCardProps {
   core: StakingCore;
   totalUserStaked: BigNumber | undefined;
@@ -127,8 +129,8 @@ const ProjectCard = (props: ProjectCardProps) => {
   return (
     <div
       key={core.account}
-      className="flex flex-col justify-between w-full bg-tinkerGrey rounded-xl space-y-4">
-      <div className={`relative p-8 flex flex-col gap-6 justify-start ${ mini ? 'h-44' : 'h-96' }`}>
+      className={`flex flex-col justify-between w-full rounded-xl space-y-4 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
+      <div className={`relative p-8 flex flex-col gap-6 justify-start ${ mini ? 'h-60' : 'h-auto' }`}>
 
         {/* Avatar, Name, Members */}
         <div className="flex items-center space-x-4">
@@ -142,7 +144,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         </div>
 
         {/* Description */}
-        {!mini ? <div ref={descriptionRef} className={`relative bg-tinkerDarkGrey rounded-lg p-4 h-28 hover:cursor-pointer`}
+        {!mini ? <div ref={descriptionRef} className={`relative bg-tinkerGrey rounded-lg p-4 h-28 hover:cursor-pointer`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleReadMore}>
@@ -154,7 +156,7 @@ const ProjectCard = (props: ProjectCardProps) => {
           </p>
         </div> : null}
 
-        <div className={`relative stats-section grid grid-cols-1 gap-2 ${ !mini ? 'tinker-scrollbar scrollbar scrollbar-thin pr-4 overflow-y-scroll' : '' }`}>
+        <div className={`relative h-24 stats-section grid grid-cols-1 gap-2 ${ !mini ? 'tinker-scrollbar scrollbar scrollbar-thin pr-4 overflow-y-scroll' : '' }`}>
 
           {/* Total Stakers */}
           {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
@@ -286,22 +288,13 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
           </div> : null}
         </div>
+        {selectedAccount ? <Button variant='primary' mini={true} onClick={handleClick}
+          disabled={
+            (coreInfo?.numberOfStakers || 0) >=
+            (chainProperties?.maxStakersPerCore || 0) &&
+            !totalUserStaked
+          }>{!mini ? 'Manage Staking' : 'View Details'}</Button> : null}
       </div>
-      {selectedAccount ? (
-        <div className='relative' style={{ margin: 0 }}>
-          <button type="button" className="bg-tinkerYellow bg-opacity-20 hover:bg-opacity-100 text-tinkerYellow hover:text-black w-full rounded-bl-xl rounded-br-xl p-4 transition duration-100 disabled:cursor-not-allowed disabled:bg-opacity-20 focus:outline-none disabled:hover:bg-opacity-20 disabled:text-black disabled:text-opacity-40"
-            onClick={handleClick}
-            disabled={
-              (coreInfo?.numberOfStakers || 0) >=
-              (chainProperties?.maxStakersPerCore || 0) &&
-              !totalUserStaked
-            }>
-            <span className="font-base text-[16px] text-center tracking-[0] leading-[normal] whitespace-nowrap">
-              {!mini ? 'Manage Staking' : 'View Details'}
-            </span>
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 };
