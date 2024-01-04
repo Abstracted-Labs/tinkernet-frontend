@@ -42,7 +42,6 @@ const Overview = () => {
   const [isDataLoaded, setDataLoaded] = useState(false);
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
-  const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [nextEraBlock, setNextEraBlock] = useState<number>(0);
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
@@ -74,9 +73,7 @@ const Overview = () => {
     selectedAccount: InjectedAccountWithMeta;
   }) => {
     // Current block subscription
-    const blocks = api.rpc.chain.subscribeNewHeads((header) => {
-      setCurrentBlock(header.number.toNumber());
-    });
+    const blocks = api.rpc.chain.subscribeNewHeads(() => { });
 
     // Next era starting block subscription
     const nextEraStartingBlock = api.query.ocifStaking.nextEraStartingBlock(
@@ -554,11 +551,11 @@ const Overview = () => {
             totalStaked={undefined}
             totalUnclaimed={totalUnclaimed || new BigNumber(0)}
             totalClaimed={totalClaimed || new BigNumber(0)}
-            currentStakingEra={currentStakingEra || 0}
-            currentBlock={currentBlock}
+            currentStakingEra={undefined}
+            currentBlock={undefined}
             nextEraBlock={nextEraBlock}
             blocksPerEra={blocksPerEra}
-            unclaimedEras={unclaimedEras}
+            unclaimedEras={undefined}
           />
 
           <DaoList mini={true} isOverview={true} />

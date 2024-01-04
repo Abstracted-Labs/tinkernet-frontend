@@ -1,5 +1,4 @@
 import { BigNumber } from 'bignumber.js';
-import { formatBalance } from '@polkadot/util';
 import { UnclaimedErasType } from '../routes/staking';
 import DashboardCard from './DashboardCard';
 import MyStakeIcon from '../assets/my-stake-icon.svg';
@@ -53,12 +52,8 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         {availableBalance ? `${ formatBalanceToTwoDecimals(availableBalance) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
-      {totalUserStaked !== undefined && <DashboardCard cardTitle="My Staked TNKR" iconSrc={MyStakeIcon}>
-        {totalUserStaked ? `${ formatBalanceToTwoDecimals(totalUserStaked) } TNKR` : "0 TNKR"}
-      </DashboardCard>}
-
-      {vestingBalance !== undefined && <DashboardCard cardTitle="My Vesting TNKR" iconSrc={AnnualRewardIcon}>
-        {vestingBalance ? `${ formatBalanceToTwoDecimals(new BigNumber(vestingBalance)) } TNKR` : "0 TNKR"}
+      {totalUserStaked !== undefined && vestingBalance !== undefined && <DashboardCard cardTitle="My Staked + Vesting TNKR" iconSrc={MyStakeIcon}>
+        {totalUserStaked || vestingBalance ? `${ formatBalanceToTwoDecimals(totalUserStaked.plus(new BigNumber(vestingBalance))) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
       {totalSupply !== undefined && totalStaked !== undefined && <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
