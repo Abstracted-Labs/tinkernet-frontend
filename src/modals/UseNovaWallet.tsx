@@ -19,7 +19,7 @@ const UseNovaWallet = ({ isOpen }: { isOpen: boolean; }) => {
     <Dialog open={true} onClose={closeCurrentModal}>
       <>
         <Dialog.Title className="sr-only">Notice</Dialog.Title>
-        <div className="fixed inset-0 z-[49] h-screen w-full bg-white/10 backdrop-blur-md" />
+        <div className="fixed inset-0 z-[49] h-screen w-full bg-black/10 backdrop-blur-md" />
         <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">
           <XMarkIcon className="h-5 w-5" />
           <span className="block">Close</span>
