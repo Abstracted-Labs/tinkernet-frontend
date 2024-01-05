@@ -23,8 +23,12 @@ export const formatNumberShorthand = (num: number) => {
 export const formatBalanceToTwoDecimals = (balance: BigNumber) => {
   const balanceWithDecimals = balance.dividedBy(new BigNumber(10).pow(12)).toString();
   const parts = balanceWithDecimals.split('.');
-  if (parts[1] && parts[1].length > 2) {
-    parts[1] = parts[1].substring(0, 2);
+  if (parts[1]) {
+    if (parts[1].length > 2) {
+      parts[1] = parts[1].substring(0, 2);
+    } else if (parts[1].length === 1) {
+      parts[1] += '0'; // Append a zero if there's only one digit after the decimal point
+    }
   }
   const formattedNumber = parseFloat(parts.join('.')).toLocaleString('en');
   return formattedNumber;

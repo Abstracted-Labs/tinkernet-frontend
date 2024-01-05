@@ -47,16 +47,17 @@ const ViewMembers = (props: ViewMembersProps) => {
 
   if (!name || !members || !image) return null;
 
-  return (
-    <Dialog open={isOpen} onClose={closeModal}>
-      <Dialog.Overlay className="fixed inset-0 z-[49] h-screen w-full bg-black/10 backdrop-blur-md" />
+  return isOpen ? (
+    <Dialog open={true} onClose={closeModal}>
+      <Dialog.Title className="sr-only">View Members</Dialog.Title>
+      <div className="fixed inset-0 z-[49] h-screen w-full bg-white/10 backdrop-blur-md" />
       <button className="pointer fixed top-0 right-0 z-[50] flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">
         <XMarkIcon className="h-5 w-5" />
         <span className="block">Close</span>
       </button>
       <Dialog.Panel>
         <>
-          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] rounded-xl space-y-4 p-8 border border-[2px] border-neutral-700 ${ BG_GRADIENT }`}>
+          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] rounded-xl space-y-4 p-8 border border-[2px] border-neutral-200 ${ BG_GRADIENT }`}>
             <div className="flex items-center space-x-4">
               <Avatar src={image} alt="Project Image" />
               <div className="flex flex-col items-start gap-1 justify-start">
@@ -78,7 +79,7 @@ const ViewMembers = (props: ViewMembersProps) => {
         </>
       </Dialog.Panel>
     </Dialog>
-  );
+  ) : null;
 };
 
 export default ViewMembers;

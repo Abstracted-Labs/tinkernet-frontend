@@ -42,7 +42,7 @@ const useModal = createWithEqualityFn<ModalState>()((set) => ({
       }
 
       return state;
-    });
+    }, true);
   },
   closeCurrentModal: () => {
     set((state) => {

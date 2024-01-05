@@ -373,9 +373,10 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     return <Dropdown initialValue={(initialSelectedCore.current?.metadata as SelectedCoreInfo)?.name as string} currentValue={selectedCoreInfo} list={list} onSelect={handleSelect} />;
   });
 
-  return (
-    <Dialog open={isOpen} onClose={closeCurrentModal}>
-      <Dialog.Overlay className="fixed inset-0 z-[49] h-screen w-full bg-black/10 backdrop-blur-md" />
+  return isOpen ? (
+    <Dialog open={true} onClose={closeCurrentModal}>
+      <Dialog.Title className="sr-only">Manage Staking</Dialog.Title>
+      <div className="fixed inset-0 z-[49] h-screen w-full bg-white/10 backdrop-blur-md" />
       <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">
         <XMarkIcon className="h-5 w-5" />
         <span className="block">Close</span>
@@ -558,7 +559,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
         </>
       </Dialog.Panel>
     </Dialog >
-  );
+  ) : null;
 };
 
 export default ManageStaking;

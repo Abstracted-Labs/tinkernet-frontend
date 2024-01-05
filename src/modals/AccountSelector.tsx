@@ -44,9 +44,10 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
     closeCurrentModal();
   };
 
-  return (
-    <Dialog open={isOpen} onClose={closeModal}>
-      <Dialog.Overlay className="fixed inset-0 z-[49] h-screen w-full bg-black/10 backdrop-blur-md" />
+  return isOpen ? (
+    <Dialog open={true} onClose={closeModal}>
+      <Dialog.Title className="sr-only">Select your Wallet</Dialog.Title>
+      <div className="fixed inset-0 z-[49] h-screen w-full bg-black/10 backdrop-blur-md" />
       <button className="pointer fixed top-0 right-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-neutral-900 bg-transparent bg-opacity-50 p-6 text-gray-100 outline-none duration-500 hover:bg-opacity-100 hover:opacity-30">
         <XMarkIcon className="h-5 w-5" />
         <span className="block">Close</span>
@@ -98,7 +99,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
         </>
       </Dialog.Panel>
     </Dialog>
-  );
+  ) : null;
 };
 
 export default AccountSelector;

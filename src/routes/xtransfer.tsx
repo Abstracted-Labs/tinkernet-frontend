@@ -24,7 +24,7 @@ import Dropdown from "../components/Dropdown";
 
 const RPC_PROVIDER_BASILISK = "wss://basilisk-rpc.dwellir.com";
 
-const MINI_BUTTON_STYLE = "cursor-pointer bg-white hover:bg-tinkerYellow text-black py-2 px-3 rounded-lg text-xs font-medium";
+const MINI_BUTTON_STYLE = "cursor-pointer bg-white hover:bg-tinkerYellow text-black py-1 px-2 sm:py-2 sm:px-3 rounded-lg text-xs font-medium";
 
 type SystemAccount = Struct & {
   data: {
@@ -467,56 +467,72 @@ const Transfer = () => {
             </div>
             <div className="p-4">
               <div className="flex flex-row items-center gap-0">
-                <Dropdown
-                  defaultOption="Select Source Chain"
-                  initialValue={{ name: pair.from }}
-                  currentValue={{ name: pair.from }}
-                  onSelect={(opt) => {
-                    if (!opt) return;
-                    const from = opt.name as Currency;
+                <div className="flex-grow">
+                  <label
+                    htmlFor="amount"
+                    className="block text-xxs font-medium text-white mb-2"
+                  >
+                    Source Chain
+                  </label>
+                  <Dropdown
+                    defaultOption="Select Source Chain"
+                    initialValue={{ name: pair.from }}
+                    currentValue={{ name: pair.from }}
+                    onSelect={(opt) => {
+                      if (!opt) return;
+                      const from = opt.name as Currency;
 
-                    setPair((pair) => ({
-                      from: from,
-                      to: from === pair.to ? pair.from : pair.to,
-                    }));
-                  }}
-                >
-                  {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
-                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-sm">
-                      {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
-                      <span>{chain.name}</span>
-                    </span>
-                  )) : []}
-                </Dropdown>
+                      setPair((pair) => ({
+                        from: from,
+                        to: from === pair.to ? pair.from : pair.to,
+                      }));
+                    }}
+                  >
+                    {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
+                      <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-sm">
+                        {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
+                        <span>{chain.name}</span>
+                      </span>
+                    )) : []}
+                  </Dropdown>
+                </div>
 
-                <div className="mx-3">
+                <div className="mx-3 relative top-3">
                   <ArrowRightIcon
                     className="h-5 w-5 cursor-pointer text-white"
                     onClick={handlePairSwap}
                   />
                 </div>
 
-                <Dropdown
-                  defaultOption="Select Destination Chain"
-                  initialValue={{ name: pair.to }}
-                  currentValue={{ name: pair.to }}
-                  onSelect={(opt) => {
-                    if (!opt) return;
-                    const to = opt.name as Currency;
+                <div className="flex-grow">
+                  <label
+                    htmlFor="amount"
+                    className="block text-xxs font-medium text-white mb-2"
+                  >
+                    Destination Chain
+                  </label>
+                  <Dropdown
+                    defaultOption="Select Destination Chain"
+                    initialValue={{ name: pair.to }}
+                    currentValue={{ name: pair.to }}
+                    onSelect={(opt) => {
+                      if (!opt) return;
+                      const to = opt.name as Currency;
 
-                    setPair((pair) => ({
-                      from: to === pair.from ? pair.to : pair.from,
-                      to: to,
-                    }));
-                  }}
-                >
-                  {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
-                    <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-sm">
-                      {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
-                      <span>{chain.name}</span>
-                    </span>
-                  )) : []}
-                </Dropdown>
+                      setPair((pair) => ({
+                        from: to === pair.from ? pair.to : pair.from,
+                        to: to,
+                      }));
+                    }}
+                  >
+                    {Array.isArray(chainInfoLedger) ? chainInfoLedger.map((chain: ChainLogo) => (
+                      <span key={chain.name} id={chain.name} className="flex flex-row gap-1 items-center justify-start text-sm">
+                        {chain.logo && <img className="w-4 h-4" src={chain.logo} alt={chain.name} />}
+                        <span>{chain.name}</span>
+                      </span>
+                    )) : []}
+                  </Dropdown>
+                </div>
               </div>
 
               {pair.from === currency.TINKERNET &&

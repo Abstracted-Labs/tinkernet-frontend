@@ -1,5 +1,4 @@
 import { web3Accounts, web3Enable } from "@polkadot/extension-dapp";
-import { shallow } from "zustand/shallow";
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 
@@ -10,8 +9,7 @@ const useConnect = () => {
     (state) => ({
       setAccounts: state.setAccounts,
       setSelectedAccount: state.setSelectedAccount,
-    }),
-    shallow
+    })
   );
 
   const handleConnect = async () => {
