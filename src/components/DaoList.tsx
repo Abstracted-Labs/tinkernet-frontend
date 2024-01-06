@@ -131,7 +131,8 @@ const DaoList = (props: DaoListProps) => {
         await Promise.all([
           loadAccountInfo(selectedAccount),
           loadCores(),
-          loadStakingConstants()
+          loadStakingConstants(),
+          loadTotalUserStaked()
         ]);
       }
 
@@ -202,7 +203,6 @@ const DaoList = (props: DaoListProps) => {
               era: era,
               staked: staked,
             });
-            console.log('Array.from(userStakedInfoMap.values())', Array.from(userStakedInfoMap.values()));
             setUserStakedInfo(Array.from(userStakedInfoMap.values()));
 
             const coreEraStake = coreEraStakeInfo.find(info => info.coreId === stakingCore.key);
@@ -234,7 +234,7 @@ const DaoList = (props: DaoListProps) => {
 
   useEffect(() => {
     loadTotalUserStaked();
-  }, [selectedAccount, stakingCores]);
+  }, [selectedAccount, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   useEffect(() => {
     if (selectedAccount) {
@@ -274,7 +274,7 @@ const DaoList = (props: DaoListProps) => {
         }
       });
     };
-  }, [selectedAccount, api, stakingCores]);
+  }, [selectedAccount, api, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   const loadingSpinner = <div className='flex items-center justify-center'>
     <LoadingSpinner />
@@ -290,7 +290,7 @@ const DaoList = (props: DaoListProps) => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stakingCores.map((core: StakingCore) => {
           const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);
-          const userStaked = totalUserStakedData[core.key] || new BigNumber(0);
+          const userStaked = totalUserStakedData[core.key] ? totalUserStakedData[core.key] : new BigNumber(0);
 
           const projectCard = (minified: boolean) => (
             <ProjectCard
