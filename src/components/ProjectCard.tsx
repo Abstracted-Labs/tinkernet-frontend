@@ -114,14 +114,14 @@ const ProjectCard = (props: ProjectCardProps) => {
   useEffect(() => {
     loadAggregateStaked();
     loadStakeRewardMinimum();
-  }, []);
+  }, [api]);
 
   useEffect(() => {
     calcMinSupportMet();
   }, [minStakeReward, coreInfo?.totalStaked]);
 
   useEffect(() => {
-    if (totalStaked) {
+    if (totalStaked !== undefined) {
       setTotalUserStaked(totalStaked);
     }
   }, [totalStaked]);

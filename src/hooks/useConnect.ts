@@ -21,7 +21,7 @@ const useConnect = () => {
       return;
     }
 
-    const accounts = await web3Accounts();
+    const accounts = await web3Accounts({ ss58Format: 117 });
 
     setAccounts(accounts);
 

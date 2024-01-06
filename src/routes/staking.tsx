@@ -151,7 +151,7 @@ export function getTotalUserStaked(userStakedInfo: UserStakedInfoType[], core: S
   )?.staked;
 }
 
-export function getCoreInfo(coreEraStakeInfo: (CoreEraStakeInfoType | Partial<CoreEraStakeInfoType>)[], core: StakingCore) {
+export function getCoreInfo(coreEraStakeInfo: (CoreEraStakeInfoType)[], core: StakingCore) {
   return !!coreEraStakeInfo && coreEraStakeInfo.find(
     (info) => info.coreId === core.key
   );
@@ -172,7 +172,7 @@ const Staking = () => {
   const [isDataLoaded, setDataLoaded] = useState(false);
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
-  const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<Partial<CoreEraStakeInfoType>[]>([]);
+  const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakeInfoType[]>([]);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
   const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
   >([]);
@@ -335,7 +335,7 @@ const Staking = () => {
 
   const loadDaos = async () => {
     if (!selectedAccount) return;
-    const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, totalUserStakedData, api);
+    const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, api);
     setStakedDaos(daos);
   };
 
@@ -584,8 +584,12 @@ const Staking = () => {
   }, [selectedAccount, stakingCores, totalUserStakedData, api]);
 
   useEffect(() => {
-    loadTotalUserStaked();
-  }, [selectedAccount, stakingCores, coreEraStakeInfo, userStakedInfo]);
+    const fetchData = async () => {
+      await loadTotalUserStaked();
+    };
+
+    fetchData();
+  }, [selectedAccount?.address, stakingCores, userStakedInfo, coreEraStakeInfo, api]);
 
   useEffect(() => {
     if (!rewardsClaimedQuery.data?.stakers?.length || !selectedAccount) return;
@@ -604,13 +608,14 @@ const Staking = () => {
   useEffect(() => {
     if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
 
-    let coreEraStakeInfoMap: CoreEraStakeInfoType[] = [];
-    coreEraStakeInfoMap = rewardsCoreClaimedQuery.data.cores.filter((core: CoreEraStakeInfoType) => {
-      return !coreEraStakeInfoMap.some((item: CoreEraStakeInfoType) => item.coreId === core.coreId);
-    });
+    const coreEraStakeInfoMap: CoreEraStakeInfoType[] = rewardsCoreClaimedQuery.data.cores;
 
-    setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
-  }, [stakingCores, rewardsCoreClaimedQuery]);
+    const uniqueCoreEraStakeInfo = coreEraStakeInfoMap.filter((core, index, self) =>
+      index === self.findIndex((item) => item.coreId === core.coreId)
+    );
+
+    setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
+  }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
