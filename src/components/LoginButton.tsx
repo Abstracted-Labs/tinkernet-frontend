@@ -49,11 +49,7 @@ const LoginButton = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 768) {
-        setIsHovered(true);
-      } else {
-        setIsHovered(false);
-      }
+      setIsHovered(false);
     };
 
     // Set the initial state based on the current window size
@@ -100,7 +96,8 @@ const LoginButton = () => {
             {stringShorten(selectedAccount.meta.name || selectedAccount.address, 4)}
           </span>
           <span className={`relative -top-[8px] md:-top-[10px] flex flex-row items-center gap-1 transition-transform transform ${ showFirstSpan ? 'translate-y-20' : 'translate-y-0' }`}>
-            <img className="lg:w-3 lg:h-3 fill-tinkerYellow" src={isHovered ? TinkerBlackIcon : TinkerYellowIcon} alt="tnkr icon" />
+            {isHovered ? <img className="lg:w-3 lg:h-3" src={TinkerBlackIcon} alt="tnkr icon" /> :
+              <img className="lg:w-3 lg:h-3" src={TinkerYellowIcon} alt="tnkr icon" />}
             <span className="truncate">
               {formattedBalance} TNKR
             </span>

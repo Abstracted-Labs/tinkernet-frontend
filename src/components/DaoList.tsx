@@ -277,10 +277,12 @@ const DaoList = (props: DaoListProps) => {
   }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   const stakedCoresCount = useMemo(() => {
-    return stakingCores.filter(core =>
-      totalUserStakedData[core.key] && (totalUserStakedData[core.key] as BigNumber).isGreaterThan(0)
-    ).length;
-  }, [stakingCores, totalUserStakedData]);
+    return isOverview
+      ? stakingCores.filter(core =>
+        totalUserStakedData[core.key] && (totalUserStakedData[core.key] as BigNumber).isGreaterThan(0)
+      ).length
+      : stakingCores.length;
+  }, [selectedAccount?.address, isOverview, stakingCores, totalUserStakedData]);
 
   const loadingSpinner = <div className='flex items-center justify-center'>
     <LoadingSpinner />
