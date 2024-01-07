@@ -601,6 +601,7 @@ const Staking = () => {
     if (!rewardsUserClaimedQuery.data?.stakers?.length) {
       setTotalClaimed(new BigNumber(0));
       setTotalUnclaimed(new BigNumber(0));
+      setUnclaimedEras({ cores: [], total: 0 });
       return;
     }
 

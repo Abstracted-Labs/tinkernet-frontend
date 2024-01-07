@@ -53,7 +53,15 @@ const MetricDashboard = (props: MetricDashboardProps) => {
       </DashboardCard>}
 
       {totalUserStaked !== undefined && vestingBalance !== undefined && <DashboardCard cardTitle="My Staked + Vesting TNKR" iconSrc={MyStakeIcon}>
-        {totalUserStaked || vestingBalance ? `${ formatBalanceToTwoDecimals(totalUserStaked.plus(new BigNumber(vestingBalance))) } TNKR` : "0 TNKR"}
+        {
+          totalUserStaked && vestingBalance
+            ? formatBalanceToTwoDecimals(
+              new BigNumber(totalUserStaked).isNaN() || new BigNumber(vestingBalance).isNaN()
+                ? new BigNumber(0)
+                : totalUserStaked.plus(new BigNumber(vestingBalance))
+            ) + ' TNKR'
+            : '0 TNKR'
+        }
       </DashboardCard>}
 
       {totalSupply !== undefined && totalStaked !== undefined && <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
