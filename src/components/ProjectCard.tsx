@@ -114,7 +114,7 @@ const ProjectCard = (props: ProjectCardProps) => {
   useEffect(() => {
     loadAggregateStaked();
     loadStakeRewardMinimum();
-  }, [api]);
+  }, []);
 
   useEffect(() => {
     calcMinSupportMet();
