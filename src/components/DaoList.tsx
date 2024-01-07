@@ -125,7 +125,7 @@ const DaoList = (props: DaoListProps) => {
     setChainProperties({ maxStakersPerCore, inflationErasPerYear });
   };
 
-  const loadDashboardData = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const initializeData = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       if (selectedAccount) {
         await Promise.all([
@@ -223,24 +223,24 @@ const DaoList = (props: DaoListProps) => {
   };
 
   useEffect(() => {
-    loadDashboardData(selectedAccount);
-  }, [selectedAccount, api]);
+    initializeData(selectedAccount);
+  }, [selectedAccount?.address, api]);
 
   useEffect(() => {
     if (!selectedAccount) return;
     if (!stakingCores) return;
     loadDaos();
-  }, [selectedAccount, stakingCores, api]);
+  }, [selectedAccount?.address, stakingCores, api]);
 
   useEffect(() => {
     loadTotalUserStaked();
-  }, [selectedAccount, stakingCores, coreEraStakeInfo, userStakedInfo]);
+  }, [selectedAccount?.address, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   useEffect(() => {
     if (selectedAccount) {
       reexecuteQuery();
     }
-  }, [selectedAccount]);
+  }, [selectedAccount?.address]);
 
   useEffect(() => {
     if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
@@ -252,7 +252,7 @@ const DaoList = (props: DaoListProps) => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data]);
+  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
@@ -274,7 +274,7 @@ const DaoList = (props: DaoListProps) => {
         }
       });
     };
-  }, [selectedAccount, api, stakingCores, coreEraStakeInfo, userStakedInfo]);
+  }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   const loadingSpinner = <div className='flex items-center justify-center'>
     <LoadingSpinner />

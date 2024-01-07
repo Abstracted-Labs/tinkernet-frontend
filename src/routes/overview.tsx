@@ -218,7 +218,7 @@ const Overview = () => {
     }
   };
 
-  const loadDashboardData = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const initializeData = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       toast.loading("Loading staking cores...");
 
@@ -387,20 +387,20 @@ const Overview = () => {
   }, []);
 
   useEffect(() => {
-    loadDashboardData(selectedAccount);
-  }, [selectedAccount, api]);
+    initializeData(selectedAccount);
+  }, [selectedAccount?.address, api]);
 
   useEffect(() => {
     if (!selectedAccount) return;
     if (!stakingCores) return;
     loadDaos();
-  }, [selectedAccount, stakingCores, api]);
+  }, [selectedAccount?.address, stakingCores, api]);
 
   useEffect(() => {
     if (selectedAccount) {
       reexecuteQuery();
     }
-  }, [selectedAccount]);
+  }, [selectedAccount?.address]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
@@ -420,7 +420,7 @@ const Overview = () => {
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
     setTotalUnclaimed(totalUnclaimed);
-  }, [selectedAccount, rewardsUserClaimedQuery]);
+  }, [selectedAccount?.address, rewardsUserClaimedQuery.data]);
 
   useEffect(() => {
     if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
@@ -432,7 +432,7 @@ const Overview = () => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data]);
+  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
@@ -454,7 +454,7 @@ const Overview = () => {
         }
       });
     };
-  }, [selectedAccount, api, stakingCores, coreEraStakeInfo, currentStakingEra]);
+  }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo]);
 
   // useSubscription(
   //   {
