@@ -48,13 +48,34 @@ const LoginButton = () => {
   };
 
   useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setIsHovered(true);
+      } else {
+        setIsHovered(false);
+      }
+    };
+
+    // Set the initial state based on the current window size
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Remove event listener on cleanup
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
     loadBalance();
-  }, [selectedAccount, api]);
+  }, [selectedAccount?.address, api]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
       setShowFirstSpan(prev => !prev);
-    }, 3000); // Change 2000 to the desired interval in milliseconds
+    }, 3000);
 
     return () => clearInterval(intervalId);
   }, []);

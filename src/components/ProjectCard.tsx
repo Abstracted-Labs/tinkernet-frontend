@@ -7,6 +7,10 @@ import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import TotalStakersIcon from '../assets/total-stakers-icon.svg';
 import TotalStakedIcon from '../assets/total-staked-icon.svg';
 import MyProjectStakeIcon from '../assets/my-project-stake-icon.svg';
+import ClaimedRewardsIcon from '../assets/claimed-rewards-icon.svg';
+import UnclaimedRewardsIcon from '../assets/unclaimed-rewards-icon.svg';
+import SupportShareIcon from '../assets/support-share-icon.svg';
+import MinSupportIcon from '../assets/min-support-icon.svg';
 import Avatar from './Avatar';
 import { AnyJson } from '@polkadot/types/types';
 import useApi from '../hooks/useApi';
@@ -222,7 +226,7 @@ const ProjectCard = (props: ProjectCardProps) => {
           {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
             <div className='flex flex-row items-center gap-2'>
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={TotalStakedIcon} alt="Total Staked Icon" />
+                <img src={ClaimedRewardsIcon} alt="Total Staked Icon" />
               </div>
               <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
                 Total Rewards
@@ -239,7 +243,7 @@ const ProjectCard = (props: ProjectCardProps) => {
           {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
             <div className='flex flex-row items-center gap-2'>
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={TotalStakedIcon} alt="Total Staked Icon" />
+                <img src={UnclaimedRewardsIcon} alt="Total Staked Icon" />
               </div>
               <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
                 Unclaimed Rewards
@@ -256,7 +260,7 @@ const ProjectCard = (props: ProjectCardProps) => {
           {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
             <div className='flex flex-row items-center gap-2'>
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={TotalStakedIcon} alt="Total Staked Icon" />
+                <img src={SupportShareIcon} alt="Total Staked Icon" />
               </div>
               <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
                 Support Share
@@ -273,7 +277,7 @@ const ProjectCard = (props: ProjectCardProps) => {
           {!mini ? <div className="stats flex justify-between items-center">
             <div className='flex flex-row items-center gap-2'>
               <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={TotalStakedIcon} alt="Total Staked Icon" />
+                <img src={MinSupportIcon} alt="Total Staked Icon" />
               </div>
               <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
                 Min. Support Met
