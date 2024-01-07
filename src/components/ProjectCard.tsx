@@ -130,7 +130,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     <div
       key={core.account}
       className={`flex flex-col justify-between w-full rounded-xl space-y-4 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
-      <div className={`relative p-8 flex flex-col gap-6 justify-start ${ mini ? 'h-60' : 'h-auto' }`}>
+      <div className={`relative p-8 flex flex-col gap-6 justify-start h-auto`}>
 
         {/* Avatar, Name, Members */}
         <div className="flex items-center space-x-4">
