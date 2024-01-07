@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ProjectCard from './ProjectCard';
 import LoadingSpinner from './LoadingSpinner';
 import { BalanceType, ChainPropertiesType, CoreEraStakeInfoType, LockedType, StakingCore, TotalRewardsCoreClaimedQuery, TotalUserStakedData, UserStakedInfoType, getCoreInfo, getTotalUserStaked } from '../routes/staking';
@@ -276,6 +276,12 @@ const DaoList = (props: DaoListProps) => {
     };
   }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
+  const stakedCoresCount = useMemo(() => {
+    return stakingCores.filter(core =>
+      totalUserStakedData[core.key] && (totalUserStakedData[core.key] as BigNumber).isGreaterThan(0)
+    ).length;
+  }, [stakingCores, totalUserStakedData]);
+
   const loadingSpinner = <div className='flex items-center justify-center'>
     <LoadingSpinner />
   </div>;
@@ -286,7 +292,7 @@ const DaoList = (props: DaoListProps) => {
 
   return (
     <>
-      <h4 className="text-white text-md">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakingCores.length ?? '0'})</h4>
+      <h4 className="text-white text-md">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stakingCores.map((core: StakingCore) => {
           const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);

@@ -52,7 +52,7 @@ const SideNav = (props: SideNavProps) => {
               to={link.path}
               onClick={handleClick}
               className={({ isActive }) =>
-                isActive ? 'truncate text-white bg-tinkerYellow bg-opacity-25 border-l border-tinkerYellow border-l-4 w-full h-16 pl-6 text-sm flex flex-col justify-center hover:text-tinkerYellow' : 'truncate text-white w-full h-16 pl-7 text-sm flex flex-col justify-center hover:text-tinkerYellow'
+                isActive ? 'truncate text-white bg-tinkerYellow bg-opacity-25 border-l border-tinkerYellow border-l-4 w-full h-16 pl-6 text-sm flex flex-col justify-center hover:text-tinkerYellow focus:outline-none' : 'truncate text-white w-full h-16 pl-7 text-sm flex flex-col justify-center hover:text-tinkerYellow'
               }
             >
               <div className="flex items-center">

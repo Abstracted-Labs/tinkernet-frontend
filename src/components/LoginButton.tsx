@@ -15,6 +15,7 @@ import { formatBalanceToTwoDecimals } from "../utils/formatNumber";
 const LoginButton = () => {
   const [balance, setBalance] = useState<BigNumber>();
   const [isHovered, setIsHovered] = useState(false);
+  const [showFirstSpan, setShowFirstSpan] = useState(true);
   const { handleConnect } = useConnect();
   const api = useApi();
   const closeCurrentModal = useModal((state) => state.closeCurrentModal);
@@ -50,6 +51,14 @@ const LoginButton = () => {
     loadBalance();
   }, [selectedAccount, api]);
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setShowFirstSpan(prev => !prev);
+    }, 3000); // Change 2000 to the desired interval in milliseconds
+
+    return () => clearInterval(intervalId);
+  }, []);
+
   const formattedBalance = balance ? formatBalanceToTwoDecimals(balance) : 0;
 
   return <Button
@@ -65,11 +74,11 @@ const LoginButton = () => {
   >
     <div className="flex-grow">
       {selectedAccount ? (
-        <div className="flex flex-row justify-between items-center gap-5">
-          <span className="flex font-bold">
+        <div className="overflow-hidden">
+          <span className={`relative -top-[2px] flex font-bold transition-transform transform ${ showFirstSpan ? 'translate-y-3' : 'translate-y-12' }`}>
             {stringShorten(selectedAccount.meta.name || selectedAccount.address, 4)}
           </span>
-          <span className="flex flex-row items-center gap-1">
+          <span className={`relative -top-[8px] md:-top-[10px] flex flex-row items-center gap-1 transition-transform transform ${ showFirstSpan ? 'translate-y-20' : 'translate-y-0' }`}>
             <img className="lg:w-3 lg:h-3 fill-tinkerYellow" src={isHovered ? TinkerBlackIcon : TinkerYellowIcon} alt="tnkr icon" />
             <span className="truncate">
               {formattedBalance} TNKR
