@@ -31,6 +31,7 @@ const Overview = () => {
     total: number;
   }>({ cores: [], total: 0 });
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
+  const [lockedBalance, setLockedBalance] = useState<BigNumber>();
   const [isLoading, setLoading] = useState(true);
   const [isDataLoaded, setDataLoaded] = useState(false);
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
@@ -188,6 +189,7 @@ const Overview = () => {
     const currentBalance = new BigNumber(balance.data.free).minus(new BigNumber(locked.locked));
 
     setAvailableBalance(currentBalance);
+    setLockedBalance(new BigNumber(balance.data.frozen));
   };
 
   const loadVestingBalance = async (selectedAccount: InjectedAccountWithMeta | null) => {
@@ -304,35 +306,36 @@ const Overview = () => {
         </h2>
       </div>
       {selectedAccount &&
-        currentStakingEra &&
-        unclaimedEras ? (
-        <>
-          <MetricDashboard
-            vestingBalance={vestingSummary?.vestedRemaining || "0"}
-            availableBalance={availableBalance || new BigNumber(0)}
-            aggregateStaked={aggregateStaked || new BigNumber(0)}
-            totalUserStaked={totalUserStaked || new BigNumber(0)}
-            totalSupply={undefined}
-            totalStaked={undefined}
-            totalUnclaimed={totalUnclaimed || new BigNumber(0)}
-            totalClaimed={totalClaimed || new BigNumber(0)}
-            currentStakingEra={undefined}
-            currentBlock={undefined}
-            nextEraBlock={nextEraBlock}
-            blocksPerEra={blocksPerEra}
-            unclaimedEras={undefined}
-          />
+       currentStakingEra &&
+       unclaimedEras ? (
+         <>
+           <MetricDashboard
+             vestingBalance={vestingSummary?.vestedRemaining || "0"}
+             availableBalance={availableBalance || new BigNumber(0)}
+             lockedBalance={lockedBalance || new BigNumber(0)}
+             aggregateStaked={aggregateStaked || new BigNumber(0)}
+             totalUserStaked={totalUserStaked || new BigNumber(0)}
+             totalSupply={undefined}
+             totalStaked={undefined}
+             totalUnclaimed={totalUnclaimed || new BigNumber(0)}
+             totalClaimed={totalClaimed || new BigNumber(0)}
+             currentStakingEra={undefined}
+             currentBlock={undefined}
+             nextEraBlock={nextEraBlock}
+             blocksPerEra={blocksPerEra}
+             unclaimedEras={undefined}
+           />
 
-          <DaoList mini={true} isOverview={true} />
-        </>
-      ) : <div className="text-center">
-        <h5 className="text-sm font-bold text-white">
-          Wallet not connected
-        </h5>
-        <p className="mt-2 text-xs text-white">
-          Connect your wallet to access your account overview.
-        </p>
-      </div>}
+           <DaoList mini={true} isOverview={true} />
+         </>
+       ) : <div className="text-center">
+         <h5 className="text-sm font-bold text-white">
+           Wallet not connected
+         </h5>
+         <p className="mt-2 text-xs text-white">
+           Connect your wallet to access your account overview.
+         </p>
+       </div>}
     </div>
   );
 };
