@@ -517,7 +517,7 @@ const Staking = () => {
     const totalUnclaimed = new BigNumber(
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
-    setTotalUnclaimed(claimAllSuccess ? new BigNumber("0") : totalUnclaimed);
+    setTotalUnclaimed(claimAllSuccess ? new BigNumber(0) : totalUnclaimed);
   }, [selectedAccount?.address, rewardsUserClaimedQuery.data, rewardsUserClaimedQuery.fetching, claimAllSuccess]);
 
   useEffect(() => {
@@ -534,7 +534,7 @@ const Staking = () => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery]);
+  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.fetching, rewardsCoreClaimedQuery.data]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
