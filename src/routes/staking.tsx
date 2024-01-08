@@ -606,6 +606,7 @@ const Staking = () => {
           <MetricDashboard
             vestingBalance={undefined}
             availableBalance={undefined}
+            lockedBalance={undefined}
             aggregateStaked={aggregateStaked || new BigNumber(0)}
             totalUserStaked={totalUserStaked || new BigNumber(0)}
             totalSupply={totalSupply || new BigNumber(0)}
