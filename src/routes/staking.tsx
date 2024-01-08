@@ -487,7 +487,7 @@ const Staking = () => {
       // Set a default value when there's no value in local storage
       setEnableAutoRestake(true);
     }
-  }, [enableAutoRestake]);
+  }, []);
 
   useEffect(() => {
     initializeData(selectedAccount);
