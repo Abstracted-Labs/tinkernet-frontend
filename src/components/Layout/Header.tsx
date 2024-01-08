@@ -25,7 +25,7 @@ const Header = (props: SideNavProps) => {
       <div className="w-full flex flex-row justify-between gap-8 p-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-4">
           <div className="flex-shrink-0">
-            <Link to="/">
+            <Link to="/" className="focus:outline-none">
               <img
                 className="h-3 md:h-6 w-auto lock"
                 src={logoFull}
