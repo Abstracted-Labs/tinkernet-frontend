@@ -36,8 +36,6 @@ const Overview = () => {
   const [isDataLoaded, setDataLoaded] = useState(false);
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
-  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
-  const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
   const [vestingSummary, setVestingSummary] = useState<VestingData | null>(null);
 
   const [rewardsUserClaimedQuery, reexecuteQuery] = useQuery({
@@ -67,11 +65,7 @@ const Overview = () => {
     const blocks = api.rpc.chain.subscribeNewHeads(() => { });
 
     // Next era starting block subscription
-    const nextEraStartingBlock = api.query.ocifStaking.nextEraStartingBlock(
-      (blockNumber: Codec) => {
-        setNextEraBlock(blockNumber.toPrimitive() as number);
-      }
-    );
+    const nextEraStartingBlock = api.query.ocifStaking.nextEraStartingBlock(() => { });
 
     let generalEraInfo;
 
@@ -163,11 +157,6 @@ const Overview = () => {
     return Promise.resolve(unsubs as UnsubscribePromise[]);
   };
 
-  const loadStakingConstants = async () => {
-    const blocksPerEra = api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
-    setBlocksPerEra(blocksPerEra);
-  };
-
   const loadAggregateStaked = async () => {
     const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
     const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
@@ -217,7 +206,6 @@ const Overview = () => {
         await Promise.all([
           loadAccountInfo(selectedAccount),
           loadCores(),
-          loadStakingConstants(),
           loadAggregateStaked(),
           loadVestingBalance(selectedAccount)
         ]);
@@ -321,8 +309,8 @@ const Overview = () => {
             totalClaimed={totalClaimed || new BigNumber(0)}
             currentStakingEra={undefined}
             currentBlock={undefined}
-            nextEraBlock={nextEraBlock}
-            blocksPerEra={blocksPerEra}
+            nextEraBlock={undefined}
+            blocksPerEra={undefined}
             unclaimedEras={undefined}
           />
 
