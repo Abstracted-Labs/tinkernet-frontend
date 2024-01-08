@@ -4,7 +4,7 @@ import BigNumber from "bignumber.js";
 import { UnclaimedErasType } from "../routes/staking";
 import { getSignAndSendCallbackWithPromise } from "./getSignAndSendCallback";
 import { Vec } from "@polkadot/types";
-import { Call } from "@polkadot/types/interfaces";
+import { Balance, Call } from "@polkadot/types/interfaces";
 import toast from "react-hot-toast";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 
@@ -68,7 +68,7 @@ export const restakeClaim = async ({
 
     // Get the fee that each batch transaction will cost
     const info = await api.tx.utility.batchAll(batch as Vec<Call>).paymentInfo(selectedAccount.address, { signer: injector.signer });
-    const batchTxFees = info.partialFee;
+    const batchTxFees: Balance = info.partialFee;
     const rebuildBatch: unknown[] = [];
 
     // Rebuild the batch exactly like we did before,
@@ -86,7 +86,8 @@ export const restakeClaim = async ({
         const restakeAmount = handleRestakingLogic();
         if (restakeAmount && !restakeAmount.isZero()) {
           const batchTxFeesBigNumber = new BigNumber(batchTxFees.toString());
-          let adjustedRestakeAmount = restakeAmount.minus(batchTxFeesBigNumber).minus(new BigNumber(0.01));
+          const feesPerCore = batchTxFeesBigNumber.dividedBy(uniqueCores.length);
+          let adjustedRestakeAmount = restakeAmount.minus(feesPerCore).minus(new BigNumber(0.01));
           if (adjustedRestakeAmount.isNegative()) {
             adjustedRestakeAmount = new BigNumber(0);
           }
