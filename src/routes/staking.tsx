@@ -1,40 +1,76 @@
-import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { formatBalance } from "@polkadot/util";
-import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
-import useModal, { modalName } from "../stores/modals";
-import { useQuery, useSubscription } from "urql";
 import { Codec } from "@polkadot/types/types";
-import { UserGroupIcon, LockClosedIcon } from "@heroicons/react/24/outline";
-import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { StakesInfo } from "./claim";
+import MetricDashboard from "../components/MetricDashboard";
+import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
+import DaoList from "../components/DaoList";
+import Button from "../components/Button";
+import useModal, { modalName } from "../stores/modals";
+import { encodeAddress } from "@polkadot/util-crypto";
+import { useQuery } from "urql";
+import { StakedDaoType } from "./overview";
+import OnOffSwitch from "../components/Switch";
+import { autoRestake } from "../utils/autoRestake";
+import { restakeClaim } from "../utils/restakeClaim";
 
-const TotalRewardsClaimedQuery = `
-  query totalRewardsClaimed($accountId: String!) {
+export type UnsubFunction = () => Promise<void>;
+
+export type RewardQueryType = { latestClaimBlock: number; totalRewards: string; totalUnclaimed: string; };
+
+export const TotalRewardsClaimedQuery = `
+  query totalRewardsClaimed($accountId: String) {
     stakers(where: {account_eq: $accountId}) {
       latestClaimBlock
       totalRewards
+      totalUnclaimed
     }
   }
 `;
 
-const TotalRewardsClaimedSubscription = `
-  subscription totalRewardsClaimed($accountId: String!) {
+export const TotalRewardsClaimedSubscription = `
+  subscription totalRewardsClaimed($accountId: String) {
     stakers(where: {account_eq: $accountId}) {
       latestClaimBlock
       totalRewards
+      totalUnclaimed
     }
   }
 `;
 
-type StakingCore = {
+export const TotalRewardsCoreClaimedQuery = `
+  query totalRewardsCoreClaimed($coreId: Int) {
+    cores(where: {coreId_eq: $coreId}) {
+      latestClaimBlock
+      totalRewards
+      totalUnclaimed
+      totalStaked
+      coreId
+      numberOfStakers
+    }
+  }
+`;
+
+export const TotalRewardsCoreClaimedSubscription = `
+  subscription totalRewardsCoreClaimed($coreId: Int) {
+    cores(where: {coreId_eq: $coreId}) {
+      latestClaimBlock
+      totalRewards
+      totalUnclaimed
+      totalStaked
+      coreId
+      numberOfStakers
+    }
+  }
+`;
+
+export type StakingCore = {
   key: number;
   account: string;
   metadata: {
@@ -44,7 +80,9 @@ type StakingCore = {
   };
 };
 
-type BalanceType = {
+export type TotalUserStakedData = { [key: number]: BigNumber | undefined; };
+
+export type BalanceType = {
   nonce: string;
   consumers: string;
   providers: string;
@@ -56,23 +94,34 @@ type BalanceType = {
   };
 };
 
-type CoreEraStakedInfoType = {
+export type CoreEraStakeInfoType = {
   coreId: number;
   account: string;
-  total: string;
+  totalRewards: string;
+  totalUnclaimed: string;
+  totalStaked: string;
   numberOfStakers: number;
   rewardClaimed: boolean;
   active: boolean;
 };
 
-type CoreEraStakeType = {
-  total: string;
-  numberOfStakers: number;
-  rewardClaimed: boolean;
-  active: boolean;
+export type UnclaimedErasType = {
+  cores: { coreId: number; earliestEra: number; }[];
+  total: number;
 };
 
-type LedgerType = {
+export type UserStakedInfoType = {
+  coreId: number;
+  era: number;
+  staked: BigNumber;
+};
+
+export type ChainPropertiesType = {
+  maxStakersPerCore: number;
+  inflationErasPerYear: number;
+};
+
+export type LedgerType = {
   locked: number;
   unbondingInfo: {
     unlockingChunks: {
@@ -82,11 +131,11 @@ type LedgerType = {
   };
 };
 
-type LockedType = { locked: string; };
+export type LockedType = { locked: string; };
 
-type StakedType = { staked: string; };
+export type StakedType = { staked: string; };
 
-type CorePrimitiveType = {
+export type CorePrimitiveType = {
   account: string;
   metadata: {
     name: string;
@@ -95,99 +144,64 @@ type CorePrimitiveType = {
   };
 };
 
-type ReturnResultType = {
-  nonce: string;
-  consumers: string;
-  providers: string;
-  sufficients: string;
-  data: {
-    free: string;
-    reserved: string;
-    frozen: string;
-  };
-};
+export function getTotalUserStaked(userStakedInfo: UserStakedInfoType[], core: StakingCore) {
+  return !!userStakedInfo && userStakedInfo.find(
+    (info) => info.coreId === core.key
+  )?.staked;
+}
+
+export function getCoreInfo(coreEraStakeInfo: (CoreEraStakeInfoType)[], core: StakingCore) {
+  return !!coreEraStakeInfo && coreEraStakeInfo.find(
+    (info) => info.coreId === core.key
+  );
+}
 
 const Staking = () => {
+  const api = useApi();
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
-  const api = useApi();
-  const [hasUnbondedTokens, setHasUnbondedTokens] = useState(false);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
-  const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<
-    {
-      coreId: number;
-      account: string;
-      total: string;
-      numberOfStakers: number;
-      rewardClaimed: boolean;
-      active: boolean;
-    }[]
-  >([]);
   const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>();
   const [totalStaked, setTotalStaked] = useState<BigNumber>();
-  const [userStakedInfo, setUserStakedInfo] = useState<
-    {
-      coreId: number;
-      era: number;
-      staked: BigNumber;
-    }[]
-  >([]);
   const [totalSupply, setTotalSupply] = useState<BigNumber>();
+  const [aggregateStaked, setAggregateStaked] = useState<BigNumber>();
+  const [isLoading, setLoading] = useState(true);
+  const [isWaiting, setWaiting] = useState(false);
+  const [isDataLoaded, setDataLoaded] = useState(false);
+  const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
+  const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
+  const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakeInfoType[]>([]);
+  const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
+  const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
+  >([]);
+  const [stakedDaos, setStakedDaos] = useState<StakedDaoType[]>([]);
   const [unclaimedEras, setUnclaimedEras] = useState<{
     cores: { coreId: number; earliestEra: number; }[];
     total: number;
   }>({ cores: [], total: 0 });
-  const [availableBalance, setAvailableBalance] = useState<BigNumber>();
+  const [enableAutoRestake, setEnableAutoRestake] = useState<boolean>(false);
+  const [currentBlock, setCurrentBlock] = useState<number>(0);
+  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
+  const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
 
-  const [isLoading, setLoading] = useState(false);
-  const [isWaiting, setWaiting] = useState(false);
-
-  const [rewardsClaimedQuery] = useQuery({
+  const [rewardsUserClaimedQuery, reexecuteQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
     variables: {
       accountId: selectedAccount
-        ? encodeAddress(selectedAccount.address, 2)
+        ? encodeAddress(selectedAccount.address, 117)
         : null,
     },
 
     pause: !selectedAccount,
   });
 
-  const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
+  const [rewardsCoreClaimedQuery, reexecuteCoreQuery] = useQuery({
+    query: TotalRewardsCoreClaimedQuery,
+    variables: {},
 
-  const [chainProperties, setChainProperties] = useState<{
-    maxStakersPerCore: number;
-    inflationErasPerYear: number;
-  }>();
-
-  const [currentBlock, setCurrentBlock] = useState<number>(0);
-  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
-  const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
-
-  useSubscription(
-    {
-      query: TotalRewardsClaimedSubscription,
-      variables: {
-        accountId: selectedAccount
-          ? encodeAddress(selectedAccount.address, 2)
-          : null,
-      },
-      pause: !selectedAccount,
-    },
-    (
-      _: unknown,
-      result: { stakers: { latestClaimBlock: number; totalRewards: string; }[]; }
-    ) => {
-      if (result.stakers.length === 0) return;
-
-      if (!result.stakers[0].totalRewards) return;
-
-      const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
-
-      setTotalClaimed(totalClaimed);
-    }
-  );
+    pause: !selectedAccount,
+  });
 
   const setupSubscriptions = ({
     selectedAccount,
@@ -224,20 +238,7 @@ const Staking = () => {
       setCurrentStakingEra(era.toPrimitive() as number);
     });
 
-    const account = api.query.system.account(
-      selectedAccount.address,
-      async (account) => {
-        const balance = account.toPrimitive() as BalanceType;
-
-        const locked = (
-          await api.query.ocifStaking.ledger(selectedAccount.address)
-        ).toPrimitive() as LockedType;
-
-        setAvailableBalance(
-          new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
-        );
-      }
-    );
+    const account = api.query.system.account(selectedAccount.address);
 
     const unsubs = [blocks, nextEraStartingBlock, currentEra, account];
 
@@ -245,396 +246,157 @@ const Staking = () => {
       unsubs.push(generalEraInfo);
     }
 
-    // Core era stake + Use era stake subscriptions
-    const coreEraStakeInfoMap: Map<
-      number, CoreEraStakedInfoType> = new Map();
-
     const userStakedInfoMap: Map<
-      number,
-      {
-        coreId: number;
-        era: number;
-        staked: BigNumber;
-      }
+      number, UserStakedInfoType
     > = new Map();
 
-    for (const stakingCore of stakingCores) {
-      api.query.ocifStaking.coreEraStake(
-        stakingCore.key,
-        currentStakingEra,
-        (c: Codec) => {
-          const coreEraStake = c.toPrimitive() as CoreEraStakeType;
-
-          coreEraStakeInfoMap.set(stakingCore.key, {
-            coreId: stakingCore.key,
-            account: stakingCore.account,
-            ...coreEraStake,
-          });
-
-          if (Array.from(coreEraStakeInfoMap.values()).length > 0) {
-            setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
-          }
-        }
-      );
-
-      api.query.ocifStaking.ledger(selectedAccount.address, (c: Codec) => {
-        const ledger = c.toPrimitive() as LedgerType;
-
-        setHasUnbondedTokens(ledger.unbondingInfo.unlockingChunks.length > 0);
-      });
-
-      api.query.ocifStaking.generalStakerInfo(
-        stakingCore.key,
-        selectedAccount.address,
-        (generalStakerInfo: Codec) => {
-          const info = generalStakerInfo.toPrimitive() as StakesInfo;
-
-          if (info.stakes.length > 0) {
-            const unclaimedEarliest = info.stakes.reduce((p, v) => p.era < v.era ? p : v).era;
-
-            if (parseInt(unclaimedEarliest) < currentStakingEra) {
-              const unclaimed = unclaimedEras;
-
-              const cores = unclaimed.cores.filter((value) => {
-                return value.coreId != stakingCore.key;
-              });
-
-              cores.push({
-                coreId: stakingCore.key,
-                earliestEra: parseInt(unclaimedEarliest),
-              });
-
-              let total = unclaimed.total;
-
-              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
-                total = currentStakingEra - parseInt(unclaimedEarliest);
-              }
-
-              setUnclaimedEras({
-                cores,
-                total: unclaimed.total,
-              });
-            } else {
-              setUnclaimedEras((unclaimedEras) => ({
-                ...unclaimedEras,
-                total: 0,
-              }));
-            }
-
+    if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
+      for (const stakingCore of stakingCores) {
+        api.query.ocifStaking.generalStakerInfo(
+          stakingCore.key,
+          selectedAccount.address,
+          (generalStakerInfo: Codec) => {
+            const info = generalStakerInfo.toPrimitive() as StakesInfo;
             const latestInfo = info.stakes.at(-1);
 
-            if (!latestInfo) {
-              return;
+            let era = -1;
+            let staked = new BigNumber(0);
+
+            if (info.stakes.length > 0) {
+              const unclaimedEarliest = info.stakes.reduce((p, v) => parseInt(p.era) < parseInt(v.era) ? p : v).era;
+
+              if (parseInt(unclaimedEarliest) < currentStakingEra) {
+                const unclaimed = unclaimedEras;
+                const unclaimedCore = unclaimed.cores.find(value => value.coreId === stakingCore.key);
+
+                if (unclaimedCore) {
+                  // Update the earliestEra of the existing core
+                  unclaimedCore.earliestEra = parseInt(unclaimedEarliest);
+                } else {
+                  // Add a new core
+                  unclaimed.cores.push({
+                    coreId: stakingCore.key,
+                    earliestEra: parseInt(unclaimedEarliest),
+                  });
+                }
+
+                let total = unclaimed.total;
+                total = currentStakingEra - parseInt(unclaimedEarliest);
+
+                setUnclaimedEras({
+                  cores: unclaimed.cores,
+                  total,
+                });
+              } else {
+                setUnclaimedEras((unclaimedEras) => ({
+                  ...unclaimedEras,
+                  total: 0,
+                }));
+              }
+            }
+
+            if (latestInfo) {
+              era = parseInt(latestInfo.era);
+              staked = new BigNumber(latestInfo.staked);
             }
 
             userStakedInfoMap.set(stakingCore.key, {
               coreId: stakingCore.key,
-              era: parseInt(latestInfo.era),
-              staked: new BigNumber(latestInfo.staked),
+              era: era,
+              staked: staked,
             });
 
-            if (Array.from(userStakedInfoMap.values()).length != 0) {
-              setUserStakedInfo(Array.from(userStakedInfoMap.values()));
+            const newTotalStaked = Array.from(
+              userStakedInfoMap.values()
+            ).reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
 
-              const newTotalStaked = Array.from(
-                userStakedInfoMap.values()
-              ).reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
-
-              setTotalUserStaked(newTotalStaked);
-            }
+            setTotalUserStaked(newTotalStaked);
+            setUserStakedInfo(Array.from(userStakedInfoMap.values()));
           }
-        }
-      );
+        );
+      }
     }
 
-    return unsubs as UnsubscribePromise[];
+    return Promise.resolve(unsubs as UnsubscribePromise[]);
   };
 
-  const loadStakingCores = async (
-    selectedAccount: InjectedAccountWithMeta | null
-  ) => {
-    setLoading(true);
+  const loadTotalUserStaked = () => {
+    if (!selectedAccount) return;
+
+    const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
+    const totalUserStakedResults: TotalUserStakedData = {};
+
+    for (const core of stakingCores) {
+      const coreInfo = getCoreInfo(coreEraStakeInfo, core);
+      const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
+
+      coreInfoResults[core.key] = coreInfo;
+      totalUserStakedResults[core.key] = totalUserStaked;
+    }
+
+    setTotalUserStakedData(totalUserStakedResults);
+  };
+
+  const loadCurrentEraAndStake = async () => {
+    const currentStakingEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
+    const generalEraInfo = (await api.query.ocifStaking.generalEraInfo(currentStakingEra)).toPrimitive() as StakedType;
+    const totalStaked = new BigNumber(generalEraInfo.staked);
+
+    setCurrentStakingEra(currentStakingEra);
+    setTotalStaked(totalStaked);
+  };
+
+  const loadTotalSupply = async () => {
+    const supply = (await api.query.balances.totalIssuance()).toPrimitive() as string;
+    setTotalSupply(new BigNumber(supply));
+  };
+
+  const loadStakingConstants = async () => {
+    const blocksPerEra = api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
+    setBlocksPerEra(blocksPerEra);
+  };
+
+  const loadAggregateStaked = async () => {
+    const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
+    const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
+    setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
+  };
+
+  const loadDaos = async () => {
+    if (!selectedAccount) return;
+    const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, api);
+    setStakedDaos(daos);
+  };
+
+  const loadCores = async () => {
+    const cores = await loadProjectCores(api);
+
+    if (cores) {
+      setStakingCores(cores);
+    }
+  };
+
+  const initializeData = async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       toast.loading("Loading staking cores...");
 
-      const blocksPerEra =
-        api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
-
-      setBlocksPerEra(blocksPerEra);
-
-      const maxStakersPerCore =
-        api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
-
-      const inflationErasPerYear =
-        api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
-
-      setCurrentBlock(
-        (await api.rpc.chain.getBlock()).block.header.number.toNumber()
-      );
-
-      setNextEraBlock(
-        (
-          await api.query.ocifStaking.nextEraStartingBlock()
-        ).toPrimitive() as number
-      );
-
-      const currentStakingEra = (
-        await api.query.ocifStaking.currentEra()
-      ).toPrimitive() as number;
-
-      setCurrentStakingEra(currentStakingEra);
-
-      const generalEraInfo = (
-        await api.query.ocifStaking.generalEraInfo(currentStakingEra)
-      ).toPrimitive() as StakedType;
-
-      setTotalStaked(new BigNumber(generalEraInfo.staked));
-
-      const supply = (
-        await api.query.balances.totalIssuance()
-      ).toPrimitive() as string;
-
-      setTotalSupply(new BigNumber(supply));
-
-      setChainProperties({
-        maxStakersPerCore,
-        inflationErasPerYear,
-      });
-
-      const stakingCores = (
-        await api.query.ocifStaking.registeredCore.entries()
-      ).map(
-        ([
-          {
-            args: [key],
-          },
-          core,
-        ]) => {
-          const c = core.toPrimitive() as CorePrimitiveType;
-
-          const primitiveKey = key.toPrimitive() as number;
-
-          return {
-            key: primitiveKey,
-            ...c,
-          };
-        }
-      );
-
-      setStakingCores(stakingCores);
-
-      const coreEraStakeInfo: CoreEraStakedInfoType[] = [];
-
-      for (const stakingCore of stakingCores) {
-        const coreEraStake = (
-          await api.query.ocifStaking.coreEraStake(
-            stakingCore.key,
-            currentStakingEra
-          )
-        ).toPrimitive() as CoreEraStakeType;
-
-        coreEraStakeInfo.push({
-          coreId: stakingCore.key,
-          account: stakingCore.account,
-          ...coreEraStake,
-        });
-      }
-
-      setCoreEraStakeInfo(coreEraStakeInfo);
-
       if (selectedAccount) {
-        const results = await Promise.all([
-          api.query.system.account(selectedAccount.address),
-          api.query.ocifStaking.ledger(selectedAccount.address),
+        await Promise.all([
+          loadCores(),
+          loadStakingConstants(),
+          loadCurrentEraAndStake(),
+          loadTotalSupply(),
+          loadAggregateStaked()
         ]);
-
-        const balance = results[0].toPrimitive() as ReturnResultType;
-
-        const locked = results[1].toPrimitive() as {
-          locked: string;
-        };
-
-        setAvailableBalance(
-          new BigNumber(balance.data.free).minus(new BigNumber(locked.locked))
-        );
-
-        const userStakedInfo: {
-          coreId: number;
-          era: number;
-          staked: BigNumber;
-        }[] = [];
-
-        let newUnclaimedCores: {
-          cores: { coreId: number; earliestEra: number; }[];
-          total: number;
-        } = { cores: [], total: 0 };
-
-        for (const stakingCore of stakingCores) {
-          const generalStakerInfo =
-            await api.query.ocifStaking.generalStakerInfo(
-              stakingCore.key,
-              selectedAccount.address
-            );
-
-          const info = generalStakerInfo.toPrimitive() as StakesInfo;
-
-          if (info.stakes.length > 0) {
-            const unclaimedEarliest = info.stakes[0].era;
-
-            if (parseInt(unclaimedEarliest) < currentStakingEra) {
-              const cores = newUnclaimedCores.cores.filter((value) => {
-                return value.coreId != stakingCore.key;
-              });
-
-              cores.push({
-                coreId: stakingCore.key,
-                earliestEra: parseInt(unclaimedEarliest),
-              });
-
-              let total = newUnclaimedCores.total;
-
-              if (currentStakingEra - parseInt(unclaimedEarliest) > total) {
-                total = currentStakingEra - parseInt(unclaimedEarliest);
-              }
-
-              newUnclaimedCores = { cores, total };
-            }
-
-            const latestInfo = info.stakes.at(-1);
-
-            if (!latestInfo) {
-              continue;
-            }
-
-            userStakedInfo.push({
-              coreId: stakingCore.key,
-              era: parseInt(latestInfo.era),
-              staked: new BigNumber(latestInfo.staked),
-            });
-          }
-        }
-
-        setUnclaimedEras(newUnclaimedCores);
-
-        setUserStakedInfo(userStakedInfo);
-
-        const totalUserStaked = userStakedInfo.reduce(
-          (acc, cur) => acc.plus(cur.staked),
-          new BigNumber(0)
-        );
-
-        setTotalUserStaked(totalUserStaked);
-
-        setHasUnbondedTokens(
-          (
-            (
-              await api.query.ocifStaking.ledger(selectedAccount.address)
-            ).toPrimitive() as LedgerType).unbondingInfo.unlockingChunks.length > 0
-        );
       }
-
-      toast.dismiss();
-
-      setLoading(false);
     } catch (error) {
       toast.dismiss();
-
+      toast.error(`${ error }`);
+    } finally {
+      toast.dismiss();
+      toast.success('Loaded');
       setLoading(false);
-
-      toast.error(`${ error }`);
-    }
-  };
-
-  const handleManageStaking = async ({
-    core,
-    totalUserStaked,
-    availableBalance,
-  }: {
-    core: StakingCore;
-    totalUserStaked: BigNumber;
-    availableBalance: BigNumber;
-  }) => {
-    setOpenModal({
-      name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalUserStaked, availableBalance },
-    });
-  };
-
-  const handleClaimAll = async () => {
-    if (!selectedAccount) return;
-
-    if (!unclaimedEras) return;
-
-    if (!currentStakingEra) return;
-
-    try {
-      toast.loading("Claiming...");
-
-      await web3Enable("Tinkernet");
-
-      const injector = await web3FromAddress(selectedAccount.address);
-
-      const batch = [];
-
-      const uniqueCores = [
-        ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
-      ];
-
-      for (const core of uniqueCores) {
-        if (!core?.earliestEra) continue;
-
-        for (let i = 0; i < currentStakingEra - core.earliestEra; i += 1) {
-          batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
-          console.log("pushed core: ", core.coreId);
-        }
-      }
-
-      console.log("batch: ", batch);
-      console.log("uniqueCores: ", uniqueCores);
-      console.log("unclaimedEras: ", unclaimedEras);
-
-      await api.tx.utility.batch(batch).signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallback({
-          onInvalid: () => {
-            toast.dismiss();
-
-            toast.error("Invalid transaction");
-
-            setWaiting(false);
-          },
-          onExecuted: () => {
-            toast.dismiss();
-
-            toast.loading("Waiting for confirmation...");
-
-            setWaiting(true);
-          },
-          onSuccess: () => {
-            toast.dismiss();
-
-            toast.success("Claimed successfully");
-
-            setWaiting(false);
-          },
-          onDropped: () => {
-            toast.dismiss();
-
-            toast.error("Transaction dropped");
-
-            setWaiting(false);
-          },
-        })
-      );
-
-      toast.dismiss();
-    } catch (error) {
-      toast.dismiss();
-
-      toast.error(`${ error }`);
-
-      console.error(error);
+      setDataLoaded(true);
     }
   };
 
@@ -650,314 +412,225 @@ const Staking = () => {
     });
   };
 
+  const handleAutoRestakeSwitch = (bool: boolean) => {
+    setEnableAutoRestake(bool);
+    autoRestake(bool);
+  };
+
+  const handleRestakingLogic = () => {
+    // grab the total unclaimed rewards and account for the existential deposit
+    const unclaimedMinusED = new BigNumber(totalUnclaimed);
+
+    // Check if unclaimedMinusED is a valid number
+    if (isNaN(unclaimedMinusED.toNumber())) {
+      console.error("Invalid unclaimedMinusED");
+      return;
+    }
+
+    if (unclaimedMinusED.toNumber() <= 0) {
+      console.error("unclaimedMinusED must be greater than 0");
+      return;
+    }
+
+    // Check if stakedDaos.length is a valid number and not zero to avoid division by zero
+    if (isNaN(stakedDaos.length) || stakedDaos.length === 0) {
+      console.error("Invalid stakedDaos.length");
+      return;
+    }
+
+    // divide unclaimedMinusED by the number of stakedDaos the user is part of
+    const unclaimedPerCore = unclaimedMinusED.div(stakedDaos.length);
+
+    return unclaimedPerCore;
+  };
+
+  const handleClaimAll = async () => {
+    if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
+
+    restakeClaim({
+      api,
+      selectedAccount,
+      unclaimedEras,
+      currentStakingEra,
+      enableAutoRestake,
+      setWaiting,
+      disableClaiming,
+      handleRestakingLogic,
+    });
+  };
+
+  const disableClaiming = useMemo(() => {
+    return unclaimedEras.total === 0 || isWaiting;
+  }, [unclaimedEras, isWaiting]);
+
   useEffect(() => {
-    loadStakingCores(selectedAccount);
-  }, [selectedAccount, api]);
+    // Load auto-restake value from local storage
+    const autoRestake = localStorage.getItem("autoRestake");
+    if (autoRestake) {
+      const parsedAutoRestake = JSON.parse(autoRestake);
+      if (typeof parsedAutoRestake === 'boolean') {
+        setEnableAutoRestake(parsedAutoRestake);
+      } else {
+        console.error("Invalid value in local storage for 'autoRestake'. Expected a boolean.");
+      }
+    } else {
+      // Set a default value when there's no value in local storage
+      setEnableAutoRestake(true);
+    }
+  }, [enableAutoRestake]);
+
+  useEffect(() => {
+    initializeData(selectedAccount);
+  }, [selectedAccount?.address, api]);
 
   useEffect(() => {
     if (!selectedAccount) return;
+    if (!stakingCores) return;
+    loadDaos();
+  }, [selectedAccount?.address, stakingCores, totalUserStakedData, api]);
 
-    if (!rewardsClaimedQuery.data?.stakers?.length) return;
+  useEffect(() => {
+    if (selectedAccount) {
+      reexecuteQuery();
+      reexecuteCoreQuery();
+    }
+  }, [selectedAccount?.address]);
 
-    const totalClaimed = new BigNumber(
-      rewardsClaimedQuery.data.stakers[0].totalRewards
+  useEffect(() => {
+    if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
+
+    if (!rewardsUserClaimedQuery.data?.stakers?.length) {
+      setTotalClaimed(new BigNumber(0));
+      setTotalUnclaimed(new BigNumber(0));
+      setUnclaimedEras({ cores: [], total: 0 });
+      return;
+    }
+
+    const rewardsClaimed = new BigNumber(
+      rewardsUserClaimedQuery.data.stakers[0].totalRewards
+    );
+    setTotalClaimed(rewardsClaimed);
+
+    const totalUnclaimed = new BigNumber(
+      rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
+    );
+    setTotalUnclaimed(totalUnclaimed);
+  }, [selectedAccount?.address, rewardsUserClaimedQuery.data]);
+
+
+  useEffect(() => {
+    loadTotalUserStaked();
+  }, [selectedAccount?.address, stakingCores, coreEraStakeInfo, userStakedInfo]);
+
+  useEffect(() => {
+    if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
+
+    const coreEraStakeInfoMap: CoreEraStakeInfoType[] = rewardsCoreClaimedQuery.data.cores;
+
+    const uniqueCoreEraStakeInfo = coreEraStakeInfoMap.filter((core, index, self) =>
+      index === self.findIndex((item) => item.coreId === core.coreId)
     );
 
-    setTotalClaimed(totalClaimed);
-  }, [selectedAccount, rewardsClaimedQuery, api]);
+    setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
+  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data]);
 
   useEffect(() => {
-    if (!selectedAccount) return;
-
-    const unsubs = setupSubscriptions({ selectedAccount });
+    let unsubs: UnsubscribePromise[] = [];
+    const setup = async () => {
+      if (selectedAccount) {
+        unsubs = await setupSubscriptions({ selectedAccount });
+      }
+    };
+    setup();
 
     return () => {
-      unsubs.forEach(async (unsub) => (await unsub)());
+      unsubs.forEach((unsub: UnsubscribePromise) => {
+        if (unsub) {
+          unsub.then(unsubFunc => {
+            if (typeof unsubFunc === 'function') {
+              unsubFunc();
+            }
+          });
+        }
+      });
     };
-  }, [selectedAccount, api]);
+  }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo]);
 
   return (
-    <>
-      {isLoading ? (
-        <div className="flex items-center justify-center">
-          <LoadingSpinner />
-        </div>
-      ) : null}
+    <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+        <h2 className="lg:text-xl font-bold leading-none my-3 flex flex-row items-center gap-4">
+          <span>DAO Staking</span>
+          <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
+        </h2>
 
-      {!isLoading ? (
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 p-4 sm:px-6 lg:px-8">
-          {selectedAccount &&
-            currentStakingEra &&
-            totalUserStaked &&
-            unclaimedEras ? (
-            <>
-              <div className="flex flex-col flex-wrap items-center justify-between gap-4 md:flex-row">
-                <div>
-                  <span>OCIF Staking Dashboard</span>
-                </div>
-                <div className="flex flex-wrap gap-8">
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
-                    onClick={handleUnbondTokens}
-                    disabled={!hasUnbondedTokens}
-                  >
-                    Unbonding TNKR
-                  </button>
-
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-md bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:bg-neutral-400"
-                    onClick={handleClaimAll}
-                    disabled={unclaimedEras.total === 0 || isWaiting}
-                  >
-                    Claim Rewards
-                  </button>
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 shadow sm:grid md:grid-cols-2 lg:grid-cols-6">
-                <div className="flex flex-col gap-2 p-6">
-                  <div>
-                    <span className="text-sm">Your stake</span>
-                  </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {formatBalance(totalUserStaked.toString(), {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }).slice(0, -2) || "0"}{" "}
-                      TNKR
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 p-6">
-                  <div>
-                    <span className="text-sm">Unclaimed Eras</span>
-                  </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {unclaimedEras.total} eras
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 p-6">
-                  <div>
-                    <span className="text-sm">Total Rewards Claimed</span>
-                  </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {formatBalance(totalClaimed.toString(), {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }).slice(0, -2) || "0"}{" "}
-                      TNKR
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 p-6">
-                  <div>
-                    <span className="text-sm">Current Staking APY</span>
-                  </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {totalSupply &&
-                        totalSupply.toNumber() > 0 &&
-                        totalStaked &&
-                        totalStaked.toNumber() > 0
-                        ? totalSupply
-                          .times(4)
-                          .dividedBy(totalStaked)
-                          .decimalPlaces(2)
-                          .toString()
-                        : 0}
-                      %
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 p-6">
-                  <div>
-                    <span className="text-sm">Annual DAO rewards</span>
-                  </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {totalSupply && totalSupply.toNumber() > 0
-                        ? totalSupply
-                          .dividedBy(1000000000000)
-                          .times(0.06)
-                          .decimalPlaces(2)
-                          .toString()
-                        : 0}{" "}
-                      TNKR
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 p-6">
-                  <div>
-                    <span className="text-sm">Current Era</span>
-                  </div>
-                  <div>
-                    <span className="text-md font-bold">
-                      {currentStakingEra} |{" "}
-                      {(
-                        ((currentBlock - (nextEraBlock - blocksPerEra)) /
-                          (nextEraBlock - (nextEraBlock - blocksPerEra))) *
-                        100
-                      ).toFixed(0)}
-                      % complete
-                    </span>
-                  </div>
-                  {/* <div>
-                    <LineChart fill={CURRENT_BLOCK_FILLED_PERCENTAGE} />
-                  </div> */}
-                </div>
-              </div>
-            </>
-          ) : null}
-
+        {selectedAccount && <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 items-stretch md:items-center justify-start z-1">
+          <div className="">
+            <Button
+              mini
+              onClick={handleRegisterProject}
+              disabled={isLoading}
+              variant="primary">
+              Register New DAO
+            </Button>
+          </div>
           <div>
-            {selectedAccount ? (
-              <button
-                type="button"
-                onClick={handleRegisterProject}
-                className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-base font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:opacity-40"
-              >
-                Register Project
-              </button>
-            ) : null}
+            <Button
+              mini
+              onClick={handleUnbondTokens}
+              disabled={isWaiting}
+              variant="secondary">
+              Claim Unbonded TNKR
+            </Button>
           </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {stakingCores.map((core) => {
-              const totalUserStaked = userStakedInfo.find(
-                (info) => info.coreId === core.key
-              )?.staked;
-
-              const coreInfo = coreEraStakeInfo.find(
-                (info) => info.account === core.account
-              );
-
-              return (
-                <div
-                  key={core.account}
-                  className="relative flex flex-col gap-4 overflow-hidden rounded-md border border-neutral-50 bg-neutral-900 p-6 pb-28 sm:flex-row"
-                >
-                  <div className="flex w-full flex-col gap-4">
-                    <div className="flex flex-shrink-0">
-                      <img
-                        src={core.metadata.image}
-                        alt={core.metadata.name}
-                        className="h-16 w-16 rounded-full"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-4">
-                      <h4 className="font-bold">{core.metadata.name}</h4>
-
-                      <p className="text-sm">{core.metadata.description}</p>
-                    </div>
-
-                    <div className="absolute bottom-0 left-0 flex w-full flex-col gap-4 p-6">
-                      {selectedAccount ? (
-                        <div className="flex items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            className="inline-flex w-full items-center justify-center rounded-md border border-amber-300 bg-amber-300 px-4 py-2 text-sm font-medium text-black shadow-sm hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 disabled:border-neutral-400 disabled:bg-neutral-400"
-                            onClick={() => {
-                              const parsedTotalStaked =
-                                totalUserStaked || new BigNumber("0");
-
-                              const parsedAvailableBalance =
-                                availableBalance?.minus(
-                                  new BigNumber(10).pow(12).times(2)
-                                ) || new BigNumber("0");
-
-                              handleManageStaking({
-                                core,
-                                totalUserStaked: parsedTotalStaked,
-                                availableBalance:
-                                  parsedAvailableBalance.isNegative()
-                                    ? new BigNumber("0")
-                                    : parsedAvailableBalance,
-                              });
-                            }}
-                            disabled={
-                              (coreInfo?.numberOfStakers || 0) >=
-                              (chainProperties?.maxStakersPerCore || 0) &&
-                              !totalUserStaked
-                            }
-                          >
-                            Manage Staking
-                          </button>
-
-                          <span className="block text-sm">
-                            {totalUserStaked
-                              ? `Your stake: ${ formatBalance(
-                                totalUserStaked.toString(),
-                                {
-                                  decimals: 12,
-                                  withUnit: false,
-                                  forceUnit: "-",
-                                }
-                              ).slice(0, -2) } TNKR`
-                              : null}
-                          </span>
-                        </div>
-                      ) : null}
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-2 ">
-                          {(coreInfo?.numberOfStakers || 0) >=
-                            (chainProperties?.maxStakersPerCore || 0) ? (
-                            <LockClosedIcon
-                              className="h-5 w-5 cursor-pointer text-white"
-                              onClick={() => {
-                                toast.error(
-                                  "This core has reached the staker limit"
-                                );
-                              }}
-                            />
-                          ) : (
-                            <UserGroupIcon
-                              className="h-5 w-5 cursor-pointer text-white"
-                              onClick={() => {
-                                toast.success(
-                                  "This core can have more stakers"
-                                );
-                              }}
-                            />
-                          )}
-
-                          <span className="truncate text-sm">
-                            {coreInfo?.numberOfStakers || "0"} stakers
-                          </span>
-                        </div>
-                        <div className="truncate text-sm">
-                          {coreInfo?.total
-                            ? formatBalance(coreInfo.total.toString(), {
-                              decimals: 12,
-                              withUnit: false,
-                              forceUnit: "-",
-                            }).slice(0, -2)
-                            : "0"}{" "}
-                          TNKR staked
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="flex flex-row items-center gap-1">
+            <Button
+              mini
+              onClick={handleClaimAll}
+              disabled={disableClaiming}
+              variant="primary">
+              Claim TNKR Rewards
+            </Button>
+            <div className="flex flex-col items-center justify-around relative border border-tinkerYellow border-opacity-50 bg-tinkerGrey rounded-lg scale-70 lg:scale-90">
+              <div className="flex-grow">
+                <OnOffSwitch defaultEnabled={enableAutoRestake} onChange={(bool) => handleAutoRestakeSwitch(bool)} />
+              </div>
+              <span className="text-[.5rem] text-gray-300 relative bottom-1">Auto-Restake</span>
+            </div>
           </div>
-        </div>
-      ) : null}
-    </>
+        </div>}
+      </div>
+
+      {selectedAccount ? (
+        <>
+          <MetricDashboard
+            vestingBalance={undefined}
+            availableBalance={undefined}
+            lockedBalance={undefined}
+            aggregateStaked={aggregateStaked || new BigNumber(0)}
+            totalUserStaked={totalUserStaked || new BigNumber(0)}
+            totalSupply={totalSupply || new BigNumber(0)}
+            totalStaked={totalStaked || new BigNumber(0)}
+            totalUnclaimed={totalUnclaimed || new BigNumber(0)}
+            totalClaimed={totalClaimed || new BigNumber(0)}
+            currentStakingEra={currentStakingEra || 0}
+            currentBlock={currentBlock}
+            nextEraBlock={nextEraBlock}
+            blocksPerEra={blocksPerEra}
+            unclaimedEras={unclaimedEras}
+          />
+
+          <DaoList mini={false} isOverview={false} />
+        </>
+      ) : <div className="text-center">
+        <h5 className="text-sm font-bold text-white">
+          Wallet not connected
+        </h5>
+        <p className="mt-2 text-xs text-white">
+          Connect your wallet to view your staking information.
+        </p>
+      </div>}
+    </div>
   );
 };
 

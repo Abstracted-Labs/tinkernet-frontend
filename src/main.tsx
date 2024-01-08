@@ -9,24 +9,25 @@ import {
   Client,
 } from "urql";
 import { createClient as createWSClient } from "graphql-ws";
-
 import Claim from "./routes/claim";
-import XTransfer from "./routes/xtransfer";
+import Transfer from "./routes/xtransfer";
 import Staking from "./routes/staking";
 import NotFound from "./routes/not-found";
-
 import "./index.css";
 import { Toaster } from "react-hot-toast";
 import ApiProvider from "./providers/api";
 import Layout from "./components/Layout";
 import Modals from "./modals";
+import Overview from "./routes/overview";
 
 const wsClient = createWSClient({
-  url: "wss://squid.subsquid.io/ocif-squid/v/v1/graphql",
+  url: "wss://squid.subsquid.io/ocif-squid/v/v4/graphql",
+  // url: "ws://localhost:4350/graphql",
 });
 
 const client = new Client({
-  url: "https://squid.subsquid.io/ocif-squid/v/v1/graphql",
+  url: "https://squid.subsquid.io/ocif-squid/v/v4/graphql",
+  // url: "http://localhost:4350/graphql",
   exchanges: [
     cacheExchange,
     fetchExchange,
@@ -54,11 +55,14 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <Modals />
 
           <Routes>
-            <Route index element={<Navigate to="staking" replace={true} />} />
+            <Route index element={<Navigate to="overview" replace={true} />} />
+
             <Route path="/" element={<Layout />}>
+              <Route path="overview" element={<Overview />} />
+
               <Route path="claim" element={<Claim />} />
 
-              <Route path="xtransfer" element={<XTransfer />} />
+              <Route path="transfer" element={<Transfer />} />
 
               <Route path="staking" element={<Staking />} />
 

@@ -1,6 +1,4 @@
 import { web3Accounts, web3Enable } from "@polkadot/extension-dapp";
-import { shallow } from "zustand/shallow";
-
 import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 
@@ -11,22 +9,25 @@ const useConnect = () => {
     (state) => ({
       setAccounts: state.setAccounts,
       setSelectedAccount: state.setSelectedAccount,
-    }),
-    shallow
+    })
   );
 
   const handleConnect = async () => {
-    const extensions = await web3Enable("GitArch");
+    const extensions = await web3Enable("Tinkernet");
 
     if (extensions.length === 0) {
+      setOpenModal({ name: modalName.USE_NOVA });
+
       return;
     }
 
-    const accounts = await web3Accounts();
+    const accounts = await web3Accounts({ ss58Format: 117 });
 
     setAccounts(accounts);
 
     if (accounts.length === 0) {
+      setOpenModal({ name: modalName.USE_NOVA });
+
       return;
     }
 

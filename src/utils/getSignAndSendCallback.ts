@@ -1,16 +1,45 @@
 import { ISubmittableResult } from "@polkadot/types/types";
 
-const getSignAndSendCallback = ({
-  onInvalid,
-  onExecuted,
-  onSuccess,
-  onDropped,
-}: {
-  onInvalid?: (payload: ISubmittableResult) => void;
-  onExecuted?: (payload: ISubmittableResult) => void;
-  onSuccess?: (payload: ISubmittableResult) => void;
-  onDropped?: (payload: ISubmittableResult) => void;
-}) => {
+export interface ISignAndSendCallback {
+  onInvalid?: () => void;
+  onExecuted?: () => void;
+  onSuccess?: () => void;
+  onDropped?: () => void;
+}
+
+export const getSignAndSendCallbackWithPromise = (callbacks: ISignAndSendCallback) => {
+  const wrappedCallbacks: ISignAndSendCallback = {
+    onInvalid: async () => {
+      if (callbacks.onInvalid) {
+        callbacks.onInvalid();
+      }
+    },
+    onExecuted: async () => {
+      if (callbacks.onExecuted) {
+        callbacks.onExecuted();
+      }
+    },
+    onSuccess: async () => {
+      if (callbacks.onSuccess) {
+        callbacks.onSuccess();
+      }
+    },
+    onDropped: async () => {
+      if (callbacks.onDropped) {
+        callbacks.onDropped();
+      }
+    },
+  };
+  return getSignAndSendCallback(wrappedCallbacks);
+};
+
+const getSignAndSendCallback = (props: ISignAndSendCallback) => {
+  const {
+    onInvalid,
+    onExecuted,
+    onSuccess,
+    onDropped,
+  } = props;
   let hasFinished = false;
 
   return (result: ISubmittableResult) => {
@@ -19,17 +48,17 @@ const getSignAndSendCallback = ({
     }
 
     if (result.status.isInvalid) {
-      if (onInvalid) onInvalid(result);
+      if (onInvalid) onInvalid();
 
       hasFinished = true;
     } else if (result.status.isReady) {
-      if (onExecuted) onExecuted(result);
+      if (onExecuted) onExecuted();
     } else if (result.status.isDropped) {
-      if (onDropped) onDropped(result);
+      if (onDropped) onDropped();
 
       hasFinished = true;
     } else if (result.status.isInBlock || result.status.isFinalized) {
-      if (onSuccess) onSuccess(result);
+      if (onSuccess) onSuccess();
 
       hasFinished = true;
     }

@@ -4,4 +4,40 @@
 
 html {
   font-feature-settings: "salt", "zero", "calt", "ccmp", "kern";
+  background-color: black;
 }
+
+@layer utilities {
+  /* Scrollbars */
+  .tinker-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .tinker-scrollbar::-webkit-scrollbar-track {
+    border-radius: 100vh;
+    height: 100vh;
+  }
+
+  .tinker-scrollbar::-webkit-scrollbar-track, .tinker-scrollbar::-webkit-scrollbar-track:hover {
+    background: #141414;
+  }
+
+  .tinker-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 100vh;
+    @apply bg-tinkerYellow rounded;
+  }
+
+  /* Description gradient */
+  .gradient-bottom::after {
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%; /* Adjust this value to control the height of the gradient */
+    border-radius: 0.5rem;
+    background: linear-gradient(to top, #141414 0%, transparent 100%);
+  }
+}
+ 
