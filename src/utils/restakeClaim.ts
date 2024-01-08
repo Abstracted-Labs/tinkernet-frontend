@@ -29,8 +29,6 @@ export const restakeClaim = async ({
   enableAutoRestake,
   handleRestakingLogic,
 }: RestakeClaimProps) => {
-  if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
-
   try {
     toast.loading("Claiming...");
 
