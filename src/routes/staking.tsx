@@ -17,7 +17,7 @@ import { encodeAddress } from "@polkadot/util-crypto";
 import { useQuery } from "urql";
 import { StakedDaoType } from "./overview";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
-import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 import OnOffSwitch from "../components/Switch";
 import { autoRestake } from "../utils/autoRestake";
 
@@ -497,7 +497,7 @@ const Staking = () => {
       await api.tx.utility.batch(batch).signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback({
+        getSignAndSendCallbackWithPromise({
           onInvalid: () => {
             toast.dismiss();
 

@@ -5,13 +5,12 @@ import { formatBalance } from "@polkadot/util";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { shallow } from "zustand/shallow";
-
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
-import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import Button from "../components/Button";
 import { BG_GRADIENT } from "../utils/consts";
+import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 
 const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
   const { closeCurrentModal } = useModal(
@@ -45,7 +44,7 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
       await api.tx.ocifStaking.withdrawUnstaked().signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback({
+        getSignAndSendCallbackWithPromise({
           onInvalid: () => {
             toast.dismiss();
 

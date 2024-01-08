@@ -9,11 +9,11 @@ import { toast } from "react-hot-toast";
 import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
-import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import useApi from "../hooks/useApi";
 import Button from "../components/Button";
 import { calculateVestingSchedule, calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import { loadProjectCores } from "../utils/stakingServices";
+import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 
 export type SystemAccount = Struct & {
   data: {
@@ -190,7 +190,7 @@ const Claim = () => {
       await api.tx.vesting.claim().signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback({
+        getSignAndSendCallbackWithPromise({
           onInvalid: () => {
             toast.dismiss();
             toast.error("Invalid transaction");

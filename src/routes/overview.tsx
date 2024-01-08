@@ -10,7 +10,6 @@ import useAccount from "../stores/account";
 import useModal, { modalName } from "../stores/modals";
 import { useQuery } from "urql";
 import { AnyJson, Codec } from "@polkadot/types/types";
-import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { StakesInfo, VestingData, VestingSchedule } from "./claim";
 import MetricDashboard from "../components/MetricDashboard";
@@ -19,6 +18,7 @@ import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
 import { StakingCore, CoreEraStakeInfoType, UserStakedInfoType, BalanceType, LockedType, TotalRewardsClaimedQuery, TotalRewardsCoreClaimedQuery } from "./staking";
 import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import DaoList from "../components/DaoList";
+import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 
 export type StakedDaoType = StakingCore & { members?: AnyJson; };
 
@@ -326,7 +326,7 @@ const Overview = () => {
       await api.tx.utility.batch(batch).signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback({
+        getSignAndSendCallbackWithPromise({
           onInvalid: () => {
             toast.dismiss();
 

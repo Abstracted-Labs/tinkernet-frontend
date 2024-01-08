@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
 import { shallow } from "zustand/shallow";
-import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import { ISignAndSendCallback, getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal, { Metadata, ModalState, modalName } from "../stores/modals";
@@ -137,7 +137,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     const injector = await web3FromAddress(selectedAccount.address);
 
     try {
-      const toasts = {
+      const toasts: ISignAndSendCallback = {
         onInvalid: () => {
           toast.dismiss();
           toast.error("Invalid transaction");
@@ -165,7 +165,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
           .signAndSend(
             selectedAccount.address,
             { signer: injector.signer },
-            getSignAndSendCallback(toasts)
+            getSignAndSendCallbackWithPromise(toasts)
           );
       } else {
         const toCore = metadata.key;
@@ -177,7 +177,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
           .signAndSend(
             selectedAccount.address,
             { signer: injector.signer },
-            getSignAndSendCallback(toasts)
+            getSignAndSendCallbackWithPromise(toasts)
           );
       }
     } catch (error) {
@@ -233,7 +233,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallback({
+          getSignAndSendCallbackWithPromise({
             onInvalid: () => {
               toast.dismiss();
               toast.error("Invalid transaction");

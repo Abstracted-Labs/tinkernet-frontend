@@ -13,7 +13,7 @@ import useRPC from "../stores/rpc";
 import useAccount from "../stores/account";
 import { shallow } from "zustand/shallow";
 import LoadingSpinner from "../components/LoadingSpinner";
-import getSignAndSendCallback from "../utils/getSignAndSendCallback";
+import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 import useApi from "../hooks/useApi";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { FrameSystemAccountInfo } from "@polkadot/types/lookup";
@@ -282,7 +282,7 @@ const Transfer = () => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback({
+        getSignAndSendCallbackWithPromise({
           onInvalid: () => {
             toast.dismiss();
 
@@ -352,7 +352,7 @@ const Transfer = () => {
       .signAndSend(
         selectedAccount.address,
         { signer: injector.signer },
-        getSignAndSendCallback({
+        getSignAndSendCallbackWithPromise({
           onInvalid: () => {
             toast.dismiss();
 

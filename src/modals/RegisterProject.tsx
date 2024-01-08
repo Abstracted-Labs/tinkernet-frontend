@@ -7,13 +7,12 @@ import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
 import { shallow } from "zustand/shallow";
-
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
-import getSignAndSendCallback from "../utils/getSignAndSendCallback";
 import Button from "../components/Button";
 import { BG_GRADIENT } from "../utils/consts";
+import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 
 const schema = z
   .object({
@@ -96,7 +95,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
           .signAndSend(
             selectedAccount.address,
             { signer: injector.signer },
-            getSignAndSendCallback({
+            getSignAndSendCallbackWithPromise({
               onInvalid: () => {
                 toast.dismiss();
 
