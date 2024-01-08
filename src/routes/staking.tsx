@@ -400,6 +400,12 @@ const Staking = () => {
     }
   };
 
+  const handleUnbondTokens = () => {
+    setOpenModal({
+      name: modalName.UNBOND_TOKENS,
+    });
+  };
+
   const handleRegisterProject = async () => {
     setOpenModal({
       name: modalName.REGISTER_PROJECT,
@@ -407,9 +413,8 @@ const Staking = () => {
   };
 
   const handleAutoRestakeSwitch = (bool: boolean) => {
-    if (autoRestake) {
-      autoRestake(bool);
-    }
+    setEnableAutoRestake(bool);
+    autoRestake(bool);
   };
 
   const handleRestakingLogic = () => {
@@ -486,13 +491,20 @@ const Staking = () => {
   // );
 
   useEffect(() => {
-    // load auto-restake value from local storage
+    // Load auto-restake value from local storage
     const autoRestake = localStorage.getItem("autoRestake");
     if (autoRestake) {
-      setEnableAutoRestake(JSON.parse(autoRestake));
+      const parsedAutoRestake = JSON.parse(autoRestake);
+      if (typeof parsedAutoRestake === 'boolean') {
+        setEnableAutoRestake(parsedAutoRestake);
+      } else {
+        console.error("Invalid value in local storage for 'autoRestake'. Expected a boolean.");
+      }
+    } else {
+      // Set a default value when there's no value in local storage
+      setEnableAutoRestake(true);
     }
-  }, []);
-
+  }, [enableAutoRestake]);
 
   useEffect(() => {
     initializeData(selectedAccount);
@@ -587,6 +599,15 @@ const Staking = () => {
               disabled={isLoading}
               variant="primary">
               Register New DAO
+            </Button>
+          </div>
+          <div>
+            <Button
+              mini
+              onClick={handleUnbondTokens}
+              disabled={isWaiting}
+              variant="secondary">
+              Claim Unbonded TNKR
             </Button>
           </div>
           <div className="flex flex-row items-center gap-1">

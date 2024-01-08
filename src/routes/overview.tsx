@@ -1,29 +1,25 @@
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
-import useModal, { modalName } from "../stores/modals";
 import { useQuery } from "urql";
 import { AnyJson, Codec } from "@polkadot/types/types";
 import { UnsubscribePromise } from "@polkadot/api/types";
 import { StakesInfo, VestingData, VestingSchedule } from "./claim";
 import MetricDashboard from "../components/MetricDashboard";
-import Button from "../components/Button";
-import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
+import { loadProjectCores } from '../utils/stakingServices';
 import { StakingCore, CoreEraStakeInfoType, UserStakedInfoType, BalanceType, LockedType, TotalRewardsClaimedQuery, TotalRewardsCoreClaimedQuery } from "./staking";
 import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import DaoList from "../components/DaoList";
-import { restakeClaim } from "../utils/restakeClaim";
 
 export type StakedDaoType = StakingCore & { members?: AnyJson; };
 
 const Overview = () => {
   const api = useApi();
-  const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
@@ -36,15 +32,12 @@ const Overview = () => {
   }>({ cores: [], total: 0 });
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
   const [isLoading, setLoading] = useState(true);
-  const [isWaiting, setWaiting] = useState(false);
   const [isDataLoaded, setDataLoaded] = useState(false);
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
   const [nextEraBlock, setNextEraBlock] = useState<number>(0);
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
   const [vestingSummary, setVestingSummary] = useState<VestingData | null>(null);
-  const [enableAutoRestake, setEnableAutoRestake] = useState<boolean>(false);
-  const [stakedDaos, setStakedDaos] = useState<StakedDaoType[]>([]);
 
   const [rewardsUserClaimedQuery, reexecuteQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -177,12 +170,6 @@ const Overview = () => {
     setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
   };
 
-  const loadDaos = async () => {
-    if (!selectedAccount) return;
-    const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, api);
-    setStakedDaos(daos);
-  };
-
   const loadCores = async () => {
     const cores = await loadProjectCores(api);
 
@@ -241,75 +228,9 @@ const Overview = () => {
     }
   };
 
-  const handleRestakingLogic = () => {
-    // grab the total unclaimed rewards and account for the existential deposit
-    const unclaimedMinusED = new BigNumber(totalUnclaimed);
-
-    // Check if unclaimedMinusED is a valid number
-    if (isNaN(unclaimedMinusED.toNumber())) {
-      console.error("Invalid unclaimedMinusED");
-      return;
-    }
-
-    if (unclaimedMinusED.toNumber() <= 0) {
-      console.error("unclaimedMinusED must be greater than 0");
-      return;
-    }
-
-    // Check if stakedDaos.length is a valid number and not zero to avoid division by zero
-    if (isNaN(stakedDaos.length) || stakedDaos.length === 0) {
-      console.error("Invalid stakedDaos.length");
-      return;
-    }
-
-    // divide unclaimedMinusED by the number of stakedDaos the user is part of
-    const unclaimedPerCore = unclaimedMinusED.div(stakedDaos.length);
-
-    return unclaimedPerCore;
-  };
-
-  const handleClaimAll = async () => {
-    if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
-
-    restakeClaim({
-      api,
-      selectedAccount,
-      unclaimedEras,
-      currentStakingEra,
-      enableAutoRestake,
-      setWaiting,
-      disableClaiming,
-      handleRestakingLogic,
-    });
-  };
-
-  const handleUnbondTokens = () => {
-    setOpenModal({
-      name: modalName.UNBOND_TOKENS,
-    });
-  };
-
-  const disableClaiming = useMemo(() => {
-    return unclaimedEras.total === 0 || isWaiting;
-  }, [unclaimedEras, isWaiting]);
-
-  useEffect(() => {
-    // load auto-restake value from local storage
-    const autoRestake = localStorage.getItem("autoRestake");
-    if (autoRestake) {
-      setEnableAutoRestake(JSON.parse(autoRestake));
-    }
-  }, []);
-
   useEffect(() => {
     initializeData(selectedAccount);
   }, [selectedAccount?.address, api]);
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-    if (!stakingCores) return;
-    loadDaos();
-  }, [selectedAccount?.address, stakingCores, api]);
 
   useEffect(() => {
     if (selectedAccount) {
@@ -406,27 +327,6 @@ const Overview = () => {
           <span>Account Overview</span>
           <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
         </h2>
-
-        {selectedAccount && <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 items-stretch md:items-center justify-start z-1">
-          <div>
-            <Button
-              mini
-              onClick={handleUnbondTokens}
-              disabled={isWaiting}
-              variant="secondary">
-              Claim Unbonded TNKR
-            </Button>
-          </div>
-          <div className="flex flex-row items-center gap-1">
-            <Button
-              mini
-              onClick={handleClaimAll}
-              disabled={disableClaiming}
-              variant="primary">
-              Claim TNKR Rewards
-            </Button>
-          </div>
-        </div>}
       </div>
       {selectedAccount &&
         currentStakingEra &&

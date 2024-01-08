@@ -9,7 +9,6 @@ import useApi from "../hooks/useApi";
 import useConnect from "../hooks/useConnect";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
-import { stringShorten } from "@polkadot/util";
 import { formatBalanceToTwoDecimals } from "../utils/formatNumber";
 
 const LoginButton = () => {
@@ -92,8 +91,8 @@ const LoginButton = () => {
     <div className="flex-grow">
       {selectedAccount ? (
         <div className="overflow-hidden">
-          <span className={`relative -top-[2px] flex font-bold transition-transform transform ${ showFirstSpan ? 'translate-y-3' : 'translate-y-12' }`}>
-            {stringShorten(selectedAccount.meta.name || selectedAccount.address, 4)}
+          <span className={`relative -top-[2px] flex font-bold transition-transform transform truncate ${ showFirstSpan ? 'translate-y-3' : 'translate-y-12' }`}>
+            {selectedAccount.meta.name || selectedAccount.address}
           </span>
           <span className={`relative -top-[8px] md:-top-[10px] flex flex-row items-center gap-1 transition-transform transform ${ showFirstSpan ? 'translate-y-20' : 'translate-y-0' }`}>
             {isHovered ? <img className="lg:w-3 lg:h-3" src={TinkerBlackIcon} alt="tnkr icon" /> :
