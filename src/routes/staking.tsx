@@ -592,7 +592,7 @@ const Staking = () => {
         </h2>
 
         {selectedAccount && <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 items-stretch md:items-center justify-start z-1">
-          <div>
+          <div className="">
             <Button
               mini
               onClick={handleRegisterProject}
