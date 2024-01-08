@@ -7,7 +7,6 @@ import ClaimableRewardsIcon from '../assets/claimable-reward-icon.svg';
 import StakingApyIcon from '../assets/staking-apy-icon.svg';
 import AnnualRewardIcon from '../assets/annual-reward-icon.svg';
 import CurrentEraIcon from '../assets/current-era-icon.svg';
-import CompletionRateIcon from '../assets/completion-rate-icon.svg';
 import AggregateStakedIcon from '../assets/aggregate-staked-icon.svg';
 import { formatBalanceToTwoDecimals } from '../utils/formatNumber';
 
@@ -59,6 +58,18 @@ const MetricDashboard = (props: MetricDashboardProps) => {
               new BigNumber(totalUserStaked).isNaN() || new BigNumber(vestingBalance).isNaN()
                 ? new BigNumber(0)
                 : totalUserStaked.plus(new BigNumber(vestingBalance))
+            ) + ' TNKR'
+            : '0 TNKR'
+        }
+      </DashboardCard>}
+
+      {totalUserStaked !== undefined && vestingBalance === undefined && <DashboardCard cardTitle="My Staked TNKR" iconSrc={MyStakeIcon}>
+        {
+          totalUserStaked
+            ? formatBalanceToTwoDecimals(
+              new BigNumber(totalUserStaked).isNaN()
+                ? new BigNumber(0)
+                : totalUserStaked
             ) + ' TNKR'
             : '0 TNKR'
         }
@@ -118,17 +129,12 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         {unclaimedEras ? unclaimedEras.total : 0}
       </DashboardCard>}
 
-      {currentStakingEra !== undefined && <DashboardCard cardTitle="Current Era" iconSrc={CurrentEraIcon}>
+      {currentStakingEra !== undefined && <DashboardCard cardTitle={<>Current Era <br /> ({(currentBlock ?? 0) && (nextEraBlock ?? 0) && (blocksPerEra ?? 0) ? (
+        (((currentBlock ?? 0) - ((nextEraBlock ?? 0) - (blocksPerEra ?? 0))) /
+          ((nextEraBlock ?? 0) - ((nextEraBlock ?? 0) - (blocksPerEra ?? 0)))) *
+        100
+      ).toFixed(0) : 0}% until next era)</>} iconSrc={CurrentEraIcon}>
         {currentStakingEra || 0}
-      </DashboardCard>}
-
-      {currentBlock !== undefined && nextEraBlock !== undefined && blocksPerEra !== undefined && <DashboardCard cardTitle="% Til Next Era" iconSrc={CompletionRateIcon}>
-        {currentBlock && nextEraBlock && blocksPerEra ? (
-          ((currentBlock - (nextEraBlock - blocksPerEra)) /
-            (nextEraBlock - (nextEraBlock - blocksPerEra))) *
-          100
-        ).toFixed(0) : 0}
-        %
       </DashboardCard>}
     </div>
   );
