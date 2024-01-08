@@ -160,15 +160,17 @@ const Staking = () => {
   const api = useApi();
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
+  const [isLoading, setLoading] = useState(true);
+  const [isWaiting, setWaiting] = useState(false);
+  const [isDataLoaded, setDataLoaded] = useState(false);
+  const [enableAutoRestake, setEnableAutoRestake] = useState<boolean>(true);
+  const [claimAllSuccess, setClaimAllSuccess] = useState(false);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
   const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>();
   const [totalStaked, setTotalStaked] = useState<BigNumber>();
   const [totalSupply, setTotalSupply] = useState<BigNumber>();
   const [aggregateStaked, setAggregateStaked] = useState<BigNumber>();
-  const [isLoading, setLoading] = useState(true);
-  const [isWaiting, setWaiting] = useState(false);
-  const [isDataLoaded, setDataLoaded] = useState(false);
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakeInfoType[]>([]);
@@ -180,7 +182,6 @@ const Staking = () => {
     cores: { coreId: number; earliestEra: number; }[];
     total: number;
   }>({ cores: [], total: 0 });
-  const [enableAutoRestake, setEnableAutoRestake] = useState<boolean>(false);
   const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [nextEraBlock, setNextEraBlock] = useState<number>(0);
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
@@ -447,7 +448,7 @@ const Staking = () => {
   const handleClaimAll = async () => {
     if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
 
-    restakeClaim({
+    const result = await restakeClaim({
       api,
       selectedAccount,
       unclaimedEras,
@@ -457,6 +458,15 @@ const Staking = () => {
       disableClaiming,
       handleRestakingLogic,
     });
+    setClaimAllSuccess(result);
+    refreshQuery();
+  };
+
+  const refreshQuery = () => {
+    if (!claimAllSuccess) return;
+    reexecuteQuery({ requestPolicy: 'network-only' });
+    reexecuteCoreQuery({ requestPolicy: 'network-only' });
+    setClaimAllSuccess(false);
   };
 
   const disableClaiming = useMemo(() => {
@@ -490,13 +500,6 @@ const Staking = () => {
   }, [selectedAccount?.address, stakingCores, totalUserStakedData, api]);
 
   useEffect(() => {
-    if (selectedAccount) {
-      reexecuteQuery();
-      reexecuteCoreQuery();
-    }
-  }, [selectedAccount?.address]);
-
-  useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
 
     if (!rewardsUserClaimedQuery.data?.stakers?.length) {
@@ -514,16 +517,15 @@ const Staking = () => {
     const totalUnclaimed = new BigNumber(
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
-    setTotalUnclaimed(totalUnclaimed);
-  }, [selectedAccount?.address, rewardsUserClaimedQuery.data]);
-
+    setTotalUnclaimed(claimAllSuccess ? new BigNumber("0") : totalUnclaimed);
+  }, [selectedAccount?.address, rewardsUserClaimedQuery.data, rewardsUserClaimedQuery.fetching, claimAllSuccess]);
 
   useEffect(() => {
     loadTotalUserStaked();
   }, [selectedAccount?.address, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   useEffect(() => {
-    if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
+    if (rewardsCoreClaimedQuery.fetching || !rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
 
     const coreEraStakeInfoMap: CoreEraStakeInfoType[] = rewardsCoreClaimedQuery.data.cores;
 
@@ -532,7 +534,7 @@ const Staking = () => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data]);
+  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];

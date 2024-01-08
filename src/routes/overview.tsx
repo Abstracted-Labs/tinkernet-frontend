@@ -38,7 +38,7 @@ const Overview = () => {
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
   const [vestingSummary, setVestingSummary] = useState<VestingData | null>(null);
 
-  const [rewardsUserClaimedQuery, reexecuteQuery] = useQuery({
+  const [rewardsUserClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
     variables: {
       accountId: selectedAccount
@@ -226,12 +226,6 @@ const Overview = () => {
   }, [selectedAccount?.address, api]);
 
   useEffect(() => {
-    if (selectedAccount) {
-      reexecuteQuery();
-    }
-  }, [selectedAccount?.address]);
-
-  useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
 
     if (!rewardsUserClaimedQuery.data?.stakers?.length) {
@@ -249,10 +243,10 @@ const Overview = () => {
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
     setTotalUnclaimed(totalUnclaimed);
-  }, [selectedAccount?.address, rewardsUserClaimedQuery.data]);
+  }, [selectedAccount?.address, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data]);
 
   useEffect(() => {
-    if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
+    if (rewardsCoreClaimedQuery.fetching || !rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount?.address) return;
 
     const coreEraStakeInfoMap: CoreEraStakeInfoType[] = rewardsCoreClaimedQuery.data.cores;
 
@@ -261,7 +255,7 @@ const Overview = () => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data]);
+  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data, rewardsCoreClaimedQuery.fetching]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
