@@ -1,29 +1,22 @@
 import { ApiPromise } from "@polkadot/api";
-import { InjectedAccountWithMeta, InjectedExtension } from "@polkadot/extension-inject/types";
+import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import BigNumber from "bignumber.js";
 import { UnclaimedErasType } from "../routes/staking";
-import { ISignAndSendCallback, getSignAndSendCallbackWithPromise } from "./getSignAndSendCallback";
+import { getSignAndSendCallbackWithPromise } from "./getSignAndSendCallback";
 import { Vec } from "@polkadot/types";
 import { Call } from "@polkadot/types/interfaces";
+import toast from "react-hot-toast";
+import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 
 export interface RestakeClaimProps {
   selectedAccount: InjectedAccountWithMeta;
   unclaimedEras: UnclaimedErasType;
   currentStakingEra: number;
   api: ApiPromise;
-  toast: {
-    loading: (message: string) => void;
-    dismiss: () => void;
-    error: (message: string) => void;
-    success: (message: string) => void;
-  };
   setWaiting: (isWaiting: boolean) => void;
   disableClaiming: boolean;
   enableAutoRestake: boolean;
-  web3Enable: (appName: string) => Promise<InjectedExtension[]>;
-  web3FromAddress: (address: string) => Promise<InjectedExtension>;
-  getSignAndSendCallback: (callbacks: ISignAndSendCallback) => void;
-  handleRestakingLogic: () => BigNumber;
+  handleRestakingLogic: () => void | BigNumber;
 }
 
 export const restakeClaim = async ({
@@ -31,12 +24,9 @@ export const restakeClaim = async ({
   unclaimedEras,
   currentStakingEra,
   api,
-  toast,
   setWaiting,
   disableClaiming,
   enableAutoRestake,
-  web3Enable,
-  web3FromAddress,
   handleRestakingLogic,
 }: RestakeClaimProps) => {
   if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
@@ -51,8 +41,8 @@ export const restakeClaim = async ({
     }
 
     await web3Enable("Tinkernet");
-    const injector = await web3FromAddress(selectedAccount.address);
 
+    const injector = await web3FromAddress(selectedAccount.address);
     const uniqueCores = [...new Map(unclaimedEras.cores.map((x) => [x['coreId'], x])).values()];
     const batch: unknown[] = [];
 
@@ -76,9 +66,41 @@ export const restakeClaim = async ({
       });
     }
 
+    if (batch.length === 0) return;
+
+    // Get the fee that each batch transaction will cost
+    const info = await api.tx.utility.batchAll(batch as Vec<Call>).paymentInfo(selectedAccount.address, { signer: injector.signer });
+    const batchTxFees = info.partialFee;
+    const rebuildBatch: unknown[] = [];
+
+    // Rebuild the batch exactly like we did before,
+    uniqueCores.forEach(core => {
+      if (!core?.earliestEra) return;
+      for (let i = core.earliestEra; i < currentStakingEra; i++) {
+        rebuildBatch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+      }
+    });
+
+    // But now, using adjustedRestakeAmount in the stake call(s)
+    if (enableAutoRestake) {
+      uniqueCores.forEach(core => {
+        if (!core?.earliestEra) return;
+        const restakeAmount = handleRestakingLogic();
+        if (restakeAmount && !restakeAmount.isZero()) {
+          const batchTxFeesBigNumber = new BigNumber(batchTxFees.toString());
+          let adjustedRestakeAmount = restakeAmount.minus(batchTxFeesBigNumber).minus(new BigNumber(0.01));
+          if (adjustedRestakeAmount.isNegative()) {
+            adjustedRestakeAmount = new BigNumber(0);
+          }
+          const adjustedRestakeAmountInteger = adjustedRestakeAmount.integerValue().toString();
+          rebuildBatch.push(api.tx.ocifStaking.stake(core.coreId, adjustedRestakeAmountInteger));
+        }
+      });
+    }
+
     // Send the transaction batch
     // Casting batch to the correct type to satisfy the linting error
-    const castedBatch = batch as Vec<Call>;
+    const castedBatch = rebuildBatch as Vec<Call>;
     await api.tx.utility.batch(castedBatch).signAndSend(
       selectedAccount.address,
       { signer: injector.signer },

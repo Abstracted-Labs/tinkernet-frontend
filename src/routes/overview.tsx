@@ -1,4 +1,3 @@
-import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
@@ -18,7 +17,7 @@ import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
 import { StakingCore, CoreEraStakeInfoType, UserStakedInfoType, BalanceType, LockedType, TotalRewardsClaimedQuery, TotalRewardsCoreClaimedQuery } from "./staking";
 import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import DaoList from "../components/DaoList";
-import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
+import { restakeClaim } from "../utils/restakeClaim";
 
 export type StakedDaoType = StakingCore & { members?: AnyJson; };
 
@@ -272,100 +271,16 @@ const Overview = () => {
   const handleClaimAll = async () => {
     if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
 
-    try {
-      toast.loading("Claiming...");
-
-      if (disableClaiming) {
-        toast.dismiss();
-        toast.error("Can only claim when unclaimed TNKR is greater than the existential deposit");
-        return;
-      }
-
-      await web3Enable("Tinkernet");
-
-      const injector = await web3FromAddress(selectedAccount.address);
-
-      const batch = [];
-
-      const uniqueCores = [
-        ...new Map(unclaimedEras.cores.map((x) => [x.coreId, x])).values(),
-      ];
-
-      for (const core of uniqueCores) {
-        if (!core?.earliestEra) continue;
-
-        const localEarliestEra = core.earliestEra; // Create a local copy of core.earliestEra
-
-        if (typeof currentStakingEra === 'number' && core && typeof localEarliestEra === 'number') {
-          for (let i = 0; i < currentStakingEra - localEarliestEra; i++) {
-            batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
-          }
-        } else {
-          console.error("currentStakingEra, core, or localEarliestEra is undefined or not a number");
-        }
-
-        console.log("utility.batch", batch);
-      }
-
-      if (enableAutoRestake) {
-        for (const core of uniqueCores) {
-          if (!core?.earliestEra) continue;
-
-          // using the restaking logic, calculate the amount to restake
-          const restakeAmount = handleRestakingLogic();
-          // Check if restakeAmount is not zero
-          if (restakeAmount && !restakeAmount.isZero()) {
-            // Convert restakeAmount to an integer string
-            const restakeAmountInteger = restakeAmount.integerValue().toString();
-            // push restake tx to the batch
-            batch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
-          }
-        }
-      }
-
-      await api.tx.utility.batch(batch).signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallbackWithPromise({
-          onInvalid: () => {
-            toast.dismiss();
-
-            toast.error("Invalid transaction");
-
-            setWaiting(false);
-          },
-          onExecuted: () => {
-            toast.dismiss();
-
-            toast.loading("Waiting for confirmation...");
-
-            setWaiting(true);
-          },
-          onSuccess: () => {
-            toast.dismiss();
-
-            toast.success("Claimed successfully");
-
-            setWaiting(false);
-          },
-          onDropped: () => {
-            toast.dismiss();
-
-            toast.error("Transaction dropped");
-
-            setWaiting(false);
-          },
-        })
-      );
-
-      toast.dismiss();
-    } catch (error) {
-      toast.dismiss();
-
-      toast.error(`${ error }`);
-
-      console.error(error);
-    }
+    restakeClaim({
+      api,
+      selectedAccount,
+      unclaimedEras,
+      currentStakingEra,
+      enableAutoRestake,
+      setWaiting,
+      disableClaiming,
+      handleRestakingLogic,
+    });
   };
 
   const handleUnbondTokens = () => {
