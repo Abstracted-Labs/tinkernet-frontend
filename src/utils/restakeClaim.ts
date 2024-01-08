@@ -99,7 +99,7 @@ export const restakeClaim = async ({
     // Send the transaction batch
     // Casting batch to the correct type to satisfy the linting error
     const castedBatch = rebuildBatch as Vec<Call>;
-    await api.tx.utility.batch(castedBatch).signAndSend(
+    await api.tx.utility.batchAll(castedBatch).signAndSend(
       selectedAccount.address,
       { signer: injector.signer },
       getSignAndSendCallbackWithPromise({
