@@ -55,7 +55,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         {
           totalUserStaked && vestingBalance
             ? formatBalanceToTwoDecimals(
-              new BigNumber(totalUserStaked).isNaN() || new BigNumber(vestingBalance).isNaN()
+              totalUserStaked.isNaN() || new BigNumber(vestingBalance).isNaN()
                 ? new BigNumber(0)
                 : totalUserStaked.plus(new BigNumber(vestingBalance))
             ) + ' TNKR'

@@ -333,7 +333,7 @@ const Overview = () => {
         unclaimedEras ? (
         <>
           <MetricDashboard
-            vestingBalance={vestingSummary?.vestedRemaining}
+            vestingBalance={vestingSummary?.vestedRemaining || "0"}
             availableBalance={availableBalance || new BigNumber(0)}
             aggregateStaked={aggregateStaked || new BigNumber(0)}
             totalUserStaked={totalUserStaked || new BigNumber(0)}

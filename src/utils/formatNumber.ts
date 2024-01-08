@@ -21,6 +21,12 @@ export const formatNumberShorthand = (num: number) => {
 };
 
 export const formatBalanceToTwoDecimals = (balance: BigNumber) => {
+  // Check if balance is a valid BigNumber
+  if (balance.isNaN()) {
+    console.error("Invalid balance. Expected a valid BigNumber.");
+    return "0.00";
+  }
+
   const balanceWithDecimals = balance.dividedBy(new BigNumber(10).pow(12)).toString();
   const parts = balanceWithDecimals.split('.');
 
