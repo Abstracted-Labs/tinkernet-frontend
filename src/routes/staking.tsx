@@ -459,36 +459,9 @@ const Staking = () => {
     });
   };
 
-
   const disableClaiming = useMemo(() => {
     return unclaimedEras.total === 0 || isWaiting;
   }, [unclaimedEras, isWaiting]);
-
-  // useSubscription(
-  //   {
-  //     query: TotalRewardsClaimedSubscription,
-  //     variables: {
-  //       accountId: selectedAccount
-  //         ? encodeAddress(selectedAccount.address, 117)
-  //         : null,
-  //     },
-  //     pause: !selectedAccount,
-  //   },
-  //   (
-  //     _: unknown,
-  //     result: { stakers: RewardQueryType[]; }
-  //   ) => {
-  //     if (result.stakers.length === 0) return;
-
-  //     if (!result.stakers[0].totalRewards) return;
-
-  //     const totalClaimed = new BigNumber(result.stakers[0].totalRewards);
-  //     setTotalClaimed(totalClaimed);
-
-  //     const totalUnclaimed = new BigNumber(result.stakers[0].totalUnclaimed);
-  //     setTotalUnclaimed(totalUnclaimed);
-  //   }
-  // );
 
   useEffect(() => {
     // Load auto-restake value from local storage

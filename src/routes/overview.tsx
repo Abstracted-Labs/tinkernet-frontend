@@ -46,12 +46,15 @@ const Overview = () => {
         ? encodeAddress(selectedAccount.address, 117)
         : null,
     },
+
     pause: !selectedAccount,
   });
 
   const [rewardsCoreClaimedQuery] = useQuery({
     query: TotalRewardsCoreClaimedQuery,
-    variables: {}
+    variables: {},
+
+    pause: !selectedAccount,
   });
 
   const setupSubscriptions = ({
@@ -291,34 +294,6 @@ const Overview = () => {
       });
     };
   }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo]);
-
-  // useSubscription(
-  //   {
-  //     query: TotalRewardsClaimedSubscription,
-  //     variables: {
-  //       accountId: selectedAccount
-  //         ? encodeAddress(selectedAccount.address, 117)
-  //         : null,
-  //     },
-  //     pause: !selectedAccount,
-  //   },
-  //   (
-  //     _: unknown,
-  //     result: { stakers: RewardQueryType[]; }
-  //   ) => {
-  //     if (!result.stakers.length) {
-  //       setTotalClaimed(new BigNumber(0));
-  //       setTotalUnclaimed(new BigNumber(0));
-  //       return;
-  //     }
-
-  //     const totalClaimed = new BigNumber(result.stakers[0].totalRewards ? result.stakers[0].totalRewards : 0);
-  //     setTotalClaimed(totalClaimed);
-
-  //     const totalUnclaimed = new BigNumber(result.stakers[0].totalUnclaimed ? result.stakers[0].totalUnclaimed : 0);
-  //     setTotalUnclaimed(totalUnclaimed);
-  //   }
-  // );
 
   return (
     <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
