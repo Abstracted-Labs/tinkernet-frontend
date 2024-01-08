@@ -9,6 +9,7 @@ import AnnualRewardIcon from '../assets/annual-reward-icon.svg';
 import CurrentEraIcon from '../assets/current-era-icon.svg';
 import AggregateStakedIcon from '../assets/aggregate-staked-icon.svg';
 import { formatBalanceToTwoDecimals } from '../utils/formatNumber';
+import { formatBalance } from '@polkadot/util';
 
 interface MetricDashboardProps {
   vestingBalance: string | undefined;
@@ -54,11 +55,13 @@ const MetricDashboard = (props: MetricDashboardProps) => {
       {totalUserStaked !== undefined && vestingBalance !== undefined && <DashboardCard cardTitle="My Staked + Vesting TNKR" iconSrc={MyStakeIcon}>
         {
           totalUserStaked && vestingBalance
-            ? formatBalanceToTwoDecimals(
-              totalUserStaked.isNaN() || new BigNumber(vestingBalance).isNaN()
-                ? new BigNumber(0)
-                : totalUserStaked.plus(new BigNumber(vestingBalance))
-            ) + ' TNKR'
+            ? totalUserStaked.isNaN() || new BigNumber(vestingBalance).isNaN()
+              ? '0 TNKR'
+              : formatBalance(totalUserStaked.plus(new BigNumber(vestingBalance)).toString(), {
+                decimals: 12,
+                withUnit: false,
+                forceUnit: "-",
+              }) + ' TNKR'
             : '0 TNKR'
         }
       </DashboardCard>}
