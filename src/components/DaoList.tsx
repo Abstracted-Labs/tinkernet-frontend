@@ -293,8 +293,8 @@ const DaoList = (props: DaoListProps) => {
   }
 
   return (
-    <>
-      <h4 className="text-white text-md">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
+    <div>
+      <h4 className="text-white text-md mb-2">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stakingCores.map((core: StakingCore) => {
           const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);
@@ -325,7 +325,7 @@ const DaoList = (props: DaoListProps) => {
           );
         })}
       </div>
-    </>
+    </div>
   );
 };
 

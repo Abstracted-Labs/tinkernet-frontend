@@ -298,7 +298,7 @@ const Overview = () => {
   }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo]);
 
   return (
-    <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
+    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <h2 className="lg:text-xl font-bold leading-none my-3 flex flex-row items-center gap-4">
           <span>Account Overview</span>
@@ -306,36 +306,36 @@ const Overview = () => {
         </h2>
       </div>
       {selectedAccount &&
-       currentStakingEra &&
-       unclaimedEras ? (
-         <>
-           <MetricDashboard
-             vestingBalance={vestingSummary?.vestedRemaining || "0"}
-             availableBalance={availableBalance || new BigNumber(0)}
-             lockedBalance={lockedBalance || new BigNumber(0)}
-             aggregateStaked={aggregateStaked || new BigNumber(0)}
-             totalUserStaked={totalUserStaked || new BigNumber(0)}
-             totalSupply={undefined}
-             totalStaked={undefined}
-             totalUnclaimed={totalUnclaimed || new BigNumber(0)}
-             totalClaimed={totalClaimed || new BigNumber(0)}
-             currentStakingEra={undefined}
-             currentBlock={undefined}
-             nextEraBlock={nextEraBlock}
-             blocksPerEra={blocksPerEra}
-             unclaimedEras={undefined}
-           />
+        currentStakingEra &&
+        unclaimedEras ? (
+        <div>
+          <MetricDashboard
+            vestingBalance={vestingSummary?.vestedRemaining || "0"}
+            availableBalance={availableBalance || new BigNumber(0)}
+            lockedBalance={lockedBalance || new BigNumber(0)}
+            aggregateStaked={aggregateStaked || new BigNumber(0)}
+            totalUserStaked={totalUserStaked || new BigNumber(0)}
+            totalSupply={undefined}
+            totalStaked={undefined}
+            totalUnclaimed={totalUnclaimed || new BigNumber(0)}
+            totalClaimed={totalClaimed || new BigNumber(0)}
+            currentStakingEra={undefined}
+            currentBlock={undefined}
+            nextEraBlock={nextEraBlock}
+            blocksPerEra={blocksPerEra}
+            unclaimedEras={undefined}
+          />
 
-           <DaoList mini={true} isOverview={true} />
-         </>
-       ) : <div className="text-center">
-         <h5 className="text-sm font-bold text-white">
-           Wallet not connected
-         </h5>
-         <p className="mt-2 text-xs text-white">
-           Connect your wallet to access your account overview.
-         </p>
-       </div>}
+          <DaoList mini={true} isOverview={true} />
+        </div>
+      ) : <div className="text-center">
+        <h5 className="text-sm font-bold text-white">
+          Wallet not connected
+        </h5>
+        <p className="mt-2 text-xs text-white">
+          Connect your wallet to access your account overview.
+        </p>
+      </div>}
     </div>
   );
 };

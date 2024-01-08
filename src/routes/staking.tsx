@@ -557,7 +557,7 @@ const Staking = () => {
   }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo]);
 
   return (
-    <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
+    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <h2 className="lg:text-xl font-bold leading-none my-3 flex flex-row items-center gap-4">
           <span>DAO Staking</span>
@@ -602,7 +602,7 @@ const Staking = () => {
       </div>
 
       {selectedAccount ? (
-        <>
+        <div>
           <MetricDashboard
             vestingBalance={undefined}
             availableBalance={undefined}
@@ -621,7 +621,7 @@ const Staking = () => {
           />
 
           <DaoList mini={false} isOverview={false} />
-        </>
+        </div>
       ) : <div className="text-center">
         <h5 className="text-sm font-bold text-white">
           Wallet not connected
