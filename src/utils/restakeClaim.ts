@@ -60,9 +60,9 @@ export const restakeClaim = async ({
     if (enableAutoRestake) {
       uniqueCores.forEach(core => {
         if (!core?.earliestEra) return;
-        const restakeAmount = handleRestakingLogic();
-        if (restakeAmount && !restakeAmount.isZero()) {
-          const restakeAmountInteger = restakeAmount.integerValue().toString();
+        const restakeUnclaimedAmount = handleRestakingLogic();
+        if (restakeUnclaimedAmount && !restakeUnclaimedAmount.isZero()) {
+          const restakeAmountInteger = restakeUnclaimedAmount.integerValue().toString();
           batch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
         }
       });
@@ -92,11 +92,11 @@ export const restakeClaim = async ({
     if (enableAutoRestake) {
       uniqueCores.forEach(core => {
         if (!core?.earliestEra) return;
-        const restakeAmount = handleRestakingLogic();
-        if (restakeAmount && !restakeAmount.isZero()) {
-          const batchTxFeesBigNumber = new BigNumber(batchTxFees.toString());
-          const feesPerCore = batchTxFeesBigNumber.dividedBy(uniqueCores.length).times(1.5);
-          let adjustedRestakeAmount = restakeAmount.minus(feesPerCore);
+        const restakeUnclaimedAmount = handleRestakingLogic();
+        if (restakeUnclaimedAmount && !restakeUnclaimedAmount.isZero()) {
+          const batchTxFeesBigNumber = new BigNumber(batchTxFees.toString()).times(1.5);
+          const feesPerCore = batchTxFeesBigNumber.dividedBy(uniqueCores.length);
+          let adjustedRestakeAmount = restakeUnclaimedAmount.minus(feesPerCore);
           if (adjustedRestakeAmount.isNegative()) {
             adjustedRestakeAmount = new BigNumber(0);
           }
