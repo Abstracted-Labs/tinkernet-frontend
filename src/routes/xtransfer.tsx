@@ -151,8 +151,7 @@ const Transfer = () => {
       const reserved = new BigNumber(balance.data.reserved.toString());
       const transferable = total.minus(frozen).minus(reserved);
 
-      // setBalanceInTinkernet(transferable);
-      setBalanceInTinkernet(new BigNumber(8297553199999900));
+      setBalanceInTinkernet(transferable);
 
       const balanceInBasilisk = new BigNumber(
         (
@@ -164,8 +163,7 @@ const Transfer = () => {
         ).free
       );
 
-      // setBalanceInBasilisk(balanceInBasilisk);
-      setBalanceInBasilisk(new BigNumber(2648198499999900));
+      setBalanceInBasilisk(balanceInBasilisk);
 
       toast.dismiss();
 
