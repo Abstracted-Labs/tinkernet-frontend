@@ -31,7 +31,7 @@ dependencies:
     version: 0.46.4(@polkadot/api@10.8.1)(@polkadot/util@12.2.2)
   '@polkadot/react-identicon':
     specifier: ^3.6.4
-    version: 3.6.4(@polkadot/keyring@12.6.2)(@polkadot/networks@12.6.2)(@polkadot/util-crypto@12.2.2)(@polkadot/util@12.2.2)(react-dom@18.2.0)(react-is@16.13.1)(react@18.2.0)
+    version: 3.6.4(@polkadot/keyring@12.6.2)(@polkadot/networks@12.6.2)(@polkadot/util-crypto@12.2.2)(@polkadot/util@12.2.2)(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
   '@polkadot/types':
     specifier: ^10.8.1
     version: 10.8.1
@@ -73,7 +73,7 @@ dependencies:
     version: 7.44.3(react@18.2.0)
   react-hot-toast:
     specifier: ^2.4.1
-    version: 2.4.1(csstype@3.1.2)(react-dom@18.2.0)(react@18.2.0)
+    version: 2.4.1(csstype@3.1.3)(react-dom@18.2.0)(react@18.2.0)
   react-router-dom:
     specifier: ^6.12.0
     version: 6.12.0(react-dom@18.2.0)(react@18.2.0)
@@ -84,7 +84,7 @@ dependencies:
     specifier: ^4.0.3
     version: 4.0.3(graphql@16.6.0)(react@18.2.0)
   zod:
-    specifier: ^3.20.2
+    specifier: ^3.21.4
     version: 3.21.4
   zustand:
     specifier: ^4.4.5
@@ -113,7 +113,7 @@ devDependencies:
     specifier: ^4.0.0
     version: 4.0.0(vite@4.3.9)
   autoprefixer:
-    specifier: ^10.4.13
+    specifier: ^10.4.14
     version: 10.4.14(postcss@8.4.24)
   eslint:
     specifier: ^8.52.0
@@ -121,6 +121,9 @@ devDependencies:
   eslint-config-prettier:
     specifier: ^9.0.0
     version: 9.0.0(eslint@8.52.0)
+  eslint-plugin-react-hooks:
+    specifier: ^4.6.0
+    version: 4.6.0(eslint@8.52.0)
   postcss:
     specifier: ^8.4.24
     version: 8.4.24
@@ -969,7 +972,7 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@polkadot/react-identicon@3.6.4(@polkadot/keyring@12.6.2)(@polkadot/networks@12.6.2)(@polkadot/util-crypto@12.2.2)(@polkadot/util@12.2.2)(react-dom@18.2.0)(react-is@16.13.1)(react@18.2.0):
+  /@polkadot/react-identicon@3.6.4(@polkadot/keyring@12.6.2)(@polkadot/networks@12.6.2)(@polkadot/util-crypto@12.2.2)(@polkadot/util@12.2.2)(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-y8DFLXEVVZ1dKAQDdvtASxPyR4JqnqokRzbuZF1eDUleNxOJruNDGLGrfuM6rqVNHdHRy35Rku546aFqVE5Ldg==}
     engines: {node: '>=18'}
     peerDependencies:
@@ -990,7 +993,7 @@ packages:
       react: 18.2.0
       react-copy-to-clipboard: 5.1.0(react@18.2.0)
       react-dom: 18.2.0(react@18.2.0)
-      react-is: 16.13.1
+      react-is: 18.2.0
       styled-components: 6.1.1(react-dom@18.2.0)(react@18.2.0)
       tslib: 2.6.2
     transitivePeerDependencies:
@@ -2324,7 +2327,7 @@ packages:
       postcss: ^8.1.0
     dependencies:
       browserslist: 4.21.5
-      caniuse-lite: 1.0.30001465
+      caniuse-lite: 1.0.30001576
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
@@ -2368,7 +2371,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001465
+      caniuse-lite: 1.0.30001576
       electron-to-chromium: 1.4.328
       node-releases: 2.0.10
       update-browserslist-db: 1.0.10(browserslist@4.21.5)
@@ -2379,7 +2382,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001495
+      caniuse-lite: 1.0.30001576
       electron-to-chromium: 1.4.422
       node-releases: 2.0.12
       update-browserslist-db: 1.0.11(browserslist@4.21.7)
@@ -2398,12 +2401,8 @@ packages:
     resolution: {integrity: sha512-dU+Tx2fsypxTgtLoE36npi3UqcjSSMNYfkqgmoEhtZrraP5VWq0K7FkWVTYa8eMPtnU/G2txVsfdCJTn9uzpuQ==}
     dev: false
 
-  /caniuse-lite@1.0.30001465:
-    resolution: {integrity: sha512-HvjgL3MYAJjceTDCcjRnQGjwUz/5qec9n7JPOzUursUoOTIsYCSDOb1l7RsnZE8mjbxG78zVRCKfrBXyvChBag==}
-    dev: true
-
-  /caniuse-lite@1.0.30001495:
-    resolution: {integrity: sha512-F6x5IEuigtUfU5ZMQK2jsy5JqUUlEFRVZq8bO2a+ysq5K7jD6PPc9YXZj78xDNS3uNchesp1Jw47YXEqr+Viyg==}
+  /caniuse-lite@1.0.30001576:
+    resolution: {integrity: sha512-ff5BdakGe2P3SQsMsiqmt1Lc8221NR1VzHj5jXN5vBny9A6fpze94HiVV/n7XRosOlsShJcvMv5mdnpjOGCEgg==}
     dev: true
 
   /canvas-renderer@2.2.1:
@@ -2441,7 +2440,7 @@ packages:
       normalize-path: 3.0.0
       readdirp: 3.6.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
 
   /classnames@2.3.2:
     resolution: {integrity: sha512-CSbhY4cFEJRe6/GQzIk5qXZ4Jeg5pcsP7b5peFSDpffpe1cqjASH/n9UTjBwOp6XpMSTwQ8Za2K5V02ueA7Tmw==}
@@ -2522,6 +2521,10 @@ packages:
 
   /csstype@3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
+
+  /csstype@3.1.3:
+    resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
+    dev: false
 
   /d3-array@2.12.1:
     resolution: {integrity: sha512-B0ErZK/66mHtEsR1TkPEEkwdy+WDesimkM5gpZr5Dsg54BiTA5RXtYW5qTLIAcekaS9xfZrzBLF/OAkB3Qn1YQ==}
@@ -2689,6 +2692,15 @@ packages:
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
+    dependencies:
+      eslint: 8.52.0
+    dev: true
+
+  /eslint-plugin-react-hooks@4.6.0(eslint@8.52.0):
+    resolution: {integrity: sha512-oFc7Itz9Qxh2x4gNHStv3BqJq54ExXmfC+a1NjAta66IAN87Wu0R/QArgIS9qKzX3dXKPI9H5crl9QchNMY9+g==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
     dependencies:
       eslint: 8.52.0
     dev: true
@@ -2900,8 +2912,8 @@ packages:
   /fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  /fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+  /fsevents@2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -2977,12 +2989,12 @@ packages:
       slash: 3.0.0
     dev: true
 
-  /goober@2.1.13(csstype@3.1.2):
+  /goober@2.1.13(csstype@3.1.3):
     resolution: {integrity: sha512-jFj3BQeleOoy7t93E9rZ2de+ScC4lQICLwiAQmKMg9F6roKGaLSHoCDYKkWlSafg138jejvq/mTdvmnwDQgqoQ==}
     peerDependencies:
       csstype: ^3.0.10
     dependencies:
-      csstype: 3.1.2
+      csstype: 3.1.3
     dev: false
 
   /graphemer@1.4.0:
@@ -3589,14 +3601,14 @@ packages:
       react: 18.2.0
     dev: false
 
-  /react-hot-toast@2.4.1(csstype@3.1.2)(react-dom@18.2.0)(react@18.2.0):
+  /react-hot-toast@2.4.1(csstype@3.1.3)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-j8z+cQbWIM5LY37pR6uZR6D4LfseplqnuAO4co4u8917hBUvXlEqyP1ZzqVLcqoyUesZZv/ImreoCeHVDpE5pQ==}
     engines: {node: '>=10'}
     peerDependencies:
       react: '>=16'
       react-dom: '>=16'
     dependencies:
-      goober: 2.1.13(csstype@3.1.2)
+      goober: 2.1.13(csstype@3.1.3)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     transitivePeerDependencies:
@@ -3605,6 +3617,10 @@ packages:
 
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
+    dev: false
+
+  /react-is@18.2.0:
+    resolution: {integrity: sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==}
     dev: false
 
   /react-refresh@0.14.0:
@@ -3752,7 +3768,7 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /run-parallel@1.2.0:
@@ -4122,7 +4138,7 @@ packages:
       postcss: 8.4.24
       rollup: 3.23.1
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /web-streams-polyfill@3.2.1:

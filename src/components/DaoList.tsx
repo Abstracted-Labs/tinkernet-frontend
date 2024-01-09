@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ProjectCard from './ProjectCard';
 import LoadingSpinner from './LoadingSpinner';
 import { BalanceType, ChainPropertiesType, CoreEraStakeInfoType, LockedType, StakingCore, TotalRewardsCoreClaimedQuery, TotalUserStakedData, UserStakedInfoType, getCoreInfo, getTotalUserStaked } from '../routes/staking';
@@ -78,21 +78,15 @@ const DaoList = (props: DaoListProps) => {
     });
   };
 
-  const loadDaos = async () => {
-    if (!selectedAccount) return;
-    const daos = await loadStakedDaos(stakingCores, selectedAccount.address, api);
-    setStakedDaos(daos);
-  };
-
-  const loadCores = async () => {
+  const loadCores = useCallback(async () => {
     const cores = await loadProjectCores(api);
 
     if (cores) {
       setStakingCores(cores);
     }
-  };
+  }, [api]);
 
-  const loadTotalUserStaked = () => {
+  const loadTotalUserStaked = useCallback(() => {
     if (!selectedAccount) return;
 
     const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
@@ -107,29 +101,30 @@ const DaoList = (props: DaoListProps) => {
     }
 
     setTotalUserStakedData(totalUserStakedResults);
-  };
+  }, [selectedAccount, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
-  const loadAccountInfo = async (selectedAccount: InjectedAccountWithMeta) => {
+  const loadAccountInfo = useCallback(async () => {
+    if (!selectedAccount) return;
     const account = await api.query.system.account(selectedAccount.address);
     const balance = account.toPrimitive() as BalanceType;
     const locked = (await api.query.ocifStaking.ledger(selectedAccount.address)).toPrimitive() as LockedType;
     const currentBalance = new BigNumber(balance.data.free).minus(new BigNumber(locked.locked));
 
     setAvailableBalance(currentBalance);
-  };
+  }, [api, selectedAccount]);
 
-  const loadStakingConstants = async () => {
+  const loadStakingConstants = useCallback(async () => {
     const maxStakersPerCore = api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
     const inflationErasPerYear = api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
 
     setChainProperties({ maxStakersPerCore, inflationErasPerYear });
-  };
+  }, [api]);
 
-  const initializeData = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       if (selectedAccount) {
         await Promise.all([
-          loadAccountInfo(selectedAccount),
+          loadAccountInfo(),
           loadCores(),
           loadStakingConstants(),
           loadTotalUserStaked()
@@ -142,9 +137,9 @@ const DaoList = (props: DaoListProps) => {
       setLoading(false);
       setDataLoaded(true);
     }
-  };
+  }, [loadAccountInfo, loadCores, loadStakingConstants, loadTotalUserStaked]);
 
-  const setupSubscriptions = async ({
+  const setupSubscriptions = useCallback(async ({
     selectedAccount,
   }: {
     selectedAccount: InjectedAccountWithMeta;
@@ -220,27 +215,34 @@ const DaoList = (props: DaoListProps) => {
     }
 
     return Promise.resolve(unsubs as UnsubscribePromise[]);
-  };
+  }, [api, currentStakingEra, stakingCores, coreEraStakeInfo]);
 
   useEffect(() => {
     initializeData(selectedAccount);
-  }, [selectedAccount?.address, api]);
+  }, [initializeData, selectedAccount]);
 
   useEffect(() => {
+    const loadDaos = async () => {
+      if (!selectedAccount) return;
+      const daos = await loadStakedDaos(stakingCores, selectedAccount.address, api);
+      setStakedDaos(daos);
+    };
+
     if (!selectedAccount) return;
     if (!stakingCores) return;
+
     loadDaos();
-  }, [selectedAccount?.address, stakingCores, api]);
+  }, [selectedAccount, stakingCores, api]);
 
   useEffect(() => {
     loadTotalUserStaked();
-  }, [selectedAccount?.address, stakingCores, coreEraStakeInfo, userStakedInfo]);
+  }, [loadTotalUserStaked]);
 
   useEffect(() => {
     if (selectedAccount) {
       reexecuteQuery();
     }
-  }, [selectedAccount?.address]);
+  }, [reexecuteQuery, selectedAccount]);
 
   useEffect(() => {
     if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
@@ -252,7 +254,7 @@ const DaoList = (props: DaoListProps) => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data]);
+  }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
@@ -274,7 +276,7 @@ const DaoList = (props: DaoListProps) => {
         }
       });
     };
-  }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo, userStakedInfo]);
+  }, [selectedAccount, setupSubscriptions]);
 
   const stakedCoresCount = useMemo(() => {
     return isOverview
@@ -282,7 +284,7 @@ const DaoList = (props: DaoListProps) => {
         totalUserStakedData[core.key] && (totalUserStakedData[core.key] as BigNumber).isGreaterThan(0)
       ).length
       : stakingCores.length;
-  }, [selectedAccount?.address, isOverview, stakingCores, totalUserStakedData]);
+  }, [isOverview, stakingCores, totalUserStakedData]);
 
   const loadingSpinner = <div className='flex items-center justify-center'>
     <LoadingSpinner />
@@ -293,8 +295,8 @@ const DaoList = (props: DaoListProps) => {
   }
 
   return (
-    <>
-      <h4 className="text-white text-md">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
+    <div>
+      <h4 className="text-white text-md mb-2">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stakingCores.map((core: StakingCore) => {
           const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);
@@ -325,8 +327,9 @@ const DaoList = (props: DaoListProps) => {
           );
         })}
       </div>
-    </>
+    </div>
   );
 };
 
 export default DaoList;
+

@@ -1,7 +1,7 @@
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
@@ -36,11 +36,9 @@ const Overview = () => {
   const [isDataLoaded, setDataLoaded] = useState(false);
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
-  const [nextEraBlock, setNextEraBlock] = useState<number>(0);
-  const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
   const [vestingSummary, setVestingSummary] = useState<VestingData | null>(null);
 
-  const [rewardsUserClaimedQuery, reexecuteQuery] = useQuery({
+  const [rewardsUserClaimedQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
     variables: {
       accountId: selectedAccount
@@ -58,7 +56,7 @@ const Overview = () => {
     pause: !selectedAccount,
   });
 
-  const setupSubscriptions = ({
+  const setupSubscriptions = useCallback(({
     selectedAccount,
   }: {
     selectedAccount: InjectedAccountWithMeta;
@@ -67,11 +65,7 @@ const Overview = () => {
     const blocks = api.rpc.chain.subscribeNewHeads(() => { });
 
     // Next era starting block subscription
-    const nextEraStartingBlock = api.query.ocifStaking.nextEraStartingBlock(
-      (blockNumber: Codec) => {
-        setNextEraBlock(blockNumber.toPrimitive() as number);
-      }
-    );
+    const nextEraStartingBlock = api.query.ocifStaking.nextEraStartingBlock(() => { });
 
     let generalEraInfo;
 
@@ -161,28 +155,23 @@ const Overview = () => {
     }
 
     return Promise.resolve(unsubs as UnsubscribePromise[]);
-  };
+  }, [api, currentStakingEra, coreEraStakeInfo, stakingCores, unclaimedEras]);
 
-  const loadStakingConstants = async () => {
-    const blocksPerEra = api.consts.ocifStaking.blocksPerEra.toPrimitive() as number;
-    setBlocksPerEra(blocksPerEra);
-  };
-
-  const loadAggregateStaked = async () => {
+  const loadAggregateStaked = useCallback(async () => {
     const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
     const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
     setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
-  };
+  }, [api]);
 
-  const loadCores = async () => {
+  const loadCores = useCallback(async () => {
     const cores = await loadProjectCores(api);
 
     if (cores) {
       setStakingCores(cores);
     }
-  };
+  }, [api]);
 
-  const loadAccountInfo = async (selectedAccount: InjectedAccountWithMeta) => {
+  const loadAccountInfo = useCallback(async (selectedAccount: InjectedAccountWithMeta) => {
     const account = await api.query.system.account(selectedAccount.address);
     const balance = account.toPrimitive() as BalanceType;
     const locked = (await api.query.ocifStaking.ledger(selectedAccount.address)).toPrimitive() as LockedType;
@@ -190,9 +179,9 @@ const Overview = () => {
 
     setAvailableBalance(currentBalance);
     setLockedBalance(new BigNumber(balance.data.frozen));
-  };
+  }, [api]);
 
-  const loadVestingBalance = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const loadVestingBalance = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     if (!selectedAccount) return;
     try {
       const results = await fetchSystemData(selectedAccount, api);
@@ -207,9 +196,9 @@ const Overview = () => {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [api]);
 
-  const initializeData = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       toast.loading("Loading staking cores...");
 
@@ -217,7 +206,6 @@ const Overview = () => {
         await Promise.all([
           loadAccountInfo(selectedAccount),
           loadCores(),
-          loadStakingConstants(),
           loadAggregateStaked(),
           loadVestingBalance(selectedAccount)
         ]);
@@ -231,17 +219,11 @@ const Overview = () => {
       setLoading(false);
       setDataLoaded(true);
     }
-  };
+  }, [loadAccountInfo, loadCores, loadAggregateStaked, loadVestingBalance]);
 
   useEffect(() => {
     initializeData(selectedAccount);
-  }, [selectedAccount?.address, api]);
-
-  useEffect(() => {
-    if (selectedAccount) {
-      reexecuteQuery();
-    }
-  }, [selectedAccount?.address]);
+  }, [initializeData, selectedAccount]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
@@ -261,10 +243,10 @@ const Overview = () => {
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
     setTotalUnclaimed(totalUnclaimed);
-  }, [selectedAccount?.address, rewardsUserClaimedQuery.data]);
+  }, [selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data]);
 
   useEffect(() => {
-    if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
+    if (rewardsCoreClaimedQuery.fetching || !rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount?.address) return;
 
     const coreEraStakeInfoMap: CoreEraStakeInfoType[] = rewardsCoreClaimedQuery.data.cores;
 
@@ -273,7 +255,7 @@ const Overview = () => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data]);
+  }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data, rewardsCoreClaimedQuery.fetching]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
@@ -295,10 +277,10 @@ const Overview = () => {
         }
       });
     };
-  }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo]);
+  }, [setupSubscriptions, selectedAccount]);
 
   return (
-    <div className="overflow-y-scroll mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
+    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <h2 className="lg:text-xl font-bold leading-none my-3 flex flex-row items-center gap-4">
           <span>Account Overview</span>
@@ -306,36 +288,36 @@ const Overview = () => {
         </h2>
       </div>
       {selectedAccount &&
-       currentStakingEra &&
-       unclaimedEras ? (
-         <>
-           <MetricDashboard
-             vestingBalance={vestingSummary?.vestedRemaining || "0"}
-             availableBalance={availableBalance || new BigNumber(0)}
-             lockedBalance={lockedBalance || new BigNumber(0)}
-             aggregateStaked={aggregateStaked || new BigNumber(0)}
-             totalUserStaked={totalUserStaked || new BigNumber(0)}
-             totalSupply={undefined}
-             totalStaked={undefined}
-             totalUnclaimed={totalUnclaimed || new BigNumber(0)}
-             totalClaimed={totalClaimed || new BigNumber(0)}
-             currentStakingEra={undefined}
-             currentBlock={undefined}
-             nextEraBlock={nextEraBlock}
-             blocksPerEra={blocksPerEra}
-             unclaimedEras={undefined}
-           />
+        currentStakingEra &&
+        unclaimedEras ? (
+        <div>
+          <MetricDashboard
+            vestingBalance={vestingSummary?.vestedRemaining || "0"}
+            availableBalance={availableBalance || new BigNumber(0)}
+            lockedBalance={lockedBalance || new BigNumber(0)}
+            aggregateStaked={aggregateStaked || new BigNumber(0)}
+            totalUserStaked={totalUserStaked || new BigNumber(0)}
+            totalSupply={undefined}
+            totalStaked={undefined}
+            totalUnclaimed={totalUnclaimed || new BigNumber(0)}
+            totalClaimed={totalClaimed || new BigNumber(0)}
+            currentStakingEra={undefined}
+            currentBlock={undefined}
+            nextEraBlock={undefined}
+            blocksPerEra={undefined}
+            unclaimedEras={undefined}
+          />
 
-           <DaoList mini={true} isOverview={true} />
-         </>
-       ) : <div className="text-center">
-         <h5 className="text-sm font-bold text-white">
-           Wallet not connected
-         </h5>
-         <p className="mt-2 text-xs text-white">
-           Connect your wallet to access your account overview.
-         </p>
-       </div>}
+          <DaoList mini={true} isOverview={true} />
+        </div>
+      ) : <div className="text-center">
+        <h5 className="text-sm font-bold text-white">
+          Wallet not connected
+        </h5>
+        <p className="mt-2 text-xs text-white">
+          Connect your wallet to access your account overview.
+        </p>
+      </div>}
     </div>
   );
 };

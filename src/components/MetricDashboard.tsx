@@ -9,7 +9,6 @@ import AnnualRewardIcon from '../assets/annual-reward-icon.svg';
 import CurrentEraIcon from '../assets/current-era-icon.svg';
 import AggregateStakedIcon from '../assets/aggregate-staked-icon.svg';
 import { formatBalanceToTwoDecimals } from '../utils/formatNumber';
-import { formatBalance } from '@polkadot/util';
 
 interface MetricDashboardProps {
   vestingBalance: string | undefined;
@@ -48,7 +47,7 @@ const MetricDashboard = (props: MetricDashboardProps) => {
 
   return (
     <div
-      className="relative overflow-x-auto rounded-xl shadow flex lg:flex-wrap flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4 mb-4">
+      className="min-h-40 relative overflow-x-auto rounded-xl shadow flex lg:flex-wrap flex-grow flex-row gap-4 justify-between backdrop-blur-sm bg-black bg-opacity-40 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 scrollbar-thin overflow-x-auto p-4 mb-4">
 
       {availableBalance !== undefined && <DashboardCard cardTitle="Available Balance" iconSrc={AggregateStakedIcon}>
         {availableBalance ? `${ formatBalanceToTwoDecimals(availableBalance) } TNKR` : "0 TNKR"}
@@ -57,65 +56,65 @@ const MetricDashboard = (props: MetricDashboardProps) => {
       {lockedBalance && <DashboardCard cardTitle="My Staked + Vesting TNKR" iconSrc={MyStakeIcon}>
         {
           lockedBalance
-          ? lockedBalance.isNaN()
-          ? '0 TNKR'
-          : formatBalanceToTwoDecimals(lockedBalance) + ' TNKR'
-          : '0 TNKR'
+            ? lockedBalance.isNaN()
+              ? '0 TNKR'
+              : formatBalanceToTwoDecimals(lockedBalance) + ' TNKR'
+            : '0 TNKR'
         }
       </DashboardCard>}
 
       {totalUserStaked !== undefined && vestingBalance === undefined && <DashboardCard cardTitle="My Staked TNKR" iconSrc={MyStakeIcon}>
         {
           totalUserStaked
-          ? formatBalanceToTwoDecimals(
-            new BigNumber(totalUserStaked).isNaN()
-            ? new BigNumber(0)
-            : totalUserStaked
-          ) + ' TNKR'
-          : '0 TNKR'
+            ? formatBalanceToTwoDecimals(
+              new BigNumber(totalUserStaked).isNaN()
+                ? new BigNumber(0)
+                : totalUserStaked
+            ) + ' TNKR'
+            : '0 TNKR'
         }
       </DashboardCard>}
 
       {totalSupply !== undefined && totalStaked !== undefined && <DashboardCard cardTitle="Staking APY" iconSrc={StakingApyIcon}>
         {totalSupply &&
-         totalSupply.toNumber() > 0 &&
-         totalStaked &&
-         totalStaked.toNumber() > 0
-                                ? totalSupply
-                                  .times(4) // Annualize
-                                  .dividedBy(totalStaked) // Total supply / total staked
-                                  .decimalPlaces(2)
-                                  .toString()
-                                : 0}
+          totalSupply.toNumber() > 0 &&
+          totalStaked &&
+          totalStaked.toNumber() > 0
+          ? totalSupply
+            .times(4) // Annualize
+            .dividedBy(totalStaked) // Total supply / total staked
+            .decimalPlaces(2)
+            .toString()
+          : 0}
         %
       </DashboardCard>}
 
       {aggregateStaked !== undefined && <DashboardCard
-                                          cardTitle="Total Active TNKR Supply"
-                                          iconSrc={AggregateStakedIcon}
-                                          leading="leading-tight"
-                                        >
+        cardTitle="Total Active TNKR Supply"
+        iconSrc={AggregateStakedIcon}
+        leading="leading-tight"
+      >
         {aggregateStaked ? `${ formatBalanceToTwoDecimals(aggregateStaked) } TNKR` : "0 TNKR"}
       </DashboardCard>}
 
       {aggregateStaked !== undefined && totalStaked !== undefined && <DashboardCard
-                                                                       cardTitle="Total TNKR Staked (%)"
-                                                                       iconSrc={AggregateStakedIcon}
-                                                                       leading="leading-tight"
-                                                                     >
+        cardTitle="Total TNKR Staked (%)"
+        iconSrc={AggregateStakedIcon}
+        leading="leading-tight"
+      >
         {totalStaked && totalStaked.toNumber() > 0 && aggregateStaked && aggregateStaked.toNumber() > 0 ? totalStaked.times(100).dividedBy(aggregateStaked).toFixed(2) : 0}%
       </DashboardCard>}
 
       {totalSupply !== undefined && <DashboardCard cardTitle="Projected Annual DAO Rewards" iconSrc={AnnualRewardIcon}>
         {totalSupply && totalSupply.toNumber() > 0
-                                               ? `${ formatBalanceToTwoDecimals(
+          ? `${ formatBalanceToTwoDecimals(
             totalSupply
               .dividedBy(1000000000000)
               .times(0.06)
               .times(10 ** 12) // Convert to smallest unit
               .integerValue() // Ensure it's an integer
           ) } TNKR`
-                                               : '0 TNKR'}
+          : '0 TNKR'}
       </DashboardCard>}
 
       {totalClaimed !== undefined && <DashboardCard cardTitle="Claimed Rewards" iconSrc={ClaimableRewardsIcon}>
@@ -131,14 +130,14 @@ const MetricDashboard = (props: MetricDashboardProps) => {
       </DashboardCard>}
 
       {currentStakingEra !== undefined && <DashboardCard cardTitle={<>Current Era <br /> ({(currentBlock ?? 0) && (nextEraBlock ?? 0) && (blocksPerEra ?? 0) ? (
-          (((currentBlock ?? 0) - ((nextEraBlock ?? 0) - (blocksPerEra ?? 0))) /
-            ((nextEraBlock ?? 0) - ((nextEraBlock ?? 0) - (blocksPerEra ?? 0)))) *
-          100
+        (((currentBlock ?? 0) - ((nextEraBlock ?? 0) - (blocksPerEra ?? 0))) /
+          ((nextEraBlock ?? 0) - ((nextEraBlock ?? 0) - (blocksPerEra ?? 0)))) *
+        100
       ).toFixed(0) : 0}% until next era)</>} iconSrc={CurrentEraIcon}>
         {currentStakingEra || 0}
       </DashboardCard>}
     </div>
-          );
+  );
 };
 
 export default MetricDashboard;

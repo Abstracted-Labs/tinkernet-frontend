@@ -2,7 +2,7 @@ import "@polkadot/api-augment";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress, web3Enable } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BN, formatBalance, u8aToHex } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
@@ -55,8 +55,8 @@ const Transfer = () => {
     from: Currency;
     to: Currency;
   }>({
-    from: currency.BASILISK,
-    to: currency.TINKERNET,
+    from: currency.TINKERNET,
+    to: currency.BASILISK,
   });
 
   const [isLoading, setLoading] = useState(true);
@@ -72,7 +72,7 @@ const Transfer = () => {
     new BigNumber(0)
   );
 
-  const setupSubscriptions = ({
+  const setupSubscriptions = useCallback(({
     selectedAccount,
   }: {
     selectedAccount: InjectedAccountWithMeta;
@@ -121,7 +121,7 @@ const Transfer = () => {
     const unsubs = [balanceTinkernet, balanceBasilisk];
 
     return unsubs as UnsubscribePromise[];
-  };
+  }, [apiBasilisk, api]);
 
   const setupApiBasilisk = async () => {
     const wsProviderBasilisk = new WsProvider(RPC_PROVIDER_BASILISK);
@@ -135,7 +135,7 @@ const Transfer = () => {
     setLoading(false);
   };
 
-  const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
+  const loadBalances = useCallback(async ({ address }: InjectedAccountWithMeta) => {
     if (!apiBasilisk) {
       return;
     }
@@ -182,21 +182,29 @@ const Transfer = () => {
       toast.dismiss();
       toast.success("Balances loaded");
     }
-  };
+  }, [apiBasilisk, api]);
 
-  useEffect(() => {
-    setupApiBasilisk();
-  }, []);
+  const handleChangedAmount = (e: string, availableBalance: BigNumber) => {
+    // Remove all non-numeric characters except for the decimal point
+    const sanitizedInput = e.replace(/[^\d.]/g, '');
 
-  useEffect(() => {
-    if (!selectedAccount) return;
-    if (!apiBasilisk) return;
+    // Convert the sanitized string to a number
+    const number = parseFloat(sanitizedInput);
 
-    loadBalances(selectedAccount);
-  }, [selectedAccount, apiBasilisk]);
+    // Format the available balance with 12 decimals
+    const formattedBalance = parseFloat(formatBalance(availableBalance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
 
-  const handleChangedAmount = (e: string) => {
-    setAmount(parseFloat(e).toFixed(12).replace(/\./g, ""));
+    // Check if the number is a valid finite number and within the valid range
+    if (Number.isFinite(number) && number >= 0 && number <= formattedBalance - 0.01) {
+      // Limit the number to 12 decimal places and return the value
+      setAmount(number.toString());
+    } else if (number < 0) {
+      // If the input is less than 0, return the minimum value
+      setAmount("0");
+    } else if (number > formattedBalance - 0.01) {
+      // If the input is more than the available balance minus 0.01, return the maximum value
+      setAmount((formattedBalance - 0.01).toString());
+    }
   };
 
   const balanceTNKR25 = () => {
@@ -212,7 +220,9 @@ const Transfer = () => {
   };
 
   const balanceTNKR100 = () => {
-    setAmount(formatBalance(balanceInTinkernet.multipliedBy(1).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const balance = balanceInTinkernet.multipliedBy(1).integerValue();
+    const formattedBalance = parseFloat(formatBalance(balance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    setAmount((formattedBalance - 0.01).toString());
   };
 
   const balanceBSX25 = () => {
@@ -228,7 +238,9 @@ const Transfer = () => {
   };
 
   const balanceBSX100 = () => {
-    setAmount(formatBalance(balanceInBasilisk.multipliedBy(1).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const balance = balanceInBasilisk.multipliedBy(1).integerValue();
+    const formattedBalance = parseFloat(formatBalance(balance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    setAmount((formattedBalance - 0.01).toString());
   };
 
   const handleChangedDestination = (e: string) => {
@@ -250,139 +262,179 @@ const Transfer = () => {
   };
 
   const handleXTransferToBasilisk = async () => {
-    if (!selectedAccount) return;
+    try {
+      setWaiting(true);
+      toast.loading("Initializing transfer...");
 
-    await web3Enable("Tinkernet");
+      if (!selectedAccount) return;
 
-    const injector = await web3FromAddress(selectedAccount.address);
+      // Convert the amount to a BigNumber
+      const amountBigNumber = new BigNumber(amount);
 
-    const api = await createApi();
+      // Validate the amount
+      if (amountBigNumber.isNaN() || amountBigNumber.lte(0)) {
+        console.error('Invalid amount');
+        return;
+      }
 
-    api.tx.xTokens
-      .transfer(
-        0,
-        amount,
-        {
-          V3: {
-            parents: 1,
-            interior: {
-              X2: [
-                { Parachain: 2090 },
-                {
-                  AccountId32: {
-                    id: destination,
+      await web3Enable("Tinkernet");
+
+      const injector = await web3FromAddress(selectedAccount.address);
+
+      const api = await createApi();
+
+      // Multiply the amount by 10^12 and convert to a string
+      const amountToSend = amountBigNumber.multipliedBy(new BigNumber(10).pow(12)).toString();
+
+      api.tx.xTokens
+        .transfer(
+          0,
+          amountToSend,
+          {
+            V3: {
+              parents: 1,
+              interior: {
+                X2: [
+                  { Parachain: 2090 },
+                  {
+                    AccountId32: {
+                      id: destination,
+                    },
                   },
-                },
-              ],
+                ],
+              },
             },
           },
-        },
-        "Unlimited"
-      )
-      .signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallbackWithPromise({
-          onInvalid: () => {
-            toast.dismiss();
+          "Unlimited"
+        )
+        .signAndSend(
+          selectedAccount.address,
+          { signer: injector.signer },
+          getSignAndSendCallbackWithPromise({
+            onInvalid: () => {
+              toast.dismiss();
 
-            toast.error("Invalid transaction");
+              toast.error("Invalid transaction");
 
-            setWaiting(false);
-          },
-          onExecuted: () => {
-            toast.dismiss();
+              setWaiting(false);
+            },
+            onExecuted: () => {
+              toast.dismiss();
 
-            toast.loading("Waiting for confirmation...");
+              toast.loading("Waiting for confirmation...");
 
-            setWaiting(true);
-          },
-          onSuccess: () => {
-            toast.dismiss();
+              setWaiting(true);
+            },
+            onSuccess: () => {
+              toast.dismiss();
 
-            toast.success("Transferred successfully");
+              toast.success("Transferred successfully");
 
-            setWaiting(false);
-          },
-          onDropped: () => {
-            toast.dismiss();
+              setWaiting(false);
+            },
+            onDropped: () => {
+              toast.dismiss();
 
-            toast.error("Transaction dropped");
+              toast.error("Transaction dropped");
 
-            setWaiting(false);
-          },
-        })
-      );
+              setWaiting(false);
+            },
+          })
+        );
+    } catch (error) {
+      console.error(error);
+      setWaiting(false);
+    }
   };
 
   const handleXTransferToTinkernet = async () => {
-    if (!selectedAccount) return;
+    try {
+      setWaiting(true);
+      toast.loading("Initializing transfer...");
 
-    await web3Enable("Tinkernet");
+      if (!selectedAccount) return;
 
-    const injector = await web3FromAddress(selectedAccount.address);
+      // Convert the amount to a BigNumber
+      const amountBigNumber = new BigNumber(amount);
 
-    const wsProviderBasilisk = new WsProvider(RPC_PROVIDER_BASILISK);
+      // Validate the amount
+      if (amountBigNumber.isNaN() || amountBigNumber.lte(0)) {
+        console.error('Invalid amount');
+        return;
+      }
 
-    const apiBasilisk = await ApiPromise.create({
-      provider: wsProviderBasilisk,
-    });
+      await web3Enable("Tinkernet");
 
-    apiBasilisk.tx.xTokens
-      .transfer(
-        6,
-        amount,
-        {
-          V3: {
-            parents: 1,
-            interior: {
-              X2: [
-                { Parachain: 2125 },
-                {
-                  AccountId32: {
-                    id: destination,
+      const injector = await web3FromAddress(selectedAccount.address);
+
+      const wsProviderBasilisk = new WsProvider(RPC_PROVIDER_BASILISK);
+
+      const apiBasilisk = await ApiPromise.create({
+        provider: wsProviderBasilisk,
+      });
+
+      // Multiply the amount by 10^12 and convert to a string
+      const amountToSend = amountBigNumber.multipliedBy(new BigNumber(10).pow(12)).toString();
+
+      apiBasilisk.tx.xTokens
+        .transfer(
+          6,
+          amountToSend,
+          {
+            V3: {
+              parents: 1,
+              interior: {
+                X2: [
+                  { Parachain: 2125 },
+                  {
+                    AccountId32: {
+                      id: destination,
+                    },
                   },
-                },
-              ],
+                ],
+              },
             },
           },
-        },
-        "Unlimited"
-      )
-      .signAndSend(
-        selectedAccount.address,
-        { signer: injector.signer },
-        getSignAndSendCallbackWithPromise({
-          onInvalid: () => {
-            toast.dismiss();
+          "Unlimited"
+        )
+        .signAndSend(
+          selectedAccount.address,
+          { signer: injector.signer },
+          getSignAndSendCallbackWithPromise({
+            onInvalid: () => {
+              toast.dismiss();
 
-            toast.error("Invalid transaction");
+              toast.error("Invalid transaction");
 
-            setWaiting(false);
-          },
-          onExecuted: () => {
-            toast.dismiss();
+              setWaiting(false);
+            },
+            onExecuted: () => {
+              toast.dismiss();
 
-            toast.loading("Waiting for confirmation...");
+              toast.loading("Waiting for confirmation...");
 
-            setWaiting(true);
-          },
-          onSuccess: () => {
-            toast.dismiss();
+              setWaiting(true);
+            },
+            onSuccess: () => {
+              toast.dismiss();
 
-            toast.success("Transferred successfully");
+              toast.success("Transferred successfully");
 
-            setWaiting(false);
-          },
-          onDropped: () => {
-            toast.dismiss();
+              setWaiting(false);
+            },
+            onDropped: () => {
+              toast.dismiss();
 
-            toast.error("Transaction dropped");
+              toast.error("Transaction dropped");
 
-            setWaiting(false);
-          },
-        })
-      );
+              setWaiting(false);
+            },
+          })
+        );
+    } catch (error) {
+      console.error(error);
+      setWaiting(false);
+    }
   };
 
   const encode = (destination: string | null, prefix: number): string => {
@@ -393,6 +445,17 @@ const Transfer = () => {
       return destination;
     }
   };
+
+  useEffect(() => {
+    setupApiBasilisk();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedAccount) return;
+    if (!apiBasilisk) return;
+
+    loadBalances(selectedAccount);
+  }, [selectedAccount, apiBasilisk, loadBalances]);
 
   useEffect(() => {
     if (!selectedAccount) return;
@@ -409,14 +472,14 @@ const Transfer = () => {
     return () => {
       unsubs.forEach(async (unsub) => (await unsub)());
     };
-  }, [api, apiBasilisk]);
+  }, [api, apiBasilisk, selectedAccount, setupSubscriptions]);
 
   useEffect(() => {
     setAmount("0");
   }, [pair.from, pair.to]);
 
   return (
-    <div className="overflow-hidden mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
+    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="z-10 w-full">
         <h2 className="lg:text-xl font-bold mt-[8px] lg:mt-[12px] mb-[20px] lg:mb-[24px] flex flex-row items-center gap-4">
           <span>Asset Transfers</span>
@@ -547,12 +610,12 @@ const Transfer = () => {
                         TNKR Amount
                       </label>
                       <div>
-                        <Input type="text"
+                        <Input type="number"
                           value={amount}
                           name="amount"
                           id="amount"
-                          disabled={balanceInTinkernet.toNumber() === 0}
-                          onChange={(e) => handleChangedAmount(e.target.value)} />
+                          disabled={balanceInTinkernet.toNumber() === 0 || isWaiting}
+                          onChange={(e) => handleChangedAmount(e.target.value, balanceInTinkernet)} />
                         <div className="flex flex-row justify-between mt-2 gap-2">
                           <span className={MINI_BUTTON_STYLE} onClick={balanceTNKR25}>25%</span>
                           <span className={MINI_BUTTON_STYLE} onClick={balanceTNKR50}>50%</span>
@@ -571,6 +634,7 @@ const Transfer = () => {
                       </label>
                       <div>
                         <Input type="text"
+                          disabled={isWaiting}
                           name="destination"
                           id="destination"
                           value={encode(destinationField, 10041)}
@@ -600,7 +664,7 @@ const Transfer = () => {
                           .div(1000000000000)
                           .toNumber() || !destination) || isWaiting
                     }
-                    onClick={() => handleXTransferToBasilisk()}
+                    onClick={handleXTransferToBasilisk}
                   >
                     Transfer
                   </Button>
@@ -619,12 +683,12 @@ const Transfer = () => {
                         TNKR Amount
                       </label>
                       <div>
-                        <Input type="text"
+                        <Input type="number"
                           value={amount}
                           name="amount"
                           id="amount"
-                          disabled={balanceInBasilisk.toNumber() === 0}
-                          onChange={(e) => handleChangedAmount(e.target.value)} />
+                          disabled={balanceInBasilisk.toNumber() === 0 || isWaiting}
+                          onChange={(e) => handleChangedAmount(e.target.value, balanceInTinkernet)} />
                         <div className="flex flex-row justify-start mt-2 gap-2">
                           <span className={MINI_BUTTON_STYLE} onClick={balanceBSX25}>25%</span>
                           <span className={MINI_BUTTON_STYLE} onClick={balanceBSX50}>50%</span>
@@ -643,6 +707,7 @@ const Transfer = () => {
                       </label>
                       <div>
                         <Input type="text"
+                          disabled={isWaiting}
                           name="destination"
                           id="destination"
                           value={encode(destinationField, 10041)}
@@ -672,7 +737,7 @@ const Transfer = () => {
                           .div(1000000000000)
                           .toNumber() || !destination) || isWaiting
                     }
-                    onClick={() => handleXTransferToTinkernet()}
+                    onClick={handleXTransferToTinkernet}
                   >
                     Transfer
                   </Button>

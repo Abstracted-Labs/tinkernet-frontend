@@ -1,7 +1,7 @@
 import "@polkadot/api-augment";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { BN, formatBalance } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
@@ -93,7 +93,7 @@ const Claim = () => {
     vestingCompletionDate = new Date(maxPayoutDate).toLocaleString('en-US', dateOptions);
   }
 
-  const loadStakedTNKR = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const loadStakedTNKR = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       const currentEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
       const stakingCores = await loadProjectCores(api);
@@ -139,9 +139,9 @@ const Claim = () => {
     } catch (error) {
       toast.error(`${ error }`);
     }
-  };
+  }, [api]);
 
-  const loadBalances = async (selectedAccount: InjectedAccountWithMeta) => {
+  const loadBalances = useCallback(async (selectedAccount: InjectedAccountWithMeta) => {
     setBalanceLoading(true);
 
     try {
@@ -177,7 +177,7 @@ const Claim = () => {
       toast.error("Failed to load balances!");
       console.error(error);
     }
-  };
+  }, [api, loadStakedTNKR]);
 
   const handleClaim = async (selectedAccount: InjectedAccountWithMeta) => {
     try {
@@ -227,10 +227,10 @@ const Claim = () => {
     if (!selectedAccount) return;
 
     loadBalances(selectedAccount);
-  }, [selectedAccount]);
+  }, [selectedAccount, loadBalances]);
 
   return (
-    <div className="overflow-hidden mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
+    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="z-10 w-full">
         <h2 className="lg:text-xl font-bold mt-[8px] lg:mt-[12px] mb-[20px] lg:mb-[24px] flex flex-row items-center gap-4">
           <span>Claim Vesting</span>

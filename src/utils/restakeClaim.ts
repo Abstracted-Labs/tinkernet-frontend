@@ -28,14 +28,18 @@ export const restakeClaim = async ({
   disableClaiming,
   enableAutoRestake,
   handleRestakingLogic,
-}: RestakeClaimProps) => {
+}: RestakeClaimProps): Promise<boolean> => {
+  let result = false;
+
   try {
+    setWaiting(true);
     toast.loading("Claiming...");
 
     if (disableClaiming) {
+      setWaiting(false);
       toast.dismiss();
       toast.error("Can only claim when unclaimed TNKR is greater than the existential deposit");
-      return;
+      throw new Error("Can only claim when unclaimed TNKR is greater than the existential deposit");
     }
 
     await web3Enable("Tinkernet");
@@ -64,7 +68,12 @@ export const restakeClaim = async ({
       });
     }
 
-    if (batch.length === 0) return;
+    if (batch.length === 0) {
+      setWaiting(false);
+      toast.dismiss();
+      toast.error("No transactions to send");
+      throw new Error("No transactions to send");
+    };
 
     // Get the fee that each batch transaction will cost
     const info = await api.tx.utility.batchAll(batch as Vec<Call>).paymentInfo(selectedAccount.address, { signer: injector.signer });
@@ -86,8 +95,8 @@ export const restakeClaim = async ({
         const restakeAmount = handleRestakingLogic();
         if (restakeAmount && !restakeAmount.isZero()) {
           const batchTxFeesBigNumber = new BigNumber(batchTxFees.toString());
-          const feesPerCore = batchTxFeesBigNumber.dividedBy(uniqueCores.length);
-          let adjustedRestakeAmount = restakeAmount.minus(feesPerCore).minus(new BigNumber(1000000000000));
+          const feesPerCore = batchTxFeesBigNumber.dividedBy(uniqueCores.length).times(1.5);
+          let adjustedRestakeAmount = restakeAmount.minus(feesPerCore);
           if (adjustedRestakeAmount.isNegative()) {
             adjustedRestakeAmount = new BigNumber(0);
           }
@@ -108,21 +117,28 @@ export const restakeClaim = async ({
           toast.dismiss();
           toast.error("Invalid transaction");
           setWaiting(false);
+          result = false;
+          return false;
         },
         onExecuted: () => {
           toast.dismiss();
           toast.loading("Waiting for confirmation...");
           setWaiting(true);
+          return false;
         },
         onSuccess: () => {
           toast.dismiss();
           toast.success("Claimed successfully");
           setWaiting(false);
+          result = true;
+          return true;
         },
         onDropped: () => {
           toast.dismiss();
           toast.error("Transaction dropped");
           setWaiting(false);
+          result = false;
+          return false;
         },
       })
     );
@@ -132,5 +148,9 @@ export const restakeClaim = async ({
     toast.dismiss();
     toast.error(`${ error }`);
     console.error(error);
+    setWaiting(false);
+    result = false;
   }
+
+  return result;
 };
