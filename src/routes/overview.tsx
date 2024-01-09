@@ -8,7 +8,6 @@ import useApi from "../hooks/useApi";
 import useAccount from "../stores/account";
 import { useQuery } from "urql";
 import { AnyJson, Codec } from "@polkadot/types/types";
-import { UnsubscribePromise } from "@polkadot/api/types";
 import { StakesInfo, VestingData, VestingSchedule } from "./claim";
 import MetricDashboard from "../components/MetricDashboard";
 import { loadProjectCores } from '../utils/stakingServices';
@@ -56,35 +55,10 @@ const Overview = () => {
     pause: !selectedAccount,
   });
 
-  const setupSubscriptions = useCallback(({
-    selectedAccount,
-  }: {
-    selectedAccount: InjectedAccountWithMeta;
-  }) => {
-    // Current block subscription
-    const blocks = api.rpc.chain.subscribeNewHeads(() => { });
-
-    // Next era starting block subscription
-    const nextEraStartingBlock = api.query.ocifStaking.nextEraStartingBlock(() => { });
-
-    let generalEraInfo;
-
-    if (currentStakingEra > 0) {
-      generalEraInfo = api.query.ocifStaking.generalEraInfo(currentStakingEra);
-    }
-
-    // Staking current era subscription
-    const currentEra = api.query.ocifStaking.currentEra((era: Codec) => {
-      setCurrentStakingEra(era.toPrimitive() as number);
-    });
-
-    const account = api.query.system.account(selectedAccount.address);
-
-    const unsubs = [blocks, nextEraStartingBlock, currentEra, account];
-
-    if (generalEraInfo) {
-      unsubs.push(generalEraInfo);
-    }
+  const setupSubscriptions = useCallback(async () => {
+    if (!selectedAccount) {
+      throw new Error("selectedAccount is null");
+    };
 
     const userStakedInfoMap: Map<
       number, UserStakedInfoType
@@ -92,7 +66,7 @@ const Overview = () => {
 
     if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
       for (const stakingCore of stakingCores) {
-        api.query.ocifStaking.generalStakerInfo(
+        await api.query.ocifStaking.generalStakerInfo(
           stakingCore.key,
           selectedAccount.address,
           (generalStakerInfo: Codec) => {
@@ -147,15 +121,12 @@ const Overview = () => {
             const newTotalStaked = Array.from(
               userStakedInfoMap.values()
             ).reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
-
             setTotalUserStaked(newTotalStaked);
           }
         );
       }
     }
-
-    return Promise.resolve(unsubs as UnsubscribePromise[]);
-  }, [api, currentStakingEra, coreEraStakeInfo, stakingCores, unclaimedEras]);
+  }, [api, currentStakingEra, stakingCores, unclaimedEras, selectedAccount, coreEraStakeInfo]);
 
   const loadAggregateStaked = useCallback(async () => {
     const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
@@ -181,6 +152,11 @@ const Overview = () => {
     setLockedBalance(new BigNumber(balance.data.frozen));
   }, [api]);
 
+  const loadCurrentEra = useCallback(async () => {
+    const currentStakingEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
+    setCurrentStakingEra(currentStakingEra);
+  }, [api]);
+
   const loadVestingBalance = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     if (!selectedAccount) return;
     try {
@@ -198,6 +174,7 @@ const Overview = () => {
     }
   }, [api]);
 
+
   const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       toast.loading("Loading staking cores...");
@@ -205,6 +182,7 @@ const Overview = () => {
       if (selectedAccount) {
         await Promise.all([
           loadAccountInfo(selectedAccount),
+          loadCurrentEra(),
           loadCores(),
           loadAggregateStaked(),
           loadVestingBalance(selectedAccount)
@@ -219,7 +197,7 @@ const Overview = () => {
       setLoading(false);
       setDataLoaded(true);
     }
-  }, [loadAccountInfo, loadCores, loadAggregateStaked, loadVestingBalance]);
+  }, [loadAccountInfo, loadCores, loadAggregateStaked, loadVestingBalance, loadCurrentEra]);
 
   useEffect(() => {
     initializeData(selectedAccount);
@@ -258,26 +236,14 @@ const Overview = () => {
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data, rewardsCoreClaimedQuery.fetching]);
 
   useEffect(() => {
-    let unsubs: UnsubscribePromise[] = [];
     const setup = async () => {
-      if (selectedAccount) {
-        unsubs = await setupSubscriptions({ selectedAccount });
+      if (selectedAccount && typeof setupSubscriptions === 'function') {
+        await setupSubscriptions();
       }
     };
     setup();
-
-    return () => {
-      unsubs.forEach((unsub: UnsubscribePromise) => {
-        if (unsub) {
-          unsub.then(unsubFunc => {
-            if (typeof unsubFunc === 'function') {
-              unsubFunc();
-            }
-          });
-        }
-      });
-    };
-  }, [setupSubscriptions, selectedAccount, api]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, stakingCores, coreEraStakeInfo]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
@@ -287,9 +253,7 @@ const Overview = () => {
           <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
         </h2>
       </div>
-      {selectedAccount &&
-        currentStakingEra &&
-        unclaimedEras ? (
+      {selectedAccount ? (
         <div>
           <MetricDashboard
             isOverview={true}

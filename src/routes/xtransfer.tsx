@@ -183,7 +183,6 @@ const Transfer = () => {
   }, [apiBasilisk, api]);
 
   const handleChangedAmount = (e: string, availableBalance: BigNumber) => {
-    console;
     // Remove all non-numeric characters except for the decimal point
     const sanitizedInput = e.replace(/[^\d.]/g, '');
 
