@@ -556,7 +556,7 @@ const Staking = () => {
         }
       });
     };
-  }, [selectedAccount, setupSubscriptions]);
+  }, [selectedAccount, setupSubscriptions, api]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">

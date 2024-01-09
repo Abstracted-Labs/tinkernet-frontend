@@ -276,7 +276,7 @@ const DaoList = (props: DaoListProps) => {
         }
       });
     };
-  }, [selectedAccount, setupSubscriptions]);
+  }, [selectedAccount, setupSubscriptions, api]);
 
   const stakedCoresCount = useMemo(() => {
     return isOverview
