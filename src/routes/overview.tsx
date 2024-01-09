@@ -254,9 +254,7 @@ const Overview = () => {
           <span>{isLoading || !isDataLoaded ? <LoadingSpinner /> : null}</span>
         </h2>
       </div>
-      {selectedAccount &&
-        currentStakingEra &&
-        unclaimedEras ? (
+      {selectedAccount ? (
         <div>
           <MetricDashboard
             isOverview={true}
