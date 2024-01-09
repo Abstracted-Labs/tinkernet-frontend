@@ -412,6 +412,7 @@ const Staking = () => {
       disableClaiming,
       handleRestakingLogic,
     });
+    setTotalUnclaimed(new BigNumber(0));
     setClaimAllSuccess(result);
     refreshQuery();
   };
