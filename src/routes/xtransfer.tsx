@@ -195,15 +195,15 @@ const Transfer = () => {
     const formattedBalance = parseFloat(formatBalance(availableBalance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
 
     // Check if the number is a valid finite number and within the valid range
-    if (Number.isFinite(number) && number >= 0 && number <= formattedBalance - 0.01) {
+    if (Number.isFinite(number) && number >= 0 && number <= formattedBalance) {
       // Limit the number to 12 decimal places and return the value
       setAmount(number.toString());
     } else if (number < 0) {
       // If the input is less than 0, return the minimum value
       setAmount("0");
-    } else if (number > formattedBalance - 0.01) {
+    } else if (number > formattedBalance) {
       // If the input is more than the available balance minus 0.01, return the maximum value
-      setAmount((formattedBalance - 0.01).toString());
+      setAmount((formattedBalance).toString());
     }
   };
 
@@ -222,7 +222,7 @@ const Transfer = () => {
   const balanceTNKR100 = () => {
     const balance = balanceInTinkernet.multipliedBy(1).integerValue();
     const formattedBalance = parseFloat(formatBalance(balance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
-    setAmount((formattedBalance - 0.01).toString());
+    setAmount((formattedBalance).toFixed(4).toString());
   };
 
   const balanceBSX25 = () => {
@@ -240,7 +240,7 @@ const Transfer = () => {
   const balanceBSX100 = () => {
     const balance = balanceInBasilisk.multipliedBy(1).integerValue();
     const formattedBalance = parseFloat(formatBalance(balance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
-    setAmount((formattedBalance - 0.01).toString());
+    setAmount((formattedBalance).toFixed(4).toString());
   };
 
   const handleChangedDestination = (e: string) => {
@@ -688,7 +688,7 @@ const Transfer = () => {
                           name="amount"
                           id="amount"
                           disabled={balanceInBasilisk.toNumber() === 0 || isWaiting}
-                          onChange={(e) => handleChangedAmount(e.target.value, balanceInTinkernet)} />
+                          onChange={(e) => handleChangedAmount(e.target.value, balanceInBasilisk)} />
                         <div className="flex flex-row justify-start mt-2 gap-2">
                           <span className={MINI_BUTTON_STYLE} onClick={balanceBSX25}>25%</span>
                           <span className={MINI_BUTTON_STYLE} onClick={balanceBSX50}>50%</span>

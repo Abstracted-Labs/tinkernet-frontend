@@ -277,7 +277,7 @@ const Overview = () => {
         }
       });
     };
-  }, [setupSubscriptions, selectedAccount]);
+  }, [setupSubscriptions, selectedAccount, api]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
@@ -292,6 +292,7 @@ const Overview = () => {
         unclaimedEras ? (
         <div>
           <MetricDashboard
+            isOverview={true}
             vestingBalance={vestingSummary?.vestedRemaining || "0"}
             availableBalance={availableBalance || new BigNumber(0)}
             lockedBalance={lockedBalance || new BigNumber(0)}
