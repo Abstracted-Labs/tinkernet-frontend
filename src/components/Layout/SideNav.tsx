@@ -33,6 +33,7 @@ const SideNav = (props: SideNavProps) => {
     return () => {
       if (navOpen) navOpen(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
