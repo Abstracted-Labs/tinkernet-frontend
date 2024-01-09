@@ -19,6 +19,7 @@ import { StakedDaoType } from "./overview";
 import OnOffSwitch from "../components/Switch";
 import { autoRestake } from "../utils/autoRestake";
 import { restakeClaim } from "../utils/restakeClaim";
+import { Balance } from "@polkadot/types/interfaces";
 
 export type UnsubFunction = () => Promise<void>;
 
@@ -418,17 +419,17 @@ const Staking = () => {
     autoRestake(bool);
   };
 
-  const handleRestakingLogic = () => {
+  const handleRestakingLogic = (partialFee?: Balance | undefined) => {
     // grab the total unclaimed rewards and account for the existential deposit
-    const unclaimedMinusED = new BigNumber(totalUnclaimed);
+    let unclaimedRewards = new BigNumber(totalUnclaimed);
 
-    // Check if unclaimedMinusED is a valid number
-    if (isNaN(unclaimedMinusED.toNumber())) {
+    // Check if unclaimedRewards is a valid number
+    if (isNaN(unclaimedRewards.toNumber())) {
       console.error("Invalid unclaimedMinusED");
       return;
     }
 
-    if (unclaimedMinusED.toNumber() <= 0) {
+    if (unclaimedRewards.toNumber() <= 0) {
       console.error("unclaimedMinusED must be greater than 0");
       return;
     }
@@ -439,8 +440,13 @@ const Staking = () => {
       return;
     }
 
-    // divide unclaimedMinusED by the number of stakedDaos the user is part of
-    const unclaimedPerCore = unclaimedMinusED.div(stakedDaos.length);
+    // Subtract partialFee * 1.5 from unclaimedRewards if partialFee exists
+    if (partialFee) {
+      unclaimedRewards = unclaimedRewards.minus(new BigNumber(partialFee.toString()).times(1.5));
+    }
+
+    // divide unclaimedRewards by the number of stakedDaos the user has staked TNKR in
+    const unclaimedPerCore = unclaimedRewards.div(stakedDaos.length);
 
     return unclaimedPerCore;
   };

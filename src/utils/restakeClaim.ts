@@ -16,7 +16,7 @@ export interface RestakeClaimProps {
   setWaiting: (isWaiting: boolean) => void;
   disableClaiming: boolean;
   enableAutoRestake: boolean;
-  handleRestakingLogic: () => void | BigNumber;
+  handleRestakingLogic: (partialFee?: Balance | undefined) => void | BigNumber;
 }
 
 export const restakeClaim = async ({
@@ -75,12 +75,12 @@ export const restakeClaim = async ({
       throw new Error("No transactions to send");
     };
 
-    // Get the fee that each batch transaction will cost
+    // Get the fee that the entire batch transaction will cost
     const info = await api.tx.utility.batchAll(batch as Vec<Call>).paymentInfo(selectedAccount.address, { signer: injector.signer });
     const batchTxFees: Balance = info.partialFee;
-    const rebuildBatch: unknown[] = [];
 
     // Rebuild the batch exactly like we did before,
+    const rebuildBatch: unknown[] = [];
     uniqueCores.forEach(core => {
       if (!core?.earliestEra) return;
       for (let i = core.earliestEra; i < currentStakingEra; i++) {
@@ -88,20 +88,14 @@ export const restakeClaim = async ({
       }
     });
 
-    // But now, using adjustedRestakeAmount in the stake call(s)
+    // But this time, use the adjusted restakeUnclaimedAmount (minus fees)
     if (enableAutoRestake) {
       uniqueCores.forEach(core => {
         if (!core?.earliestEra) return;
-        const restakeUnclaimedAmount = handleRestakingLogic();
+        const restakeUnclaimedAmount = handleRestakingLogic(batchTxFees);
         if (restakeUnclaimedAmount && !restakeUnclaimedAmount.isZero()) {
-          const batchTxFeesBigNumber = new BigNumber(batchTxFees.toString()).times(1.5);
-          const feesPerCore = batchTxFeesBigNumber.dividedBy(uniqueCores.length);
-          let adjustedRestakeAmount = restakeUnclaimedAmount.minus(feesPerCore);
-          if (adjustedRestakeAmount.isNegative()) {
-            adjustedRestakeAmount = new BigNumber(0);
-          }
-          const adjustedRestakeAmountInteger = adjustedRestakeAmount.integerValue().toString();
-          rebuildBatch.push(api.tx.ocifStaking.stake(core.coreId, adjustedRestakeAmountInteger));
+          const restakeAmountInteger = restakeUnclaimedAmount.integerValue().toString();
+          rebuildBatch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
         }
       });
     }
