@@ -95,8 +95,8 @@ export const restakeClaim = async ({
         const restakeAmount = handleRestakingLogic();
         if (restakeAmount && !restakeAmount.isZero()) {
           const batchTxFeesBigNumber = new BigNumber(batchTxFees.toString());
-          const feesPerCore = batchTxFeesBigNumber.dividedBy(uniqueCores.length);
-          let adjustedRestakeAmount = restakeAmount.minus(feesPerCore).minus("10000000000");
+          const feesPerCore = batchTxFeesBigNumber.dividedBy(uniqueCores.length).times(1.5);
+          let adjustedRestakeAmount = restakeAmount.minus(feesPerCore);
           if (adjustedRestakeAmount.isNegative()) {
             adjustedRestakeAmount = new BigNumber(0);
           }
