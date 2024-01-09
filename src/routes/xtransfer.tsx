@@ -136,24 +136,23 @@ const Transfer = () => {
   };
 
   const loadBalances = useCallback(async ({ address }: InjectedAccountWithMeta) => {
-    if (!apiBasilisk) {
-      return;
-    }
-
-    setLoading(true);
-
     try {
+      if (!apiBasilisk) {
+        return;
+      }
+
+      setLoading(true);
+
       toast.loading("Loading balances...");
 
       const balance = await api.query.system.account<SystemAccount>(address);
-
       const total = new BigNumber(balance.data.free.toString());
       const frozen = new BigNumber(balance.data.frozen.toString());
       const reserved = new BigNumber(balance.data.reserved.toString());
-
       const transferable = total.minus(frozen).minus(reserved);
 
-      setBalanceInTinkernet(transferable);
+      // setBalanceInTinkernet(transferable);
+      setBalanceInTinkernet(new BigNumber(8297553199999900));
 
       const balanceInBasilisk = new BigNumber(
         (
@@ -165,7 +164,8 @@ const Transfer = () => {
         ).free
       );
 
-      setBalanceInBasilisk(balanceInBasilisk);
+      // setBalanceInBasilisk(balanceInBasilisk);
+      setBalanceInBasilisk(new BigNumber(2648198499999900));
 
       toast.dismiss();
 
@@ -185,62 +185,60 @@ const Transfer = () => {
   }, [apiBasilisk, api]);
 
   const handleChangedAmount = (e: string, availableBalance: BigNumber) => {
+    console;
     // Remove all non-numeric characters except for the decimal point
     const sanitizedInput = e.replace(/[^\d.]/g, '');
 
-    // Convert the sanitized string to a number
-    const number = parseFloat(sanitizedInput);
-
     // Format the available balance with 12 decimals
-    const formattedBalance = parseFloat(formatBalance(availableBalance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const formattedBalance = new BigNumber(availableBalance.toString()).dividedBy(new BigNumber(10).pow(12));
 
-    // Check if the number is a valid finite number and within the valid range
-    if (Number.isFinite(number) && number >= 0 && number <= formattedBalance) {
-      // Limit the number to 12 decimal places and return the value
-      setAmount(number.toString());
-    } else if (number < 0) {
-      // If the input is less than 0, return the minimum value
-      setAmount("0");
-    } else if (number > formattedBalance) {
-      // If the input is more than the available balance minus 0.01, return the maximum value
-      setAmount((formattedBalance).toString());
+    if (sanitizedInput === '') {
+      setAmount('0');
+    } else if (Number(sanitizedInput) >= 0 && Number(sanitizedInput) <= formattedBalance.toNumber()) {
+      setAmount(sanitizedInput);
+    } else if (Number(sanitizedInput) > formattedBalance.toNumber()) {
+      setAmount(formattedBalance.toString());
     }
   };
 
   const balanceTNKR25 = () => {
-    setAmount(formatBalance(balanceInTinkernet.multipliedBy(0.25).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const balance = balanceInTinkernet.multipliedBy(0.25).dividedBy(new BigNumber(10).pow(12));
+    setAmount(balance.toString());
   };
 
   const balanceTNKR50 = () => {
-    setAmount(formatBalance(balanceInTinkernet.multipliedBy(0.5).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const balance = balanceInTinkernet.multipliedBy(0.5).dividedBy(new BigNumber(10).pow(12));
+    setAmount(balance.toString());
   };
 
   const balanceTNKR75 = () => {
-    setAmount(formatBalance(balanceInTinkernet.multipliedBy(0.75).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const balance = balanceInTinkernet.multipliedBy(0.75).dividedBy(new BigNumber(10).pow(12));
+    setAmount(balance.toString());
   };
 
   const balanceTNKR100 = () => {
-    const balance = balanceInTinkernet.multipliedBy(1).integerValue();
-    const formattedBalance = parseFloat(formatBalance(balance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
-    setAmount((formattedBalance).toFixed(4).toString());
+    const balance = balanceInTinkernet.multipliedBy(1).dividedBy(new BigNumber(10).pow(12));
+    setAmount(balance.toString());
   };
 
   const balanceBSX25 = () => {
-    setAmount(formatBalance(balanceInBasilisk.multipliedBy(0.25).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const balance = balanceInBasilisk.multipliedBy(0.25).dividedBy(new BigNumber(10).pow(12));
+    setAmount(balance.toString());
   };
 
   const balanceBSX50 = () => {
-    setAmount(formatBalance(balanceInBasilisk.multipliedBy(0.5).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const balance = balanceInBasilisk.multipliedBy(0.5).dividedBy(new BigNumber(10).pow(12));
+    setAmount(balance.toString());
   };
 
   const balanceBSX75 = () => {
-    setAmount(formatBalance(balanceInBasilisk.multipliedBy(0.75).integerValue().toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
+    const balance = balanceInBasilisk.multipliedBy(0.75).dividedBy(new BigNumber(10).pow(12));
+    setAmount(balance.toString());
   };
 
   const balanceBSX100 = () => {
-    const balance = balanceInBasilisk.multipliedBy(1).integerValue();
-    const formattedBalance = parseFloat(formatBalance(balance.toString(), { decimals: 12, forceUnit: '-', withUnit: false }));
-    setAmount((formattedBalance).toFixed(4).toString());
+    const balance = balanceInBasilisk.multipliedBy(1).dividedBy(new BigNumber(10).pow(12));
+    setAmount(balance.toString());
   };
 
   const handleChangedDestination = (e: string) => {
@@ -610,7 +608,7 @@ const Transfer = () => {
                         TNKR Amount
                       </label>
                       <div>
-                        <Input type="number"
+                        <Input type="text"
                           value={amount}
                           name="amount"
                           id="amount"
@@ -683,7 +681,7 @@ const Transfer = () => {
                         TNKR Amount
                       </label>
                       <div>
-                        <Input type="number"
+                        <Input type="text"
                           value={amount}
                           name="amount"
                           id="amount"
