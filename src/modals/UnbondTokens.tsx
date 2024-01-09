@@ -2,7 +2,7 @@ import { Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { shallow } from "zustand/shallow";
 import useApi from "../hooks/useApi";
@@ -78,7 +78,7 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
     }
   };
 
-  const loadUnbondingInfo = async () => {
+  const loadUnbondingInfo = useCallback(async () => {
     if (!selectedAccount) return;
 
     const ledger = (
@@ -111,13 +111,13 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
     );
 
     setUnbondingInfo(unbondingInfo);
-  };
+  }, [selectedAccount, api]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     loadUnbondingInfo();
-  }, [isOpen]);
+  }, [isOpen, loadUnbondingInfo]);
 
   return isOpen ? (
     <Dialog open={true} onClose={closeCurrentModal}>

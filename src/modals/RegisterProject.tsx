@@ -137,7 +137,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, [registerProjectForm.watch]);
+  }, [registerProjectForm]);
 
   useEffect(() => {
     registerProjectForm.reset();
@@ -147,7 +147,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
       description: "",
       image: "",
     });
-  }, [isOpen]);
+  }, [isOpen, registerProjectForm]);
 
   return isOpen ? (
     <Dialog open={true} onClose={closeCurrentModal}>

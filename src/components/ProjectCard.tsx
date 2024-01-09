@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useState } from 'react';
+import { RefObject, useCallback, useEffect, useState } from 'react';
 import { BigNumber } from 'bignumber.js';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
@@ -75,24 +75,24 @@ const ProjectCard = (props: ProjectCardProps) => {
     toggleViewMembers(core, members);
   };
 
-  const loadAggregateStaked = async () => {
+  const loadAggregateStaked = useCallback(async () => {
     const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
     const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
     setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
-  };
+  }, [api]);
 
-  const loadStakeRewardMinimum = () => {
+  const loadStakeRewardMinimum = useCallback(() => {
     const minStakeReward = api.consts.ocifStaking.stakeThresholdForActiveCore.toPrimitive() as string;
     setMinStakeReward(new BigNumber(minStakeReward));
-  };
+  }, [api]);
 
-  const calcMinSupportMet = () => {
+  const calcMinSupportMet = useCallback(() => {
     if (minStakeReward.isLessThan(coreInfo?.totalStaked || new BigNumber("0"))) {
       setMinSupportMet(true);
     } else {
       setMinSupportMet(false);
     }
-  };
+  }, [minStakeReward, coreInfo]);
 
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -118,11 +118,11 @@ const ProjectCard = (props: ProjectCardProps) => {
   useEffect(() => {
     loadAggregateStaked();
     loadStakeRewardMinimum();
-  }, []);
+  }, [loadAggregateStaked, loadStakeRewardMinimum]);
 
   useEffect(() => {
     calcMinSupportMet();
-  }, [minStakeReward, coreInfo?.totalStaked]);
+  }, [calcMinSupportMet]);
 
   useEffect(() => {
     if (totalStaked !== undefined) {

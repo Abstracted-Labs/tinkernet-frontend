@@ -2,7 +2,7 @@ import Button from "./Button";
 import DisconnectIcon from "../assets/disconnect-icon.svg";
 import TinkerYellowIcon from "../assets/tinker-yellow-icon.svg";
 import TinkerBlackIcon from "../assets/tinker-black-icon.svg";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import BigNumber from "bignumber.js";
 import { shallow } from "zustand/shallow";
 import useApi from "../hooks/useApi";
@@ -31,7 +31,7 @@ const LoginButton = () => {
     closeCurrentModal();
   };
 
-  const loadBalance = async () => {
+  const loadBalance = useCallback(async () => {
     if (!selectedAccount) return;
 
     await api.query.system.account(selectedAccount.address, ({ data }) => {
@@ -44,7 +44,7 @@ const LoginButton = () => {
 
       setBalance(new BigNumber(balance.free));
     });
-  };
+  }, [selectedAccount, api]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -65,7 +65,7 @@ const LoginButton = () => {
 
   useEffect(() => {
     loadBalance();
-  }, [selectedAccount?.address, api]);
+  }, [loadBalance]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {

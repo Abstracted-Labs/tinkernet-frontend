@@ -1,7 +1,7 @@
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import { encodeAddress } from "@polkadot/util-crypto";
 import BigNumber from "bignumber.js";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
@@ -56,7 +56,7 @@ const Overview = () => {
     pause: !selectedAccount,
   });
 
-  const setupSubscriptions = ({
+  const setupSubscriptions = useCallback(({
     selectedAccount,
   }: {
     selectedAccount: InjectedAccountWithMeta;
@@ -155,23 +155,23 @@ const Overview = () => {
     }
 
     return Promise.resolve(unsubs as UnsubscribePromise[]);
-  };
+  }, [api, currentStakingEra, coreEraStakeInfo, stakingCores, unclaimedEras]);
 
-  const loadAggregateStaked = async () => {
+  const loadAggregateStaked = useCallback(async () => {
     const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
     const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
     setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
-  };
+  }, [api]);
 
-  const loadCores = async () => {
+  const loadCores = useCallback(async () => {
     const cores = await loadProjectCores(api);
 
     if (cores) {
       setStakingCores(cores);
     }
-  };
+  }, [api]);
 
-  const loadAccountInfo = async (selectedAccount: InjectedAccountWithMeta) => {
+  const loadAccountInfo = useCallback(async (selectedAccount: InjectedAccountWithMeta) => {
     const account = await api.query.system.account(selectedAccount.address);
     const balance = account.toPrimitive() as BalanceType;
     const locked = (await api.query.ocifStaking.ledger(selectedAccount.address)).toPrimitive() as LockedType;
@@ -179,9 +179,9 @@ const Overview = () => {
 
     setAvailableBalance(currentBalance);
     setLockedBalance(new BigNumber(balance.data.frozen));
-  };
+  }, [api]);
 
-  const loadVestingBalance = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const loadVestingBalance = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     if (!selectedAccount) return;
     try {
       const results = await fetchSystemData(selectedAccount, api);
@@ -196,9 +196,9 @@ const Overview = () => {
     } catch (error) {
       console.error(error);
     }
-  };
+  }, [api]);
 
-  const initializeData = async (selectedAccount: InjectedAccountWithMeta | null) => {
+  const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       toast.loading("Loading staking cores...");
 
@@ -219,11 +219,11 @@ const Overview = () => {
       setLoading(false);
       setDataLoaded(true);
     }
-  };
+  }, [loadAccountInfo, loadCores, loadAggregateStaked, loadVestingBalance]);
 
   useEffect(() => {
     initializeData(selectedAccount);
-  }, [selectedAccount, api]);
+  }, [initializeData, selectedAccount]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
@@ -277,7 +277,7 @@ const Overview = () => {
         }
       });
     };
-  }, [selectedAccount, api, stakingCores, coreEraStakeInfo]);
+  }, [setupSubscriptions, selectedAccount]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">

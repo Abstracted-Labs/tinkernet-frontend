@@ -2,7 +2,7 @@ import "@polkadot/api-augment";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { web3FromAddress, web3Enable } from "@polkadot/extension-dapp";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BN, formatBalance, u8aToHex } from "@polkadot/util";
 import { Struct } from "@polkadot/types";
 import BigNumber from "bignumber.js";
@@ -72,7 +72,7 @@ const Transfer = () => {
     new BigNumber(0)
   );
 
-  const setupSubscriptions = ({
+  const setupSubscriptions = useCallback(({
     selectedAccount,
   }: {
     selectedAccount: InjectedAccountWithMeta;
@@ -121,7 +121,7 @@ const Transfer = () => {
     const unsubs = [balanceTinkernet, balanceBasilisk];
 
     return unsubs as UnsubscribePromise[];
-  };
+  }, [apiBasilisk, api]);
 
   const setupApiBasilisk = async () => {
     const wsProviderBasilisk = new WsProvider(RPC_PROVIDER_BASILISK);
@@ -135,7 +135,7 @@ const Transfer = () => {
     setLoading(false);
   };
 
-  const loadBalances = async ({ address }: InjectedAccountWithMeta) => {
+  const loadBalances = useCallback(async ({ address }: InjectedAccountWithMeta) => {
     if (!apiBasilisk) {
       return;
     }
@@ -182,18 +182,7 @@ const Transfer = () => {
       toast.dismiss();
       toast.success("Balances loaded");
     }
-  };
-
-  useEffect(() => {
-    setupApiBasilisk();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-    if (!apiBasilisk) return;
-
-    loadBalances(selectedAccount);
-  }, [selectedAccount, apiBasilisk]);
+  }, [apiBasilisk, api]);
 
   const handleChangedAmount = (e: string, availableBalance: BigNumber) => {
     // Remove all non-numeric characters except for the decimal point
@@ -458,6 +447,17 @@ const Transfer = () => {
   };
 
   useEffect(() => {
+    setupApiBasilisk();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedAccount) return;
+    if (!apiBasilisk) return;
+
+    loadBalances(selectedAccount);
+  }, [selectedAccount, apiBasilisk, loadBalances]);
+
+  useEffect(() => {
     if (!selectedAccount) return;
 
     handleChangedDestination(selectedAccount.address);
@@ -472,7 +472,7 @@ const Transfer = () => {
     return () => {
       unsubs.forEach(async (unsub) => (await unsub)());
     };
-  }, [api, apiBasilisk]);
+  }, [api, apiBasilisk, selectedAccount, setupSubscriptions]);
 
   useEffect(() => {
     setAmount("0");
