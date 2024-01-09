@@ -33,7 +33,7 @@ const SideNav = (props: SideNavProps) => {
     return () => {
       if (navOpen) navOpen(false);
     };
-  }, [navOpen]);
+  }, []);
 
   return (
     <div className="side-nav flex flex-col items-center justify-between bg-black bg-opacity-70 backdrop-blur-sm h-screen">
