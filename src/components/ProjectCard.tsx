@@ -122,7 +122,8 @@ const ProjectCard = (props: ProjectCardProps) => {
 
   useEffect(() => {
     calcMinSupportMet();
-  }, [calcMinSupportMet]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (totalStaked !== undefined) {
