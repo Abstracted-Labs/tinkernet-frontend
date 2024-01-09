@@ -491,16 +491,16 @@ const Staking = () => {
 
   useEffect(() => {
     initializeData(selectedAccount);
-  }, [selectedAccount?.address, api]);
+  }, [selectedAccount, api]);
 
   useEffect(() => {
     if (!selectedAccount) return;
     if (!stakingCores) return;
     loadDaos();
-  }, [selectedAccount?.address, stakingCores, totalUserStakedData, api]);
+  }, [selectedAccount, stakingCores, totalUserStakedData, api]);
 
   useEffect(() => {
-    if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
+    if (rewardsUserClaimedQuery.fetching || !selectedAccount) return;
 
     if (!rewardsUserClaimedQuery.data?.stakers?.length) {
       setTotalClaimed(new BigNumber(0));
@@ -518,11 +518,11 @@ const Staking = () => {
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
     setTotalUnclaimed(claimAllSuccess ? new BigNumber(0) : totalUnclaimed);
-  }, [selectedAccount?.address, rewardsUserClaimedQuery, claimAllSuccess]);
+  }, [selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data, claimAllSuccess]);
 
   useEffect(() => {
     loadTotalUserStaked();
-  }, [selectedAccount?.address, stakingCores, coreEraStakeInfo, userStakedInfo]);
+  }, [selectedAccount, stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   useEffect(() => {
     if (rewardsCoreClaimedQuery.fetching || !rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
@@ -534,7 +534,7 @@ const Staking = () => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery]);
+  }, [selectedAccount, stakingCores, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
@@ -556,7 +556,7 @@ const Staking = () => {
         }
       });
     };
-  }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo]);
+  }, [selectedAccount, api, stakingCores, coreEraStakeInfo]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">

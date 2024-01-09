@@ -223,7 +223,7 @@ const Overview = () => {
 
   useEffect(() => {
     initializeData(selectedAccount);
-  }, [selectedAccount?.address, api]);
+  }, [selectedAccount, api]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
@@ -243,7 +243,7 @@ const Overview = () => {
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
     setTotalUnclaimed(totalUnclaimed);
-  }, [selectedAccount?.address, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data]);
+  }, [selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data]);
 
   useEffect(() => {
     if (rewardsCoreClaimedQuery.fetching || !rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount?.address) return;
@@ -255,7 +255,7 @@ const Overview = () => {
     );
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount?.address, stakingCores, rewardsCoreClaimedQuery.data, rewardsCoreClaimedQuery.fetching]);
+  }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data, rewardsCoreClaimedQuery.fetching]);
 
   useEffect(() => {
     let unsubs: UnsubscribePromise[] = [];
@@ -277,7 +277,7 @@ const Overview = () => {
         }
       });
     };
-  }, [selectedAccount?.address, api, stakingCores, coreEraStakeInfo]);
+  }, [selectedAccount, api, stakingCores, coreEraStakeInfo]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
