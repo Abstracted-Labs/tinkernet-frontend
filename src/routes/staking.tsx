@@ -606,6 +606,7 @@ const Staking = () => {
       {selectedAccount ? (
         <div>
           <MetricDashboard
+            isOverview={false}
             vestingBalance={undefined}
             availableBalance={undefined}
             lockedBalance={undefined}

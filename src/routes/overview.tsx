@@ -292,6 +292,7 @@ const Overview = () => {
         unclaimedEras ? (
         <div>
           <MetricDashboard
+            isOverview={true}
             vestingBalance={vestingSummary?.vestedRemaining || "0"}
             availableBalance={availableBalance || new BigNumber(0)}
             lockedBalance={lockedBalance || new BigNumber(0)}
