@@ -550,13 +550,15 @@ const Staking = () => {
         if (unsub) {
           unsub.then(unsubFunc => {
             if (typeof unsubFunc === 'function') {
+              console.log("Unsubscribing from subscription");
               unsubFunc();
             }
           });
         }
       });
     };
-  }, [selectedAccount, setupSubscriptions, api]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, api]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
