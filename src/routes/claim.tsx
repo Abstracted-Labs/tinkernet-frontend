@@ -14,6 +14,7 @@ import Button from "../components/Button";
 import { calculateVestingSchedule, calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import { loadProjectCores } from "../utils/stakingServices";
 import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
+import { CoreEraType } from "./staking";
 
 export type SystemAccount = Struct & {
   data: {
@@ -100,7 +101,7 @@ const Claim = () => {
 
       if (selectedAccount && stakingCores) {
         const userStakeInfo: { coreId: number; era: number; staked: BigNumber; }[] = [];
-        let unclaimedCores = { cores: [] as { coreId: number; earliestEra: number; }[], total: 0 };
+        let unclaimedCores = { cores: [] as CoreEraType[], total: 0 };
 
         for (const core of stakingCores) {
           const stakerInfo = await api.query.ocifStaking.generalStakerInfo(core.key, selectedAccount.address);

@@ -16,7 +16,7 @@ export interface RestakeClaimProps {
   setWaiting: (isWaiting: boolean) => void;
   disableClaiming: boolean;
   enableAutoRestake: boolean;
-  handleRestakingLogic: (partialFee?: Balance | undefined) => void | BigNumber;
+  handleRestakingLogic: (partialFee?: Balance | undefined, stakedDaos?: number) => void | BigNumber;
 }
 
 export const restakeClaim = async ({
@@ -60,7 +60,7 @@ export const restakeClaim = async ({
     if (enableAutoRestake) {
       uniqueCores.forEach(core => {
         if (!core?.earliestEra) return;
-        const restakeUnclaimedAmount = handleRestakingLogic();
+        const restakeUnclaimedAmount = handleRestakingLogic(undefined, uniqueCores.length);
         if (restakeUnclaimedAmount && !restakeUnclaimedAmount.isZero()) {
           const restakeAmountInteger = restakeUnclaimedAmount.integerValue().toString();
           batch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
@@ -92,8 +92,7 @@ export const restakeClaim = async ({
     if (enableAutoRestake) {
       uniqueCores.forEach(core => {
         if (!core?.earliestEra) return;
-        const restakeUnclaimedAmount = handleRestakingLogic(batchTxFees);
-        console.log("restakeUnclaimedAmount", restakeUnclaimedAmount);
+        const restakeUnclaimedAmount = handleRestakingLogic(batchTxFees, uniqueCores.length);
         if (restakeUnclaimedAmount && restakeUnclaimedAmount.isGreaterThan(0)) {
           const restakeAmountInteger = restakeUnclaimedAmount.integerValue().toString();
           rebuildBatch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));

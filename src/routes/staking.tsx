@@ -8,13 +8,12 @@ import useAccount from "../stores/account";
 import { Codec } from "@polkadot/types/types";
 import { StakesInfo } from "./claim";
 import MetricDashboard from "../components/MetricDashboard";
-import { loadProjectCores, loadStakedDaos } from '../utils/stakingServices';
+import { loadProjectCores } from '../utils/stakingServices';
 import DaoList from "../components/DaoList";
 import Button from "../components/Button";
 import useModal, { modalName } from "../stores/modals";
 import { encodeAddress } from "@polkadot/util-crypto";
 import { useQuery } from "urql";
-import { StakedDaoType } from "./overview";
 import OnOffSwitch from "../components/Switch";
 import { autoRestake } from "../utils/autoRestake";
 import { restakeClaim } from "../utils/restakeClaim";
@@ -105,8 +104,10 @@ export type CoreEraStakeInfoType = {
   active: boolean;
 };
 
+export type CoreEraType = { coreId: number; earliestEra: number; };
+
 export type UnclaimedErasType = {
-  cores: { coreId: number; earliestEra: number; }[];
+  cores: CoreEraType[];
   total: number;
 };
 
@@ -174,12 +175,8 @@ const Staking = () => {
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakeInfoType[]>([]);
-  // const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
-  // const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
-  // >([]);
-  const [stakedDaos, setStakedDaos] = useState<StakedDaoType[]>([]);
   const [unclaimedEras, setUnclaimedEras] = useState<{
-    cores: { coreId: number; earliestEra: number; }[];
+    cores: CoreEraType[];
     total: number;
   }>({ cores: [], total: 0 });
   const [currentBlock, setCurrentBlock] = useState<number>(0);
@@ -322,12 +319,6 @@ const Staking = () => {
     setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
   }, [api]);
 
-  const loadDaos = useCallback(async () => {
-    if (!selectedAccount) return;
-    const daos = await loadStakedDaos(stakingCores, selectedAccount?.address, api);
-    setStakedDaos(daos);
-  }, [selectedAccount, stakingCores, api]);
-
   const loadCores = useCallback(async () => {
     const cores = await loadProjectCores(api);
 
@@ -377,7 +368,7 @@ const Staking = () => {
     autoRestake(bool);
   };
 
-  const handleRestakingLogic = (partialFee?: Balance | undefined) => {
+  const handleRestakingLogic = (partialFee?: Balance | undefined, stakedCores?: number) => {
     // grab the total unclaimed rewards and account for the existential deposit
     let unclaimedRewards = new BigNumber(totalUnclaimed);
 
@@ -393,8 +384,8 @@ const Staking = () => {
     }
 
     // Check if stakedDaos.length is a valid number and not zero to avoid division by zero
-    if (isNaN(stakedDaos.length) || stakedDaos.length === 0) {
-      console.error("Invalid stakedDaos.length");
+    if (stakedCores && (isNaN(stakedCores) || stakedCores === 0)) {
+      console.error("Invalid stakedCores length");
       return new BigNumber(0);
     }
 
@@ -404,7 +395,7 @@ const Staking = () => {
     }
 
     // Divide unclaimedRewards by the number of stakedDaos the user has staked TNKR in
-    const unclaimedPerCore = unclaimedRewards.div(stakedDaos.length);
+    const unclaimedPerCore = unclaimedRewards.div(stakedCores || 1);
     return unclaimedPerCore;
   };
 
@@ -456,11 +447,11 @@ const Staking = () => {
     initializeData(selectedAccount);
   }, [selectedAccount, initializeData]);
 
-  useEffect(() => {
-    if (!selectedAccount) return;
-    if (!stakingCores) return;
-    loadDaos();
-  }, [selectedAccount, stakingCores, loadDaos]);
+  // useEffect(() => {
+  //   if (!selectedAccount) return;
+  //   if (!stakingCores) return;
+  //   loadDaos();
+  // }, [selectedAccount, stakingCores, loadDaos]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount) return;
