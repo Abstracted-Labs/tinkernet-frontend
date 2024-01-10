@@ -281,7 +281,7 @@ const Transfer = () => {
       // Multiply the amount by 10^12 and convert to a string
       const amountToSend = amountBigNumber.multipliedBy(new BigNumber(10).pow(12)).toString();
 
-      api.tx.xTokens
+      await api.tx.xTokens
         .transfer(
           0,
           amountToSend,
@@ -367,11 +367,11 @@ const Transfer = () => {
       const apiBasilisk = await ApiPromise.create({
         provider: wsProviderBasilisk,
       });
-
+      console.log('amountBigNumber', amountBigNumber.toString());
       // Multiply the amount by 10^12 and convert to a string
       const amountToSend = amountBigNumber.multipliedBy(new BigNumber(10).pow(12)).toString();
 
-      apiBasilisk.tx.xTokens
+      await apiBasilisk.tx.xTokens
         .transfer(
           6,
           amountToSend,
