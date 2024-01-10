@@ -186,14 +186,17 @@ const Transfer = () => {
     // Remove all non-numeric characters except for the decimal point
     const sanitizedInput = e.replace(/[^\d.]/g, '');
 
+    // Remove leading zeroes after the tens digit
+    const inputWithoutLeadingZeroes = sanitizedInput.replace(/^0+([0-9]+)/, '$1');
+
     // Format the available balance with 12 decimals
     const formattedBalance = new BigNumber(availableBalance.toString()).dividedBy(new BigNumber(10).pow(12));
 
-    if (sanitizedInput === '') {
-      setAmount('0');
-    } else if (Number(sanitizedInput) >= 0 && Number(sanitizedInput) <= formattedBalance.toNumber()) {
-      setAmount(sanitizedInput);
-    } else if (Number(sanitizedInput) > formattedBalance.toNumber()) {
+    if (inputWithoutLeadingZeroes === '') {
+      setAmount('');
+    } else if (Number(inputWithoutLeadingZeroes) >= 0 && Number(inputWithoutLeadingZeroes) <= formattedBalance.toNumber()) {
+      setAmount(inputWithoutLeadingZeroes);
+    } else if (Number(inputWithoutLeadingZeroes) > formattedBalance.toNumber()) {
       setAmount(formattedBalance.toString());
     }
   };
@@ -281,7 +284,7 @@ const Transfer = () => {
       // Multiply the amount by 10^12 and convert to a string
       const amountToSend = amountBigNumber.multipliedBy(new BigNumber(10).pow(12)).toString();
 
-      api.tx.xTokens
+      await api.tx.xTokens
         .transfer(
           0,
           amountToSend,
@@ -367,11 +370,11 @@ const Transfer = () => {
       const apiBasilisk = await ApiPromise.create({
         provider: wsProviderBasilisk,
       });
-
+      console.log('amountBigNumber', amountBigNumber.toString());
       // Multiply the amount by 10^12 and convert to a string
       const amountToSend = amountBigNumber.multipliedBy(new BigNumber(10).pow(12)).toString();
 
-      apiBasilisk.tx.xTokens
+      await apiBasilisk.tx.xTokens
         .transfer(
           6,
           amountToSend,
@@ -468,10 +471,6 @@ const Transfer = () => {
       unsubs.forEach(async (unsub) => (await unsub)());
     };
   }, [api, apiBasilisk, selectedAccount, setupSubscriptions]);
-
-  useEffect(() => {
-    setAmount("0");
-  }, [pair.from, pair.to]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
