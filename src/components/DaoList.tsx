@@ -11,7 +11,6 @@ import useApi from '../hooks/useApi';
 import { toast } from 'react-hot-toast';
 import useAccount from '../stores/account';
 import { useQuery } from 'urql';
-import { UnsubscribePromise } from '@polkadot/api/types';
 import { StakesInfo } from '../routes/claim';
 import useModal, { modalName } from '../stores/modals';
 
@@ -34,11 +33,11 @@ const DaoList = (props: DaoListProps) => {
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
   const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
   >([]);
-  const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
 
   const [rewardsCoreClaimedQuery, reexecuteQuery] = useQuery({
     query: TotalRewardsCoreClaimedQuery,
-    variables: {}
+    variables: {},
+    pause: !selectedAccount || isLoading || !isDataLoaded,
   });
 
   const toggleViewMembers = (core: StakingCore, members: AnyJson[]) => {
@@ -87,8 +86,6 @@ const DaoList = (props: DaoListProps) => {
   }, [api]);
 
   const loadTotalUserStaked = useCallback(() => {
-    if (!selectedAccount) return;
-
     const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
     const totalUserStakedResults: TotalUserStakedData = {};
 
@@ -101,7 +98,7 @@ const DaoList = (props: DaoListProps) => {
     }
 
     setTotalUserStakedData(totalUserStakedResults);
-  }, [selectedAccount, stakingCores, coreEraStakeInfo, userStakedInfo]);
+  }, [stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   const loadAccountInfo = useCallback(async () => {
     if (!selectedAccount) return;
@@ -123,12 +120,10 @@ const DaoList = (props: DaoListProps) => {
   const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       if (selectedAccount) {
-        await Promise.all([
-          loadAccountInfo(),
-          loadCores(),
-          loadStakingConstants(),
-          loadTotalUserStaked()
-        ]);
+        await loadAccountInfo();
+        await loadCores();
+        await loadStakingConstants();
+        loadTotalUserStaked();
       }
 
     } catch (error) {
@@ -139,35 +134,10 @@ const DaoList = (props: DaoListProps) => {
     }
   }, [loadAccountInfo, loadCores, loadStakingConstants, loadTotalUserStaked]);
 
-  const setupSubscriptions = useCallback(async ({
-    selectedAccount,
-  }: {
-    selectedAccount: InjectedAccountWithMeta;
-  }) => {
-    // Current block subscription
-    const blocks = api.rpc.chain.subscribeNewHeads(() => { });
-
-    // Next era starting block subscription
-    const nextEraStartingBlock = api.query.ocifStaking.nextEraStartingBlock(() => { });
-
-    let generalEraInfo;
-
-    if (currentStakingEra > 0) {
-      generalEraInfo = api.query.ocifStaking.generalEraInfo(currentStakingEra);
-    }
-
-    // Staking current era subscription
-    const currentEra = api.query.ocifStaking.currentEra((era: Codec) => {
-      setCurrentStakingEra(era.toPrimitive() as number);
-    });
-
-    const account = api.query.system.account(selectedAccount.address);
-
-    const unsubs = [blocks, nextEraStartingBlock, currentEra, account];
-
-    if (generalEraInfo) {
-      unsubs.push(generalEraInfo);
-    }
+  const setupSubscriptions = useCallback(async () => {
+    if (!selectedAccount) {
+      throw new Error("selectedAccount is null");
+    };
 
     const coreEraStakeInfoMap: Map<
       number, CoreEraStakeInfoType> = new Map();
@@ -178,7 +148,7 @@ const DaoList = (props: DaoListProps) => {
 
     if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
       for (const stakingCore of stakingCores) {
-        api.query.ocifStaking.generalStakerInfo(
+        await api.query.ocifStaking.generalStakerInfo(
           stakingCore.key,
           selectedAccount.address,
           (generalStakerInfo: Codec) => {
@@ -213,13 +183,12 @@ const DaoList = (props: DaoListProps) => {
         );
       }
     }
-
-    return Promise.resolve(unsubs as UnsubscribePromise[]);
-  }, [api, currentStakingEra, stakingCores, coreEraStakeInfo]);
+  }, [api, stakingCores, coreEraStakeInfo, selectedAccount]);
 
   useEffect(() => {
     initializeData(selectedAccount);
-  }, [initializeData, selectedAccount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount]);
 
   useEffect(() => {
     const loadDaos = async () => {
@@ -227,7 +196,6 @@ const DaoList = (props: DaoListProps) => {
       const daos = await loadStakedDaos(stakingCores, selectedAccount.address, api);
       setStakedDaos(daos);
     };
-
     if (!selectedAccount) return;
     if (!stakingCores) return;
 
@@ -236,7 +204,7 @@ const DaoList = (props: DaoListProps) => {
 
   useEffect(() => {
     loadTotalUserStaked();
-  }, [loadTotalUserStaked]);
+  }, [stakingCores, loadTotalUserStaked]);
 
   useEffect(() => {
     if (selectedAccount) {
@@ -257,26 +225,14 @@ const DaoList = (props: DaoListProps) => {
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data]);
 
   useEffect(() => {
-    let unsubs: UnsubscribePromise[] = [];
     const setup = async () => {
-      if (selectedAccount) {
-        unsubs = await setupSubscriptions({ selectedAccount });
+      if (selectedAccount && typeof setupSubscriptions === 'function') {
+        await setupSubscriptions();
       }
     };
     setup();
-
-    return () => {
-      unsubs.forEach((unsub: UnsubscribePromise) => {
-        if (unsub) {
-          unsub.then(unsubFunc => {
-            if (typeof unsubFunc === 'function') {
-              unsubFunc();
-            }
-          });
-        }
-      });
-    };
-  }, [selectedAccount, setupSubscriptions, api]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, stakingCores]);
 
   const stakedCoresCount = useMemo(() => {
     return isOverview
@@ -301,6 +257,11 @@ const DaoList = (props: DaoListProps) => {
         {stakingCores.map((core: StakingCore) => {
           const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);
           const userStaked = totalUserStakedData[core.key] ? totalUserStakedData[core.key] : new BigNumber(0);
+
+          // If userStaked is zero, don't render the card
+          if (isOverview && userStaked && userStaked.isEqualTo(0)) {
+            return null;
+          }
 
           const projectCard = (minified: boolean) => (
             <ProjectCard
