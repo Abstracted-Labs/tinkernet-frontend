@@ -21,6 +21,7 @@ const ApiProvider = ({ children }: { children: ReactNode; }) => {
         api.disconnect();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [createApi, host]);
 
   if (error)

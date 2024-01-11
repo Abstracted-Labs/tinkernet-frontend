@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint \"**/*.{js,jsx,ts,tsx}\""
+    "lint": "eslint \"**/*.{js,jsx,ts,tsx}\"",
+    "start": "node server.js"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.15",
@@ -27,6 +28,7 @@
     "@visx/shape": "^3.0.0",
     "@visx/text": "^3.0.0",
     "bignumber.js": "^9.1.1",
+    "express": "^4.18.2",
     "graphql": "^16.6.0",
     "graphql-ws": "^5.13.1",
     "react": "^18.2.0",

@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
@@ -66,8 +66,12 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const api = useApi();
   const watchedUnstakeAmount = unstakeForm.watch('amount');
   const watchedStakeAmount = stakeForm.watch('amount');
-  const selectedCoreInfo = selectedCore ? { id: selectedCore.key, userStaked: totalUserStakedData[selectedCore.key], name: selectedCore.metadata.name } as SelectedCoreInfo : null;
   const initialCore = initialSelectedCore.current?.metadata as SelectedCoreInfo;
+  const selectedCoreInfo = useMemo(() => {
+    return selectedCore
+      ? { id: selectedCore.key, userStaked: totalUserStakedData[selectedCore.key], name: selectedCore.metadata.name } as SelectedCoreInfo
+      : null;
+  }, [selectedCore, totalUserStakedData]);
 
   const handleStake = stakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
@@ -329,7 +333,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   useEffect(() => {
     stakeForm.reset();
     unstakeForm.reset();
-  }, [metadata?.key]);
+  }, [metadata?.key, stakeForm, unstakeForm]);
 
   useEffect(() => {
     if (!isOpen) {

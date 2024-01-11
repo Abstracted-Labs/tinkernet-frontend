@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import {
@@ -55,19 +54,14 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <Modals />
 
           <Routes>
-            <Route index element={<Navigate to="overview" replace={true} />} />
-
+            <Route path="api/cg/tickers" element={null} />
             <Route path="/" element={<Layout />}>
+              <Route index element={<Navigate to="overview" replace={true} />} />
               <Route path="overview" element={<Overview />} />
-
               <Route path="claim" element={<Claim />} />
-
               <Route path="transfer" element={<Transfer />} />
-
               <Route path="staking" element={<Staking />} />
-
               <Route path="404" element={<NotFound />} />
-
               <Route path="*" element={<Navigate to="/404" replace={true} />} />
             </Route>
           </Routes>
