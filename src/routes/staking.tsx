@@ -49,9 +49,7 @@ export const TotalRewardsCoreClaimedQuery = `
       latestClaimBlock
       totalRewards
       totalUnclaimed
-      totalStaked
       coreId
-      numberOfStakers
     }
   }
 `;
@@ -95,13 +93,16 @@ export type BalanceType = {
 
 export type CoreEraStakeInfoType = {
   coreId: number;
-  account: string;
-  totalRewards: string;
-  totalUnclaimed: string;
   totalStaked: string;
   numberOfStakers: number;
   rewardClaimed: boolean;
   active: boolean;
+};
+
+export type CoreIndexedRewardsType = {
+  coreId: number;
+  totalRewards: string;
+  totalUnclaimed: string;
 };
 
 export type CoreEraType = { coreId: number; earliestEra: number; };
