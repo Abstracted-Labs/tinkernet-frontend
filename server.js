@@ -1,5 +1,6 @@
 import express from 'express';
-import { getAssetsData } from './apiUtils.cjs';
+import { getAssetsData, getTnkrData } from './apiUtils.cjs';
+
 
 const app = express();
 const port = process.env.PORT || 7777;
@@ -12,8 +13,9 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.get('/api/cg/tickers', async (req, res) => {
-  const assetsData = await getAssetsData();
-  res.json(assetsData);
+  // const assetsData = await getAssetsData();
+  const tnkrData = await getTnkrData();
+  res.json(tnkrData);
 });
 
 app.listen(port, () => {

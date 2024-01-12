@@ -24,14 +24,14 @@ exports.gqlQuery = async function (data) {
 exports.getAssetsData = async function () {
   const queryData = {
     query: `
-      query TnkrQuery { 
+      query AssetsData { 
         events(where: {name_eq: "AssetRegistry.MetadataSet"}, limit: 100) { 
           name 
           args 
         } 
       }`,
     variables: null,
-    operationName: "TnkrQuery",
+    operationName: "AssetsData",
   };
   const response = await exports.gqlQuery(queryData);
   const events = JSON.parse(response)[ "data" ][ "events" ];
@@ -43,4 +43,64 @@ exports.getAssetsData = async function () {
   });
 
   return assets;
+};
+
+exports.getTnkrData = async function () {
+  const queryTnkrSellData = {
+    query: `
+      query TnkrSell {
+        events(where: {name_eq: "XYK.SellExecuted"}, limit: 5000) {
+          name
+          args
+          block {
+            id
+          }
+        }
+      }
+    `,
+    variables: null,
+    operationName: "TnkrSell",
+  };
+  const queryTnkrBuyData = {
+    query: `
+      query TnkrBuy {
+        events(where: {name_eq: "XYK.BuyExecuted"}, limit: 5000) {
+          name
+          args
+          block {
+            id
+          }
+        }
+      }
+    `,
+    variables: null,
+    operationName: "TnkrBuy",
+  };
+  const sellResponse = await exports.gqlQuery(queryTnkrSellData);
+  const buyResponse = await exports.gqlQuery(queryTnkrBuyData);
+  const sellEvents = JSON.parse(sellResponse)[ "data" ][ "events" ];
+  const buyEvents = JSON.parse(buyResponse)[ "data" ][ "events" ];
+  const concatEvents = sellEvents.concat(buyEvents);
+  return concatEvents.filter((event) => event && event.args && (event.args.assetOut && event.args.assetOut === 6) || (event.args.assetIn && event.args.assetIn === 6)).map((event) => {
+    const args = event.args;
+    const blocks = event.block;
+    if (!blocks || !args) return;
+    if (args.name === "XYK.SellExecuted") {
+      return {
+        blockId: blocks.id,
+        assetOut: args.assetOut,
+        assetIn: args.assetIn,
+        amountOut: args.amount,
+        amountIn: args.salePrice,
+      };
+    } else {
+      return {
+        blockId: blocks.id,
+        assetOut: args.assetOut,
+        assetIn: args.assetIn,
+        amountOut: args.amount,
+        amountIn: args.buyPrice,
+      };
+    }
+  });
 };
