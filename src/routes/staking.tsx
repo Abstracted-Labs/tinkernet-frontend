@@ -237,7 +237,7 @@ const Staking = () => {
 
                 let total = unclaimedErasUpdate.total;
                 total = currentStakingEra - parseInt(unclaimedEarliest);
-                console.log("unclaimedEras", currentStakingEra.toString(), unclaimedEarliest.toString());
+
                 unclaimedErasUpdate = {
                   cores: unclaimedErasUpdate.cores,
                   total,
