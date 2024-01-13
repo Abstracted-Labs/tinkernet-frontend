@@ -49,9 +49,7 @@ export const TotalRewardsCoreClaimedQuery = `
       latestClaimBlock
       totalRewards
       totalUnclaimed
-      totalStaked
       coreId
-      numberOfStakers
     }
   }
 `;
@@ -62,9 +60,7 @@ export const TotalRewardsCoreClaimedSubscription = `
       latestClaimBlock
       totalRewards
       totalUnclaimed
-      totalStaked
       coreId
-      numberOfStakers
     }
   }
 `;
@@ -95,13 +91,16 @@ export type BalanceType = {
 
 export type CoreEraStakeInfoType = {
   coreId: number;
-  account: string;
-  totalRewards: string;
-  totalUnclaimed: string;
   totalStaked: string;
   numberOfStakers: number;
   rewardClaimed: boolean;
   active: boolean;
+};
+
+export type CoreIndexedRewardsType = {
+  coreId: number;
+  totalRewards: string;
+  totalUnclaimed: string;
 };
 
 export type CoreEraType = { coreId: number; earliestEra: number; };
@@ -445,14 +444,19 @@ const Staking = () => {
   }, []);
 
   useEffect(() => {
-    initializeData(selectedAccount);
-  }, [selectedAccount, initializeData]);
+    const setup = async () => {
+      if (selectedAccount && typeof setupSubscriptions === 'function') {
+        await setupSubscriptions();
+      }
+    };
+    setup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, stakingCores, coreEraStakeInfo]);
 
-  // useEffect(() => {
-  //   if (!selectedAccount) return;
-  //   if (!stakingCores) return;
-  //   loadDaos();
-  // }, [selectedAccount, stakingCores, loadDaos]);
+  useEffect(() => {
+    initializeData(selectedAccount);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount) return;
@@ -486,16 +490,6 @@ const Staking = () => {
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.fetching, rewardsCoreClaimedQuery.data]);
-
-  useEffect(() => {
-    const setup = async () => {
-      if (selectedAccount && typeof setupSubscriptions === 'function') {
-        await setupSubscriptions();
-      }
-    };
-    setup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount, stakingCores, coreEraStakeInfo]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">

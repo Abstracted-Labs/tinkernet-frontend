@@ -200,8 +200,19 @@ const Overview = () => {
   }, [loadAccountInfo, loadCores, loadAggregateStaked, loadVestingBalance, loadCurrentEra]);
 
   useEffect(() => {
+    const setup = async () => {
+      if (selectedAccount && typeof setupSubscriptions === 'function') {
+        await setupSubscriptions();
+      }
+    };
+    setup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, stakingCores, coreEraStakeInfo]);
+
+  useEffect(() => {
     initializeData(selectedAccount);
-  }, [initializeData, selectedAccount]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount?.address) return;
@@ -234,16 +245,6 @@ const Overview = () => {
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data, rewardsCoreClaimedQuery.fetching]);
-
-  useEffect(() => {
-    const setup = async () => {
-      if (selectedAccount && typeof setupSubscriptions === 'function') {
-        await setupSubscriptions();
-      }
-    };
-    setup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount, stakingCores, coreEraStakeInfo]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">

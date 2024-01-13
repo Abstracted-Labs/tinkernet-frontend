@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ProjectCard from './ProjectCard';
 import LoadingSpinner from './LoadingSpinner';
-import { BalanceType, ChainPropertiesType, CoreEraStakeInfoType, LockedType, StakingCore, TotalRewardsCoreClaimedQuery, TotalUserStakedData, UserStakedInfoType, getCoreInfo, getTotalUserStaked } from '../routes/staking';
+import { BalanceType, ChainPropertiesType, CoreEraStakeInfoType, CoreIndexedRewardsType, LockedType, StakingCore, TotalRewardsCoreClaimedQuery, TotalUserStakedData, UserStakedInfoType, getCoreInfo, getTotalUserStaked } from '../routes/staking';
 import { AnyJson, Codec } from '@polkadot/types/types';
 import { StakedDaoType } from '../routes/overview';
 import BigNumber from 'bignumber.js';
@@ -30,6 +30,7 @@ const DaoList = (props: DaoListProps) => {
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
   const [chainProperties, setChainProperties] = useState<ChainPropertiesType>();
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakeInfoType[]>([]);
+  const [coreIndexedRewards, setCoreIndexedRewards] = useState<CoreIndexedRewardsType[]>([]);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
   const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
   >([]);
@@ -37,7 +38,7 @@ const DaoList = (props: DaoListProps) => {
   const [rewardsCoreClaimedQuery, reexecuteQuery] = useQuery({
     query: TotalRewardsCoreClaimedQuery,
     variables: {},
-    pause: !selectedAccount || isLoading || !isDataLoaded,
+    pause: !selectedAccount,
   });
 
   const toggleViewMembers = (core: StakingCore, members: AnyJson[]) => {
@@ -78,14 +79,19 @@ const DaoList = (props: DaoListProps) => {
   };
 
   const loadCores = useCallback(async () => {
-    const cores = await loadProjectCores(api);
+    if (!selectedAccount) return;
 
+    const cores = await loadProjectCores(api);
     if (cores) {
       setStakingCores(cores);
     }
-  }, [api]);
+  }, [selectedAccount, api]);
 
   const loadTotalUserStaked = useCallback(() => {
+    if (!coreEraStakeInfo.length || !userStakedInfo.length) {
+      return;
+    }
+
     const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
     const totalUserStakedResults: TotalUserStakedData = {};
 
@@ -117,13 +123,48 @@ const DaoList = (props: DaoListProps) => {
     setChainProperties({ maxStakersPerCore, inflationErasPerYear });
   }, [api]);
 
+  const loadCoreEraStake = useCallback(async () => {
+    const coreEraStakeInfoMap: Map<number, CoreEraStakeInfoType> = new Map();
+    const currentEra = await api.query.ocifStaking.currentEra();
+
+    if (coreEraStakeInfo.length === 0) {
+      for (const stakingCore of stakingCores) {
+        await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
+
+          const info: {
+            total: string;
+            numberOfStakers: number;
+            rewardClaimed: boolean;
+            active: boolean;
+          } = inf.toPrimitive() as {
+            total: string;
+            numberOfStakers: number;
+            rewardClaimed: boolean;
+            active: boolean;
+          };
+
+          coreEraStakeInfoMap.set(stakingCore.key, {
+            totalStaked: info.total,
+            active: info.active,
+            rewardClaimed: info.rewardClaimed,
+            numberOfStakers: info.numberOfStakers,
+            coreId: stakingCore.key
+          });
+
+          const coreEraStake = Array.from(coreEraStakeInfoMap.values());
+          setCoreEraStakeInfo(coreEraStake);
+        });
+      }
+    }
+  }, [stakingCores, coreEraStakeInfo.length, api]);
+
   const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       if (selectedAccount) {
         await loadAccountInfo();
         await loadCores();
         await loadStakingConstants();
-        loadTotalUserStaked();
+        await loadCoreEraStake();
       }
 
     } catch (error) {
@@ -132,7 +173,7 @@ const DaoList = (props: DaoListProps) => {
       setLoading(false);
       setDataLoaded(true);
     }
-  }, [loadAccountInfo, loadCores, loadStakingConstants, loadTotalUserStaked]);
+  }, [loadAccountInfo, loadCores, loadStakingConstants, loadCoreEraStake]);
 
   const setupSubscriptions = useCallback(async () => {
     if (!selectedAccount) {
@@ -146,8 +187,39 @@ const DaoList = (props: DaoListProps) => {
       number, UserStakedInfoType
     > = new Map();
 
-    if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
+    const currentEra = await api.query.ocifStaking.currentEra();
+
+    if (coreEraStakeInfo.length === 0) {
       for (const stakingCore of stakingCores) {
+        await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
+
+          const info: {
+            total: string;
+            numberOfStakers: number;
+            rewardClaimed: boolean;
+            active: boolean;
+          } = inf.toPrimitive() as {
+            total: string;
+            numberOfStakers: number;
+            rewardClaimed: boolean;
+            active: boolean;
+          };
+
+          coreEraStakeInfoMap.set(stakingCore.key, {
+            totalStaked: info.total,
+            active: info.active,
+            rewardClaimed: info.rewardClaimed,
+            numberOfStakers: info.numberOfStakers,
+            coreId: stakingCore.key
+          });
+
+          const coreEraStake = Array.from(coreEraStakeInfoMap.values());
+          setCoreEraStakeInfo(coreEraStake);
+        });
+      }
+
+      for (const stakingCore of stakingCores) {
+
         await api.query.ocifStaking.generalStakerInfo(
           stakingCore.key,
           selectedAccount.address,
@@ -168,17 +240,9 @@ const DaoList = (props: DaoListProps) => {
               era: era,
               staked: staked,
             });
-            setUserStakedInfo(Array.from(userStakedInfoMap.values()));
 
-            const coreEraStake = coreEraStakeInfo.find(info => info.coreId === stakingCore.key);
-
-            if (coreEraStake) {
-              coreEraStakeInfoMap.set(stakingCore.key, {
-                ...coreEraStake,
-              });
-
-              setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
-            }
+            const userStakedInfo = Array.from(userStakedInfoMap.values());
+            setUserStakedInfo(userStakedInfo);
           }
         );
       }
@@ -186,9 +250,23 @@ const DaoList = (props: DaoListProps) => {
   }, [api, stakingCores, coreEraStakeInfo, selectedAccount]);
 
   useEffect(() => {
+    const setup = async () => {
+      if (selectedAccount && typeof setupSubscriptions === 'function') {
+        await setupSubscriptions();
+      }
+    };
+    setup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, stakingCores]);
+
+  useEffect(() => {
     initializeData(selectedAccount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccount]);
+
+  useEffect(() => {
+    loadTotalUserStaked();
+  }, [loadTotalUserStaked, coreEraStakeInfo, userStakedInfo, selectedAccount]);
 
   useEffect(() => {
     const loadDaos = async () => {
@@ -203,10 +281,6 @@ const DaoList = (props: DaoListProps) => {
   }, [selectedAccount, stakingCores, api]);
 
   useEffect(() => {
-    loadTotalUserStaked();
-  }, [stakingCores, loadTotalUserStaked]);
-
-  useEffect(() => {
     if (selectedAccount) {
       reexecuteQuery();
     }
@@ -215,24 +289,14 @@ const DaoList = (props: DaoListProps) => {
   useEffect(() => {
     if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
 
-    const coreEraStakeInfoMap: CoreEraStakeInfoType[] = rewardsCoreClaimedQuery.data.cores;
+    const coreIndexedRewardsMap: CoreIndexedRewardsType[] = rewardsCoreClaimedQuery.data.cores;
 
-    const uniqueCoreEraStakeInfo = coreEraStakeInfoMap.filter((core, index, self) =>
+    const uniqueCoreIndexedRewards = coreIndexedRewardsMap.filter((core, index, self) =>
       index === self.findIndex((item) => item.coreId === core.coreId)
     );
 
-    setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
+    setCoreIndexedRewards(uniqueCoreIndexedRewards);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data]);
-
-  useEffect(() => {
-    const setup = async () => {
-      if (selectedAccount && typeof setupSubscriptions === 'function') {
-        await setupSubscriptions();
-      }
-    };
-    setup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount, stakingCores]);
 
   const stakedCoresCount = useMemo(() => {
     return isOverview
@@ -256,6 +320,7 @@ const DaoList = (props: DaoListProps) => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stakingCores.map((core: StakingCore) => {
           const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);
+          const coreRewards = coreIndexedRewards.find((info) => info.coreId === core.key);
           const userStaked = totalUserStakedData[core.key] ? totalUserStakedData[core.key] : new BigNumber(0);
 
           // If userStaked is zero, don't render the card
@@ -270,6 +335,7 @@ const DaoList = (props: DaoListProps) => {
               core={core}
               totalUserStaked={userStaked}
               coreInfo={coreInfo}
+              coreRewards={coreRewards}
               handleManageStaking={handleManageStaking}
               handleViewDetails={(mini) => handleViewDetails(mini, projectCard(false))}
               toggleExpanded={toggleReadMore}

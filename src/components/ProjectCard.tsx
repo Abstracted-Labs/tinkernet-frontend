@@ -2,7 +2,7 @@ import { RefObject, useCallback, useEffect, useState } from 'react';
 import { BigNumber } from 'bignumber.js';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import { StakingCore, CoreEraStakeInfoType, ChainPropertiesType } from '../routes/staking';
+import { StakingCore, CoreEraStakeInfoType, ChainPropertiesType, CoreIndexedRewardsType } from '../routes/staking';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import TotalStakersIcon from '../assets/total-stakers-icon.svg';
 import TotalStakedIcon from '../assets/total-staked-icon.svg';
@@ -21,6 +21,7 @@ export interface ProjectCardProps {
   core: StakingCore;
   totalUserStaked: BigNumber | undefined;
   coreInfo: Partial<CoreEraStakeInfoType> | undefined;
+  coreRewards: Partial<CoreIndexedRewardsType> | undefined;
   chainProperties: ChainPropertiesType | undefined;
   availableBalance: BigNumber | undefined;
   handleManageStaking: (args: {
@@ -44,6 +45,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     core,
     totalUserStaked: totalStaked,
     coreInfo,
+    coreRewards,
     chainProperties,
     availableBalance,
     handleManageStaking,
@@ -123,7 +125,7 @@ const ProjectCard = (props: ProjectCardProps) => {
   useEffect(() => {
     calcMinSupportMet();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [minStakeReward, coreInfo?.totalStaked]);
 
   useEffect(() => {
     if (totalStaked !== undefined) {
@@ -234,8 +236,8 @@ const ProjectCard = (props: ProjectCardProps) => {
               </div>
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-              {coreInfo?.totalRewards
-                ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalRewards.toString()) / Math.pow(10, 12)) } TNKR`
+              {coreRewards?.totalRewards
+                ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalRewards.toString()) / Math.pow(10, 12)) } TNKR`
                 : '--'}
             </div>
           </div> : null}
@@ -251,8 +253,8 @@ const ProjectCard = (props: ProjectCardProps) => {
               </div>
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-              {coreInfo?.totalUnclaimed
-                ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalUnclaimed.toString()) / Math.pow(10, 12)) } TNKR`
+              {coreRewards?.totalUnclaimed
+                ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalUnclaimed.toString()) / Math.pow(10, 12)) } TNKR`
                 : '--'}
             </div>
           </div> : null}
