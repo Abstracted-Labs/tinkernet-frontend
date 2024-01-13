@@ -5,7 +5,7 @@ import PjsIcon from "../assets/pjs-icon.png";
 // TODO: WalletConnectIcon
 
 export enum WalletNameEnum {
-  SUBWALLET = "subwallet",
+  SUBWALLET = "subwallet-js",
   TALISMAN = "talisman",
   NOVAWALLET = "nova wallet",
   PJS = "polkadot-js",
