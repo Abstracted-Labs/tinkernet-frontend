@@ -455,7 +455,8 @@ const Staking = () => {
 
   useEffect(() => {
     initializeData(selectedAccount);
-  }, [selectedAccount, initializeData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount) return;

@@ -549,6 +549,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                         <Button mini variant="primary" type="submit" disabled={!unstakeForm.formState.isValid}>
                           Unstake {watchedUnstakeAmount} TNKR
                         </Button>
+                        <p className="text-xxs text-center text-tinkerYellow text-opacity-60">NOTE: Unstaking TNKR will have an unbonding period of 7 days.</p>
                       </form>
                     </Tab.Panel>
                   </Tab.Panels>

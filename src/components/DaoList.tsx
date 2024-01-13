@@ -38,7 +38,7 @@ const DaoList = (props: DaoListProps) => {
   const [rewardsCoreClaimedQuery, reexecuteQuery] = useQuery({
     query: TotalRewardsCoreClaimedQuery,
     variables: {},
-    pause: !selectedAccount || isLoading || !isDataLoaded,
+    pause: !selectedAccount,
   });
 
   const toggleViewMembers = (core: StakingCore, members: AnyJson[]) => {
