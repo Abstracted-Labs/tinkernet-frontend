@@ -60,9 +60,7 @@ export const TotalRewardsCoreClaimedSubscription = `
       latestClaimBlock
       totalRewards
       totalUnclaimed
-      totalStaked
       coreId
-      numberOfStakers
     }
   }
 `;
@@ -446,14 +444,18 @@ const Staking = () => {
   }, []);
 
   useEffect(() => {
+    const setup = async () => {
+      if (selectedAccount && typeof setupSubscriptions === 'function') {
+        await setupSubscriptions();
+      }
+    };
+    setup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, stakingCores, coreEraStakeInfo]);
+
+  useEffect(() => {
     initializeData(selectedAccount);
   }, [selectedAccount, initializeData]);
-
-  // useEffect(() => {
-  //   if (!selectedAccount) return;
-  //   if (!stakingCores) return;
-  //   loadDaos();
-  // }, [selectedAccount, stakingCores, loadDaos]);
 
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount) return;
@@ -487,16 +489,6 @@ const Staking = () => {
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.fetching, rewardsCoreClaimedQuery.data]);
-
-  useEffect(() => {
-    const setup = async () => {
-      if (selectedAccount && typeof setupSubscriptions === 'function') {
-        await setupSubscriptions();
-      }
-    };
-    setup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount, stakingCores, coreEraStakeInfo]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">

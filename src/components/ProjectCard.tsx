@@ -125,7 +125,7 @@ const ProjectCard = (props: ProjectCardProps) => {
   useEffect(() => {
     calcMinSupportMet();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [minStakeReward, coreInfo?.totalStaked]);
 
   useEffect(() => {
     if (totalStaked !== undefined) {
@@ -152,9 +152,9 @@ const ProjectCard = (props: ProjectCardProps) => {
 
         {/* Description */}
         {!mini ? <div ref={descriptionRef} className={`relative bg-tinkerGrey rounded-lg p-4 h-28 hover:cursor-pointer`}
-                      onMouseEnter={() => setIsHovered(true)}
-                      onMouseLeave={() => setIsHovered(false)}
-                      onClick={handleReadMore}>
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={handleReadMore}>
           <div className={`absolute inset-0 flex justify-center items-center font-normal text-tinkerYellow text-[12px] tracking-[0] leading-[normal] ${ isHovered ? 'opacity-100' : 'md:opacity-0 opacity-100' } transition duration-100 z-10 pointer-events-none`}>
             Show More
           </div>
@@ -178,15 +178,15 @@ const ProjectCard = (props: ProjectCardProps) => {
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] flex flex-row items-center gap-1">
               {(coreInfo?.numberOfStakers || 0) >=
                 (chainProperties?.maxStakersPerCore || 0) ? (
-                  <LockClosedIcon
-                    className="h-3 w-3 cursor-pointer text-white"
-                    onClick={() => {
-                      toast.error(
-                        "This core has reached the staker limit"
-                      );
-                    }}
-                  />
-                ) : null}
+                <LockClosedIcon
+                  className="h-3 w-3 cursor-pointer text-white"
+                  onClick={() => {
+                    toast.error(
+                      "This core has reached the staker limit"
+                    );
+                  }}
+                />
+              ) : null}
               <span>{coreInfo?.numberOfStakers}</span>
             </div>
           </div> : null}
@@ -203,8 +203,8 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {coreInfo?.totalStaked
-              ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) } TNKR`
-              : '--'}
+                ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) } TNKR`
+                : '--'}
             </div>
           </div> : null}
 
@@ -220,8 +220,8 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {totalUserStaked
-              ? `${ formatNumberShorthand(parseFloat(totalUserStaked.toString()) / Math.pow(10, 12)) } TNKR`
-              : '--'}
+                ? `${ formatNumberShorthand(parseFloat(totalUserStaked.toString()) / Math.pow(10, 12)) } TNKR`
+                : '--'}
             </div>
           </div>
 
@@ -237,8 +237,8 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {coreRewards?.totalRewards
-              ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalRewards.toString()) / Math.pow(10, 12)) } TNKR`
-              : '--'}
+                ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalRewards.toString()) / Math.pow(10, 12)) } TNKR`
+                : '--'}
             </div>
           </div> : null}
 
@@ -254,8 +254,8 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {coreRewards?.totalUnclaimed
-              ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalUnclaimed.toString()) / Math.pow(10, 12)) } TNKR`
-              : '--'}
+                ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalUnclaimed.toString()) / Math.pow(10, 12)) } TNKR`
+                : '--'}
             </div>
           </div> : null}
 
@@ -271,8 +271,8 @@ const ProjectCard = (props: ProjectCardProps) => {
             </div>
             <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
               {coreInfo?.totalStaked && aggregateStaked
-              ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(aggregateStaked).toFixed(2) }%`
-              : '--'}
+                ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(aggregateStaked).toFixed(2) }%`
+                : '--'}
             </div>
           </div> : null}
 
@@ -289,18 +289,18 @@ const ProjectCard = (props: ProjectCardProps) => {
             <div className="text-white font-normal text-[12px] text-right tracking-[0] leading-[normal] truncate">
               <span className={`${ minSupportMet ? 'text-green-400' : 'text-red-400' }`}>
                 {coreInfo?.totalStaked && minStakeReward
-                ? `${ minSupportMet ? '25K' : formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) }/${ formatNumberShorthand(parseFloat(minStakeReward.toString()) / Math.pow(10, 12)) }`
-                : '--'}
+                  ? `${ minSupportMet ? '25K' : formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) }/${ formatNumberShorthand(parseFloat(minStakeReward.toString()) / Math.pow(10, 12)) }`
+                  : '--'}
               </span> TNKR
             </div>
           </div> : null}
         </div>
         {selectedAccount ? <Button variant='primary' mini={true} onClick={handleClick}
-                                   disabled={
-                                   (coreInfo?.numberOfStakers || 0) >=
-                                     (chainProperties?.maxStakersPerCore || 0) &&
-                                   !totalUserStaked
-                                   }>{!mini ? 'Manage Staking' : 'View Details'}</Button> : null}
+          disabled={
+            (coreInfo?.numberOfStakers || 0) >=
+            (chainProperties?.maxStakersPerCore || 0) &&
+            !totalUserStaked
+          }>{!mini ? 'Manage Staking' : 'View Details'}</Button> : null}
       </div>
     </div>
   );

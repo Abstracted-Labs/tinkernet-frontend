@@ -79,90 +79,29 @@ const DaoList = (props: DaoListProps) => {
   };
 
   const loadCores = useCallback(async () => {
-    const cores = await loadProjectCores(api);
+    if (!selectedAccount) return;
 
+    const cores = await loadProjectCores(api);
     if (cores) {
       setStakingCores(cores);
-
-      const coreEraStakeInfoMap: Map<number, CoreEraStakeInfoType> = new Map();
-      const userStakedInfoMap: Map<number, UserStakedInfoType> = new Map();
-
-      const currentEra = await api.query.ocifStaking.currentEra();
-
-      if (coreEraStakeInfo.length == 0) {
-      console.log("its 0")
-      for (const stakingCore of cores) {
-        console.log("core: ", stakingCore)
-        await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
-
-          const info: {
-            total: string;
-            numberOfStakers: number;
-            rewardClaimed: boolean;
-            active: boolean;
-          } = inf.toPrimitive() as {
-            total: string;
-            numberOfStakers: number;
-            rewardClaimed: boolean;
-            active: boolean;
-          };
-
-          coreEraStakeInfoMap.set(stakingCore.key, {
-            totalStaked: info.total,
-            active: info.active,
-            rewardClaimed: info.rewardClaimed,
-            numberOfStakers: info.numberOfStakers,
-            coreId: stakingCore.key
-          });
-
-          setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
-
-        });
-
-        if (!selectedAccount) return;
-
-        await api.query.ocifStaking.generalStakerInfo(
-          stakingCore.key,
-          selectedAccount.address,
-          (generalStakerInfo: Codec) => {
-            const info = generalStakerInfo.toPrimitive() as StakesInfo;
-            const latestInfo = info.stakes.at(-1);
-
-            let era = -1;
-            let staked = new BigNumber(0);
-
-            if (latestInfo) {
-              era = parseInt(latestInfo.era);
-              staked = new BigNumber(latestInfo.staked);
-            }
-
-            userStakedInfoMap.set(stakingCore.key, {
-              coreId: stakingCore.key,
-              era: era,
-              staked: staked,
-            });
-            setUserStakedInfo(Array.from(userStakedInfoMap.values()));
-          }
-        );
-      }
     }
-
-    }
-  }, [api]);
+  }, [selectedAccount, api]);
 
   const loadTotalUserStaked = useCallback(() => {
+    if (!coreEraStakeInfo.length || !userStakedInfo.length) {
+      return;
+    }
+
     const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
     const totalUserStakedResults: TotalUserStakedData = {};
 
     for (const core of stakingCores) {
       const coreInfo = getCoreInfo(coreEraStakeInfo, core);
       const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
-      console.log("totalUserStakedResults: ", totalUserStakedResults);
 
       coreInfoResults[core.key] = coreInfo;
       totalUserStakedResults[core.key] = totalUserStaked;
     }
-
 
     setTotalUserStakedData(totalUserStakedResults);
   }, [stakingCores, coreEraStakeInfo, userStakedInfo]);
@@ -186,13 +125,10 @@ const DaoList = (props: DaoListProps) => {
 
   const loadCoreEraStake = useCallback(async () => {
     const coreEraStakeInfoMap: Map<number, CoreEraStakeInfoType> = new Map();
-
     const currentEra = await api.query.ocifStaking.currentEra();
 
-    if (coreEraStakeInfo.length == 0) {
-      console.log("its 0")
+    if (coreEraStakeInfo.length === 0) {
       for (const stakingCore of stakingCores) {
-        console.log("core: ", stakingCore)
         await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
 
           const info: {
@@ -215,13 +151,12 @@ const DaoList = (props: DaoListProps) => {
             coreId: stakingCore.key
           });
 
-              setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
-
+          const coreEraStake = Array.from(coreEraStakeInfoMap.values());
+          setCoreEraStakeInfo(coreEraStake);
         });
-
       }
     }
-  }, [stakingCores]);
+  }, [stakingCores, coreEraStakeInfo.length, api]);
 
   const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
@@ -230,7 +165,6 @@ const DaoList = (props: DaoListProps) => {
         await loadCores();
         await loadStakingConstants();
         await loadCoreEraStake();
-        loadTotalUserStaked();
       }
 
     } catch (error) {
@@ -239,7 +173,7 @@ const DaoList = (props: DaoListProps) => {
       setLoading(false);
       setDataLoaded(true);
     }
-  }, [loadAccountInfo, loadCores, loadStakingConstants, loadTotalUserStaked]);
+  }, [loadAccountInfo, loadCores, loadStakingConstants, loadCoreEraStake]);
 
   const setupSubscriptions = useCallback(async () => {
     if (!selectedAccount) {
@@ -255,7 +189,7 @@ const DaoList = (props: DaoListProps) => {
 
     const currentEra = await api.query.ocifStaking.currentEra();
 
-    if (coreEraStakeInfo.length == 0) {
+    if (coreEraStakeInfo.length === 0) {
       for (const stakingCore of stakingCores) {
         await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
 
@@ -279,21 +213,18 @@ const DaoList = (props: DaoListProps) => {
             coreId: stakingCore.key
           });
 
-              setCoreEraStakeInfo(Array.from(coreEraStakeInfoMap.values()));
-
+          const coreEraStake = Array.from(coreEraStakeInfoMap.values());
+          setCoreEraStakeInfo(coreEraStake);
         });
-
       }
-    }
 
-      if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
       for (const stakingCore of stakingCores) {
 
-          await api.query.ocifStaking.generalStakerInfo(
-            stakingCore.key,
-            selectedAccount.address,
-            (generalStakerInfo: Codec) => {
-              const info = generalStakerInfo.toPrimitive() as StakesInfo;
+        await api.query.ocifStaking.generalStakerInfo(
+          stakingCore.key,
+          selectedAccount.address,
+          (generalStakerInfo: Codec) => {
+            const info = generalStakerInfo.toPrimitive() as StakesInfo;
             const latestInfo = info.stakes.at(-1);
 
             let era = -1;
@@ -309,7 +240,9 @@ const DaoList = (props: DaoListProps) => {
               era: era,
               staked: staked,
             });
-            setUserStakedInfo(Array.from(userStakedInfoMap.values()));
+
+            const userStakedInfo = Array.from(userStakedInfoMap.values());
+            setUserStakedInfo(userStakedInfo);
           }
         );
       }
@@ -317,9 +250,23 @@ const DaoList = (props: DaoListProps) => {
   }, [api, stakingCores, coreEraStakeInfo, selectedAccount]);
 
   useEffect(() => {
+    const setup = async () => {
+      if (selectedAccount && typeof setupSubscriptions === 'function') {
+        await setupSubscriptions();
+      }
+    };
+    setup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccount, stakingCores]);
+
+  useEffect(() => {
     initializeData(selectedAccount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccount]);
+
+  useEffect(() => {
+    loadTotalUserStaked();
+  }, [loadTotalUserStaked, coreEraStakeInfo, userStakedInfo, selectedAccount]);
 
   useEffect(() => {
     const loadDaos = async () => {
@@ -332,10 +279,6 @@ const DaoList = (props: DaoListProps) => {
 
     loadDaos();
   }, [selectedAccount, stakingCores, api]);
-
-  useEffect(() => {
-    loadTotalUserStaked();
-  }, [stakingCores, loadTotalUserStaked]);
 
   useEffect(() => {
     if (selectedAccount) {
@@ -354,16 +297,6 @@ const DaoList = (props: DaoListProps) => {
 
     setCoreIndexedRewards(uniqueCoreIndexedRewards);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data]);
-
-  useEffect(() => {
-    const setup = async () => {
-      if (selectedAccount && typeof setupSubscriptions === 'function') {
-        await setupSubscriptions();
-      }
-    };
-    setup();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount, stakingCores]);
 
   const stakedCoresCount = useMemo(() => {
     return isOverview
