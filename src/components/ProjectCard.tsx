@@ -1,4 +1,4 @@
-import { RefObject, useCallback, useEffect, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { BigNumber } from 'bignumber.js';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
@@ -57,12 +57,13 @@ const ProjectCard = (props: ProjectCardProps) => {
     members,
     mini
   } = props;
-  const [isHovered, setIsHovered] = useState(false);
-  const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber("0"));
-  const [minStakeReward, setMinStakeReward] = useState<BigNumber>(new BigNumber("0"));
-  const [minSupportMet, setMinSupportMet] = useState<boolean>(false);
-  const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>(new BigNumber("0"));
+  const scrollSpeedRef = useRef(16 + Math.floor(Math.random() * 6) - 3);
   const api = useApi();
+  const [isHovered, setIsHovered] = useState(false);
+  const [minSupportMet, setMinSupportMet] = useState(false);
+  const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber(0));
+  const [minStakeReward, setMinStakeReward] = useState<BigNumber>(new BigNumber(0));
+  const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>(new BigNumber(0));
 
   const handleReadMore = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -89,7 +90,7 @@ const ProjectCard = (props: ProjectCardProps) => {
   }, [api]);
 
   const calcMinSupportMet = useCallback(() => {
-    if (minStakeReward.isLessThan(coreInfo?.totalStaked || new BigNumber("0"))) {
+    if (minStakeReward.isLessThan(coreInfo?.totalStaked || new BigNumber(0))) {
       setMinSupportMet(true);
     } else {
       setMinSupportMet(false);
@@ -99,11 +100,11 @@ const ProjectCard = (props: ProjectCardProps) => {
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
 
-    const parsedTotalStaked = totalUserStaked || new BigNumber("0");
+    const parsedTotalStaked = totalUserStaked || new BigNumber(0);
 
     const parsedAvailableBalance = availableBalance && availableBalance.isNegative()
-      ? new BigNumber("0")
-      : availableBalance || new BigNumber("0");
+      ? new BigNumber(0)
+      : availableBalance || new BigNumber(0);
 
     if (handleViewDetails && mini) {
       handleViewDetails(mini);
@@ -132,6 +133,139 @@ const ProjectCard = (props: ProjectCardProps) => {
       setTotalUserStaked(totalStaked);
     }
   }, [totalStaked]);
+
+  const statsSection = <div className={`relative stats-section grid grid-cols-1 gap-2 mt-2`}>
+
+    {/* Total Stakers */}
+    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+      <div className='flex flex-row items-center gap-2'>
+        <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+          <img src={TotalStakersIcon} alt="Total Stakers Icon" />
+        </div>
+        <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+          Total Stakers
+        </div>
+      </div>
+      <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] flex flex-row items-center gap-1">
+        {(coreInfo?.numberOfStakers || 0) >=
+          (chainProperties?.maxStakersPerCore || 0) ? (
+          <LockClosedIcon
+            className="h-3 w-3 cursor-pointer text-white"
+            onClick={() => {
+              toast.error(
+                "This core has reached the staker limit"
+              );
+            }}
+          />
+        ) : null}
+        <span>{coreInfo?.numberOfStakers}</span>
+      </div>
+    </div> : null}
+
+    {/* Total Staked */}
+    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+      <div className='flex flex-row items-center gap-2'>
+        <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+          <img src={TotalStakedIcon} alt="Total Staked Icon" />
+        </div>
+        <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+          Total Staked
+        </div>
+      </div>
+      <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+        {coreInfo?.totalStaked
+          ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) } TNKR`
+          : '--'}
+      </div>
+    </div> : null}
+
+    {/* My Stake */}
+    <div className={`stats flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}>
+      <div className='flex flex-row items-center gap-2'>
+        <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+          <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
+        </div>
+        <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+          My Stake
+        </div>
+      </div>
+      <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+        {totalUserStaked
+          ? `${ formatNumberShorthand(parseFloat(totalUserStaked.toString()) / Math.pow(10, 12)) } TNKR`
+          : '--'}
+      </div>
+    </div>
+
+    {/* Total Rewards */}
+    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+      <div className='flex flex-row items-center gap-2'>
+        <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+          <img src={ClaimedRewardsIcon} alt="Total Staked Icon" />
+        </div>
+        <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+          Total Rewards
+        </div>
+      </div>
+      <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+        {coreRewards?.totalRewards
+          ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalRewards.toString()) / Math.pow(10, 12)) } TNKR`
+          : '--'}
+      </div>
+    </div> : null}
+
+    {/* Unclaimed Rewards */}
+    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+      <div className='flex flex-row items-center gap-2'>
+        <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+          <img src={UnclaimedRewardsIcon} alt="Total Staked Icon" />
+        </div>
+        <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+          Unclaimed Rewards
+        </div>
+      </div>
+      <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+        {coreRewards?.totalUnclaimed
+          ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalUnclaimed.toString()) / Math.pow(10, 12)) } TNKR`
+          : '--'}
+      </div>
+    </div> : null}
+
+    {/* Support Share */}
+    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+      <div className='flex flex-row items-center gap-2'>
+        <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+          <img src={SupportShareIcon} alt="Total Staked Icon" />
+        </div>
+        <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+          Support Share
+        </div>
+      </div>
+      <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
+        {coreInfo?.totalStaked && aggregateStaked
+          ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(aggregateStaked).toFixed(2) }%`
+          : '--'}
+      </div>
+    </div> : null}
+
+    {/* Minimum Support */}
+    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+      <div className='flex flex-row items-center gap-2'>
+        <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
+          <img src={MinSupportIcon} alt="Total Staked Icon" />
+        </div>
+        <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
+          Min. Support Met
+        </div>
+      </div>
+      <div className="text-white font-normal text-[12px] text-right tracking-[0] leading-[normal] truncate">
+        <span className={`${ minSupportMet ? 'text-green-400' : 'text-red-400' }`}>
+          {coreInfo?.totalStaked && minStakeReward
+            ? `${ minSupportMet ? '25K' : formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) }/${ formatNumberShorthand(parseFloat(minStakeReward.toString()) / Math.pow(10, 12)) }`
+            : '--'}
+        </span> TNKR
+      </div>
+    </div> : null}
+  </div>;
 
   return (
     <div
@@ -163,138 +297,19 @@ const ProjectCard = (props: ProjectCardProps) => {
           </p>
         </div> : null}
 
-        <div className={`relative h-24 stats-section grid grid-cols-1 gap-2 ${ !mini ? 'tinker-scrollbar scrollbar scrollbar-thin pr-4 overflow-y-scroll' : '' }`}>
-
-          {/* Total Stakers */}
-          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
-            <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={TotalStakersIcon} alt="Total Stakers Icon" />
+        <div className={`relative stats-section grid grid-cols-1 gap-2 h-24 overflow-hidden`}>
+          {!mini ? (
+            <div className="scroll-container" style={{ animationDuration: `${ scrollSpeedRef.current }s` }}>
+              <div className="stats">
+                {statsSection}
               </div>
-              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-                Total Stakers
+              <div className="stats">
+                {statsSection}
               </div>
             </div>
-            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] flex flex-row items-center gap-1">
-              {(coreInfo?.numberOfStakers || 0) >=
-                (chainProperties?.maxStakersPerCore || 0) ? (
-                <LockClosedIcon
-                  className="h-3 w-3 cursor-pointer text-white"
-                  onClick={() => {
-                    toast.error(
-                      "This core has reached the staker limit"
-                    );
-                  }}
-                />
-              ) : null}
-              <span>{coreInfo?.numberOfStakers}</span>
-            </div>
-          </div> : null}
-
-          {/* Total Staked */}
-          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
-            <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={TotalStakedIcon} alt="Total Staked Icon" />
-              </div>
-              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-                Total Staked
-              </div>
-            </div>
-            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-              {coreInfo?.totalStaked
-                ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) } TNKR`
-                : '--'}
-            </div>
-          </div> : null}
-
-          {/* My Stake */}
-          <div className={`stats flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}>
-            <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
-              </div>
-              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-                My Stake
-              </div>
-            </div>
-            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-              {totalUserStaked
-                ? `${ formatNumberShorthand(parseFloat(totalUserStaked.toString()) / Math.pow(10, 12)) } TNKR`
-                : '--'}
-            </div>
-          </div>
-
-          {/* Total Rewards */}
-          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
-            <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={ClaimedRewardsIcon} alt="Total Staked Icon" />
-              </div>
-              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-                Total Rewards
-              </div>
-            </div>
-            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-              {coreRewards?.totalRewards
-                ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalRewards.toString()) / Math.pow(10, 12)) } TNKR`
-                : '--'}
-            </div>
-          </div> : null}
-
-          {/* Unclaimed Rewards */}
-          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
-            <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={UnclaimedRewardsIcon} alt="Total Staked Icon" />
-              </div>
-              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-                Unclaimed Rewards
-              </div>
-            </div>
-            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-              {coreRewards?.totalUnclaimed
-                ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalUnclaimed.toString()) / Math.pow(10, 12)) } TNKR`
-                : '--'}
-            </div>
-          </div> : null}
-
-          {/* Support Share */}
-          {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
-            <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={SupportShareIcon} alt="Total Staked Icon" />
-              </div>
-              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-                Support Share
-              </div>
-            </div>
-            <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-              {coreInfo?.totalStaked && aggregateStaked
-                ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(aggregateStaked).toFixed(2) }%`
-                : '--'}
-            </div>
-          </div> : null}
-
-          {/* Minimum Support */}
-          {!mini ? <div className="stats flex justify-between items-center">
-            <div className='flex flex-row items-center gap-2'>
-              <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
-                <img src={MinSupportIcon} alt="Total Staked Icon" />
-              </div>
-              <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-                Min. Support Met
-              </div>
-            </div>
-            <div className="text-white font-normal text-[12px] text-right tracking-[0] leading-[normal] truncate">
-              <span className={`${ minSupportMet ? 'text-green-400' : 'text-red-400' }`}>
-                {coreInfo?.totalStaked && minStakeReward
-                  ? `${ minSupportMet ? '25K' : formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) }/${ formatNumberShorthand(parseFloat(minStakeReward.toString()) / Math.pow(10, 12)) }`
-                  : '--'}
-              </span> TNKR
-            </div>
-          </div> : null}
+          ) : statsSection}
         </div>
+
         {selectedAccount ? <Button variant='primary' mini={true} onClick={handleClick}
           disabled={
             (coreInfo?.numberOfStakers || 0) >=
