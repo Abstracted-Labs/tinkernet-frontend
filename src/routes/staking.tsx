@@ -205,9 +205,8 @@ const Staking = () => {
       throw new Error("selectedAccount is null");
     };
 
-    const userStakedInfoMap: Map<
-      number, UserStakedInfoType
-    > = new Map();
+    const userStakedInfoMap: Map<number, UserStakedInfoType> = new Map();
+    let unclaimedErasUpdate = unclaimedEras;
 
     if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
       for (const stakingCore of stakingCores) {
@@ -225,30 +224,29 @@ const Staking = () => {
               const unclaimedEarliest = info.stakes.reduce((p, v) => parseInt(p.era) < parseInt(v.era) ? p : v).era;
 
               if (parseInt(unclaimedEarliest) < currentStakingEra) {
-                const unclaimed = unclaimedEras;
-                const unclaimedCore = unclaimed.cores.find(value => value.coreId === stakingCore.key);
+                const unclaimedCore = unclaimedErasUpdate.cores.find(value => value.coreId === stakingCore.key);
 
                 if (unclaimedCore) {
                   unclaimedCore.earliestEra = parseInt(unclaimedEarliest);
                 } else {
-                  unclaimed.cores.push({
+                  unclaimedErasUpdate.cores.push({
                     coreId: stakingCore.key,
                     earliestEra: parseInt(unclaimedEarliest),
                   });
                 }
 
-                let total = unclaimed.total;
+                let total = unclaimedErasUpdate.total;
                 total = currentStakingEra - parseInt(unclaimedEarliest);
-
-                setUnclaimedEras({
-                  cores: unclaimed.cores,
+                console.log("unclaimedEras", currentStakingEra.toString(), unclaimedEarliest.toString());
+                unclaimedErasUpdate = {
+                  cores: unclaimedErasUpdate.cores,
                   total,
-                });
+                };
               } else {
-                setUnclaimedEras((unclaimedEras) => ({
-                  ...unclaimedEras,
+                unclaimedErasUpdate = {
+                  ...unclaimedErasUpdate,
                   total: 0,
-                }));
+                };
               }
             }
 
@@ -271,6 +269,8 @@ const Staking = () => {
         );
       }
     }
+
+    setUnclaimedEras(unclaimedErasUpdate);
   }, [api, currentStakingEra, stakingCores, unclaimedEras, selectedAccount, coreEraStakeInfo]);
 
   const loadCurrentEraAndStake = useCallback(async () => {
