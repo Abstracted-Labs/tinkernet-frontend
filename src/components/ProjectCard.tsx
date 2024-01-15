@@ -153,6 +153,8 @@ const ProjectCard = (props: ProjectCardProps) => {
       className={`p-2 stats-1 flex justify-between items-center ${ STAT_UNDERLINE }`}
       onMouseEnter={() => handleStatsHover(true, 'stats-1')}
       onMouseLeave={() => handleStatsHover(false, 'stats-1')}
+      onTouchStart={() => handleStatsHover(true, 'stats-1')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-1')}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -183,6 +185,8 @@ const ProjectCard = (props: ProjectCardProps) => {
       className={`p-2 stats-2 flex justify-between items-center ${ STAT_UNDERLINE }`}
       onMouseEnter={() => handleStatsHover(true, 'stats-2')}
       onMouseLeave={() => handleStatsHover(false, 'stats-2')}
+      onTouchStart={() => handleStatsHover(true, 'stats-2')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-2')}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -204,6 +208,8 @@ const ProjectCard = (props: ProjectCardProps) => {
       className={`p-2 stats-3 flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}
       onMouseEnter={() => handleStatsHover(true, 'stats-3')}
       onMouseLeave={() => handleStatsHover(false, 'stats-3')}
+      onTouchStart={() => handleStatsHover(true, 'stats-3')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-3')}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -225,6 +231,8 @@ const ProjectCard = (props: ProjectCardProps) => {
       className={`p-2 stats-4 flex justify-between items-center ${ STAT_UNDERLINE }`}
       onMouseEnter={() => handleStatsHover(true, 'stats-4')}
       onMouseLeave={() => handleStatsHover(false, 'stats-4')}
+      onTouchStart={() => handleStatsHover(true, 'stats-4')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-4')}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -246,6 +254,8 @@ const ProjectCard = (props: ProjectCardProps) => {
       className={`p-2 stats-5 flex justify-between items-center ${ STAT_UNDERLINE }`}
       onMouseEnter={() => handleStatsHover(true, 'stats-5')}
       onMouseLeave={() => handleStatsHover(false, 'stats-5')}
+      onTouchStart={() => handleStatsHover(true, 'stats-5')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-5')}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -267,6 +277,8 @@ const ProjectCard = (props: ProjectCardProps) => {
       className={`p-2 stats-6 flex justify-between items-center ${ STAT_UNDERLINE }`}
       onMouseEnter={() => handleStatsHover(true, 'stats-6')}
       onMouseLeave={() => handleStatsHover(false, 'stats-6')}
+      onTouchStart={() => handleStatsHover(true, 'stats-6')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-6')}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -288,6 +300,8 @@ const ProjectCard = (props: ProjectCardProps) => {
       className={`p-2 stats-7 flex justify-between items-center`}
       onMouseEnter={() => handleStatsHover(true, 'stats-7')}
       onMouseLeave={() => handleStatsHover(false, 'stats-7')}
+      onTouchStart={() => handleStatsHover(true, 'stats-7')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-7')}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
