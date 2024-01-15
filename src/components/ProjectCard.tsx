@@ -38,7 +38,8 @@ export interface ProjectCardProps {
   mini: boolean;
 }
 
-const STAT_UNDERLINE = 'pb-2 border-b border-b-[#2B2C30]';
+const STAT_HOVER = 'hover:bg-tinkerYellow hover:bg-opacity-10';
+const STAT_UNDERLINE = `border-b border-b-[#2B2C30] ${ STAT_HOVER }`;
 
 const ProjectCard = (props: ProjectCardProps) => {
   const {
@@ -57,8 +58,8 @@ const ProjectCard = (props: ProjectCardProps) => {
     members,
     mini
   } = props;
-  const scrollSpeedRef = useRef(16 + Math.floor(Math.random() * 6) - 3);
   const api = useApi();
+  const scrollPositionRef = useRef(0);
   const [isHovered, setIsHovered] = useState(false);
   const [minSupportMet, setMinSupportMet] = useState(false);
   const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber(0));
@@ -134,10 +135,10 @@ const ProjectCard = (props: ProjectCardProps) => {
     }
   }, [totalStaked]);
 
-  const statsSection = <div className={`relative stats-section grid grid-cols-1 gap-2 mt-2`}>
+  const statsSection = <div className={`relative stats-section grid grid-cols-1`}>
 
     {/* Total Stakers */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={TotalStakersIcon} alt="Total Stakers Icon" />
@@ -163,7 +164,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Total Staked */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={TotalStakedIcon} alt="Total Staked Icon" />
@@ -180,7 +181,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* My Stake */}
-    <div className={`stats flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}>
+    <div className={`p-2 stats flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}>
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
@@ -197,13 +198,13 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div>
 
     {/* Total Rewards */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={ClaimedRewardsIcon} alt="Total Staked Icon" />
         </div>
         <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-          Total Rewards
+          Claimed Rewards
         </div>
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
@@ -214,7 +215,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Unclaimed Rewards */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={UnclaimedRewardsIcon} alt="Total Staked Icon" />
@@ -231,7 +232,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Support Share */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={SupportShareIcon} alt="Total Staked Icon" />
@@ -248,7 +249,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Minimum Support */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_HOVER }`}>
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={MinSupportIcon} alt="Total Staked Icon" />
@@ -297,17 +298,21 @@ const ProjectCard = (props: ProjectCardProps) => {
           </p>
         </div> : null}
 
-        <div className={`relative stats-section grid grid-cols-1 gap-2 h-24 overflow-hidden`}>
-          {!mini ? (
-            <div className="scroll-container" style={{ animationDuration: `${ scrollSpeedRef.current }s` }}>
-              <div className="stats">
-                {statsSection}
-              </div>
-              <div className="stats">
-                {statsSection}
-              </div>
-            </div>
-          ) : statsSection}
+        <div
+          className={`relative stats-section grid grid-cols-1 gap-2 h-24 overflow-y-scroll tinker-scrollbar scrollbar-thumb-amber-300 scrollbar-thin scrollbar pr-3`}
+          onScroll={(e) => {
+            // Update the stored scroll position
+            scrollPositionRef.current = (e.target as HTMLElement).scrollTop;
+
+            // Select all stats-section divs
+            const statsSections = document.querySelectorAll('.stats-section');
+
+            // Set the scroll position of all stats-section divs
+            statsSections.forEach((statsSection) => {
+              statsSection.scrollTop = scrollPositionRef.current;
+            });
+          }}>
+          {statsSection}
         </div>
 
         {selectedAccount ? <Button variant='primary' mini={true} onClick={handleClick}
