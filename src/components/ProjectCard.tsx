@@ -38,8 +38,7 @@ export interface ProjectCardProps {
   mini: boolean;
 }
 
-const STAT_HOVER = 'hover:bg-tinkerYellow hover:bg-opacity-10';
-const STAT_UNDERLINE = `border-b border-b-[#2B2C30] ${ STAT_HOVER }`;
+const STAT_UNDERLINE = `border-b border-b-[#2B2C30]`;
 
 const ProjectCard = (props: ProjectCardProps) => {
   const {
@@ -119,6 +118,18 @@ const ProjectCard = (props: ProjectCardProps) => {
     });
   };
 
+  const handleStatsHover = useCallback((isHovering: boolean, statClass: string) => {
+    const elements = document.querySelectorAll(`.${ statClass }`);
+    elements.forEach(element => {
+      const htmlElement = element as HTMLElement;
+      if (isHovering) {
+        htmlElement.style.backgroundColor = 'rgba(248, 206, 70, 0.1)'; // 10% tinkerYellow
+      } else {
+        htmlElement.style.backgroundColor = '';
+      }
+    });
+  }, []);
+
   useEffect(() => {
     loadAggregateStaked();
     loadStakeRewardMinimum();
@@ -138,7 +149,11 @@ const ProjectCard = (props: ProjectCardProps) => {
   const statsSection = <div className={`relative stats-section grid grid-cols-1`}>
 
     {/* Total Stakers */}
-    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-1 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-1')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-1')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={TotalStakersIcon} alt="Total Stakers Icon" />
@@ -164,7 +179,11 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Total Staked */}
-    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-2 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-2')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-2')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={TotalStakedIcon} alt="Total Staked Icon" />
@@ -181,7 +200,11 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* My Stake */}
-    <div className={`p-2 stats flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}>
+    <div
+      className={`p-2 stats-3 flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-3')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-3')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
@@ -198,7 +221,11 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div>
 
     {/* Total Rewards */}
-    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-4 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-4')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-4')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={ClaimedRewardsIcon} alt="Total Staked Icon" />
@@ -215,7 +242,11 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Unclaimed Rewards */}
-    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-5 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-5')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-5')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={UnclaimedRewardsIcon} alt="Total Staked Icon" />
@@ -232,7 +263,11 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Support Share */}
-    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-6 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-6')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-6')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={SupportShareIcon} alt="Total Staked Icon" />
@@ -249,7 +284,11 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Minimum Support */}
-    {!mini ? <div className={`p-2 stats flex justify-between items-center ${ STAT_HOVER }`}>
+    {!mini ? <div
+      className={`p-2 stats-7 flex justify-between items-center`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-7')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-7')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={MinSupportIcon} alt="Total Staked Icon" />
