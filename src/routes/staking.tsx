@@ -418,6 +418,7 @@ const Staking = () => {
     }
 
     setTotalUnclaimed(new BigNumber(0));
+    setUnclaimedEras({ cores: [], total: 0 });
     setClaimAllSuccess(result);
     refreshQuery();
   };

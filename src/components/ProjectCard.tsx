@@ -38,7 +38,7 @@ export interface ProjectCardProps {
   mini: boolean;
 }
 
-const STAT_UNDERLINE = 'pb-2 border-b border-b-[#2B2C30]';
+const STAT_UNDERLINE = `border-b border-b-[#2B2C30]`;
 
 const ProjectCard = (props: ProjectCardProps) => {
   const {
@@ -57,8 +57,8 @@ const ProjectCard = (props: ProjectCardProps) => {
     members,
     mini
   } = props;
-  const scrollSpeedRef = useRef(16 + Math.floor(Math.random() * 6) - 3);
   const api = useApi();
+  const scrollPositionRef = useRef(0);
   const [isHovered, setIsHovered] = useState(false);
   const [minSupportMet, setMinSupportMet] = useState(false);
   const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber(0));
@@ -118,6 +118,18 @@ const ProjectCard = (props: ProjectCardProps) => {
     });
   };
 
+  const handleStatsHover = useCallback((isHovering: boolean, statClass: string) => {
+    const elements = document.querySelectorAll(`.${ statClass }`);
+    elements.forEach(element => {
+      const htmlElement = element as HTMLElement;
+      if (isHovering) {
+        htmlElement.style.backgroundColor = 'rgba(248, 206, 70, 0.1)'; // 10% tinkerYellow
+      } else {
+        htmlElement.style.backgroundColor = '';
+      }
+    });
+  }, []);
+
   useEffect(() => {
     loadAggregateStaked();
     loadStakeRewardMinimum();
@@ -134,10 +146,16 @@ const ProjectCard = (props: ProjectCardProps) => {
     }
   }, [totalStaked]);
 
-  const statsSection = <div className={`relative stats-section grid grid-cols-1 gap-2 mt-2`}>
+  const statsSection = <div className={`relative stats-section grid grid-cols-1`}>
 
     {/* Total Stakers */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-1 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-1')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-1')}
+      onTouchStart={() => handleStatsHover(true, 'stats-1')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-1')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={TotalStakersIcon} alt="Total Stakers Icon" />
@@ -163,7 +181,13 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Total Staked */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-2 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-2')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-2')}
+      onTouchStart={() => handleStatsHover(true, 'stats-2')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-2')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={TotalStakedIcon} alt="Total Staked Icon" />
@@ -180,7 +204,13 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* My Stake */}
-    <div className={`stats flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}>
+    <div
+      className={`p-2 stats-3 flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-3')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-3')}
+      onTouchStart={() => handleStatsHover(true, 'stats-3')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-3')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={MyProjectStakeIcon} alt="My Project Stake Icon" />
@@ -197,13 +227,19 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div>
 
     {/* Total Rewards */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-4 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-4')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-4')}
+      onTouchStart={() => handleStatsHover(true, 'stats-4')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-4')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={ClaimedRewardsIcon} alt="Total Staked Icon" />
         </div>
         <div className="font-normal text-tinkerTextGrey text-[12px] tracking-[0] leading-[normal]">
-          Total Rewards
+          Claimed Rewards
         </div>
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
@@ -214,7 +250,13 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Unclaimed Rewards */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-5 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-5')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-5')}
+      onTouchStart={() => handleStatsHover(true, 'stats-5')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-5')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={UnclaimedRewardsIcon} alt="Total Staked Icon" />
@@ -231,7 +273,13 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Support Share */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-6 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-6')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-6')}
+      onTouchStart={() => handleStatsHover(true, 'stats-6')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-6')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={SupportShareIcon} alt="Total Staked Icon" />
@@ -248,7 +296,13 @@ const ProjectCard = (props: ProjectCardProps) => {
     </div> : null}
 
     {/* Minimum Support */}
-    {!mini ? <div className={`stats flex justify-between items-center ${ STAT_UNDERLINE }`}>
+    {!mini ? <div
+      className={`p-2 stats-7 flex justify-between items-center`}
+      onMouseEnter={() => handleStatsHover(true, 'stats-7')}
+      onMouseLeave={() => handleStatsHover(false, 'stats-7')}
+      onTouchStart={() => handleStatsHover(true, 'stats-7')}
+      onTouchEnd={() => handleStatsHover(false, 'stats-7')}
+    >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
           <img src={MinSupportIcon} alt="Total Staked Icon" />
@@ -297,17 +351,21 @@ const ProjectCard = (props: ProjectCardProps) => {
           </p>
         </div> : null}
 
-        <div className={`relative stats-section grid grid-cols-1 gap-2 h-24 overflow-hidden`}>
-          {!mini ? (
-            <div className="scroll-container" style={{ animationDuration: `${ scrollSpeedRef.current }s` }}>
-              <div className="stats">
-                {statsSection}
-              </div>
-              <div className="stats">
-                {statsSection}
-              </div>
-            </div>
-          ) : statsSection}
+        <div
+          className={`relative stats-section grid grid-cols-1 gap-2 h-28 overflow-y-scroll tinker-scrollbar scrollbar-thumb-amber-300 scrollbar-thin scrollbar pr-3`}
+          onScroll={(e) => {
+            // Update the stored scroll position
+            scrollPositionRef.current = (e.target as HTMLElement).scrollTop;
+
+            // Select all stats-section divs
+            const statsSections = document.querySelectorAll('.stats-section');
+
+            // Set the scroll position of all stats-section divs
+            statsSections.forEach((statsSection) => {
+              statsSection.scrollTop = scrollPositionRef.current;
+            });
+          }}>
+          {statsSection}
         </div>
 
         {selectedAccount ? <Button variant='primary' mini={true} onClick={handleClick}
