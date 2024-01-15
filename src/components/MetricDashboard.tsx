@@ -148,13 +148,13 @@ const MetricDashboard = (props: MetricDashboardProps) => {
         {totalStaked && totalStaked.toNumber() > 0 && aggregateStaked && aggregateStaked.toNumber() > 0 ? totalStaked.times(100).dividedBy(aggregateStaked).toFixed(2) : 0}%
       </DashboardCard>}
 
-      {aggregateStaked !== undefined && <DashboardCard
+      {totalSupply !== undefined && <DashboardCard
         mini={mini}
-        cardTitle="Total Active TNKR Supply"
+        cardTitle="Total TNKR Supply"
         iconSrc={AggregateStakedIcon}
         leading="leading-tight"
       >
-        {aggregateStaked ? `${ formatBalanceToTwoDecimals(aggregateStaked) } TNKR` : "0 TNKR"}
+        {totalSupply ? `${ formatBalanceToTwoDecimals(totalSupply) } TNKR` : "0 TNKR"}
       </DashboardCard>}
     </div>
   );

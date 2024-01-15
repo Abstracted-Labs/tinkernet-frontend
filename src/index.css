@@ -39,5 +39,19 @@ html {
     border-radius: 0.5rem;
     background: linear-gradient(to top, #141414 0%, transparent 100%);
   }
+
+  /* ProjectCard stats section */
+  .scroll-container {
+    animation: scroll 16s linear infinite;
+  }
+  
+  @keyframes scroll {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-50%);
+    }
+  }
 }
  

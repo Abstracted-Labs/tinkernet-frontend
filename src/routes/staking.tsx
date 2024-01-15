@@ -1,6 +1,6 @@
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import BigNumber from "bignumber.js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
@@ -157,6 +157,7 @@ export function getCoreInfo(coreEraStakeInfo: (CoreEraStakeInfoType)[], core: St
 }
 
 const Staking = () => {
+  const initialUnclaimed = useRef<BigNumber | null>(null);
   const api = useApi();
   const setOpenModal = useModal((state) => state.setOpenModal);
   const selectedAccount = useAccount((state) => state.selectedAccount);
@@ -205,9 +206,8 @@ const Staking = () => {
       throw new Error("selectedAccount is null");
     };
 
-    const userStakedInfoMap: Map<
-      number, UserStakedInfoType
-    > = new Map();
+    const userStakedInfoMap: Map<number, UserStakedInfoType> = new Map();
+    let unclaimedErasUpdate = unclaimedEras;
 
     if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
       for (const stakingCore of stakingCores) {
@@ -225,30 +225,29 @@ const Staking = () => {
               const unclaimedEarliest = info.stakes.reduce((p, v) => parseInt(p.era) < parseInt(v.era) ? p : v).era;
 
               if (parseInt(unclaimedEarliest) < currentStakingEra) {
-                const unclaimed = unclaimedEras;
-                const unclaimedCore = unclaimed.cores.find(value => value.coreId === stakingCore.key);
+                const unclaimedCore = unclaimedErasUpdate.cores.find(value => value.coreId === stakingCore.key);
 
                 if (unclaimedCore) {
                   unclaimedCore.earliestEra = parseInt(unclaimedEarliest);
                 } else {
-                  unclaimed.cores.push({
+                  unclaimedErasUpdate.cores.push({
                     coreId: stakingCore.key,
                     earliestEra: parseInt(unclaimedEarliest),
                   });
                 }
 
-                let total = unclaimed.total;
+                let total = unclaimedErasUpdate.total;
                 total = currentStakingEra - parseInt(unclaimedEarliest);
 
-                setUnclaimedEras({
-                  cores: unclaimed.cores,
+                unclaimedErasUpdate = {
+                  cores: unclaimedErasUpdate.cores,
                   total,
-                });
+                };
               } else {
-                setUnclaimedEras((unclaimedEras) => ({
-                  ...unclaimedEras,
+                unclaimedErasUpdate = {
+                  ...unclaimedErasUpdate,
                   total: 0,
-                }));
+                };
               }
             }
 
@@ -271,6 +270,8 @@ const Staking = () => {
         );
       }
     }
+
+    setUnclaimedEras(unclaimedErasUpdate);
   }, [api, currentStakingEra, stakingCores, unclaimedEras, selectedAccount, coreEraStakeInfo]);
 
   const loadCurrentEraAndStake = useCallback(async () => {
@@ -398,7 +399,7 @@ const Staking = () => {
     return unclaimedPerCore;
   };
 
-  const handleClaimAll = async () => {
+  const handleClaimRewards = async () => {
     if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
 
     const result = await restakeClaim({
@@ -411,6 +412,11 @@ const Staking = () => {
       disableClaiming,
       handleRestakingLogic,
     });
+
+    if (initialUnclaimed.current !== null) {
+      setTotalClaimed(prevTotalClaimed => prevTotalClaimed.plus(initialUnclaimed.current || new BigNumber(0)));
+    }
+
     setTotalUnclaimed(new BigNumber(0));
     setClaimAllSuccess(result);
     refreshQuery();
@@ -477,6 +483,10 @@ const Staking = () => {
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
     setTotalUnclaimed(claimAllSuccess ? new BigNumber(0) : totalUnclaimed);
+
+    if (initialUnclaimed.current === null) {
+      initialUnclaimed.current = totalUnclaimed;
+    }
   }, [selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data, claimAllSuccess]);
 
   useEffect(() => {
@@ -521,7 +531,7 @@ const Staking = () => {
           <div className="flex flex-row items-center gap-1">
             <Button
               mini
-              onClick={handleClaimAll}
+              onClick={handleClaimRewards}
               disabled={disableClaiming}
               variant="primary">
               Claim TNKR Rewards
