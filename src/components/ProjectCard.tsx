@@ -118,7 +118,12 @@ const ProjectCard = (props: ProjectCardProps) => {
     });
   };
 
-  const handleStatsHover = useCallback((isHovering: boolean, statClass: string) => {
+  const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (mini) return;
+
     const elements = document.querySelectorAll(`.${ statClass }`);
     elements.forEach(element => {
       const htmlElement = element as HTMLElement;
@@ -151,10 +156,10 @@ const ProjectCard = (props: ProjectCardProps) => {
     {/* Total Stakers */}
     {!mini ? <div
       className={`p-2 stats-1 flex justify-between items-center ${ STAT_UNDERLINE }`}
-      onMouseEnter={() => handleStatsHover(true, 'stats-1')}
-      onMouseLeave={() => handleStatsHover(false, 'stats-1')}
-      onTouchStart={() => handleStatsHover(true, 'stats-1')}
-      onTouchEnd={() => handleStatsHover(false, 'stats-1')}
+      onMouseEnter={(e) => handleStatsHover(true, 'stats-1', e)}
+      onMouseLeave={(e) => handleStatsHover(false, 'stats-1', e)}
+      onTouchStart={(e) => handleStatsHover(true, 'stats-1', e)}
+      onTouchEnd={(e) => handleStatsHover(false, 'stats-1', e)}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -183,10 +188,10 @@ const ProjectCard = (props: ProjectCardProps) => {
     {/* Total Staked */}
     {!mini ? <div
       className={`p-2 stats-2 flex justify-between items-center ${ STAT_UNDERLINE }`}
-      onMouseEnter={() => handleStatsHover(true, 'stats-2')}
-      onMouseLeave={() => handleStatsHover(false, 'stats-2')}
-      onTouchStart={() => handleStatsHover(true, 'stats-2')}
-      onTouchEnd={() => handleStatsHover(false, 'stats-2')}
+      onMouseEnter={(e) => handleStatsHover(true, 'stats-2', e)}
+      onMouseLeave={(e) => handleStatsHover(false, 'stats-2', e)}
+      onTouchStart={(e) => handleStatsHover(true, 'stats-2', e)}
+      onTouchEnd={(e) => handleStatsHover(false, 'stats-2', e)}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -206,10 +211,10 @@ const ProjectCard = (props: ProjectCardProps) => {
     {/* My Stake */}
     <div
       className={`p-2 stats-3 flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}
-      onMouseEnter={() => handleStatsHover(true, 'stats-3')}
-      onMouseLeave={() => handleStatsHover(false, 'stats-3')}
-      onTouchStart={() => handleStatsHover(true, 'stats-3')}
-      onTouchEnd={() => handleStatsHover(false, 'stats-3')}
+      onMouseEnter={(e) => handleStatsHover(true, 'stats-3', e)}
+      onMouseLeave={(e) => handleStatsHover(false, 'stats-3', e)}
+      onTouchStart={(e) => handleStatsHover(true, 'stats-3', e)}
+      onTouchEnd={(e) => handleStatsHover(false, 'stats-3', e)}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -229,10 +234,10 @@ const ProjectCard = (props: ProjectCardProps) => {
     {/* Total Rewards */}
     {!mini ? <div
       className={`p-2 stats-4 flex justify-between items-center ${ STAT_UNDERLINE }`}
-      onMouseEnter={() => handleStatsHover(true, 'stats-4')}
-      onMouseLeave={() => handleStatsHover(false, 'stats-4')}
-      onTouchStart={() => handleStatsHover(true, 'stats-4')}
-      onTouchEnd={() => handleStatsHover(false, 'stats-4')}
+      onMouseEnter={(e) => handleStatsHover(true, 'stats-4', e)}
+      onMouseLeave={(e) => handleStatsHover(false, 'stats-4', e)}
+      onTouchStart={(e) => handleStatsHover(true, 'stats-4', e)}
+      onTouchEnd={(e) => handleStatsHover(false, 'stats-4', e)}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -252,10 +257,10 @@ const ProjectCard = (props: ProjectCardProps) => {
     {/* Unclaimed Rewards */}
     {!mini ? <div
       className={`p-2 stats-5 flex justify-between items-center ${ STAT_UNDERLINE }`}
-      onMouseEnter={() => handleStatsHover(true, 'stats-5')}
-      onMouseLeave={() => handleStatsHover(false, 'stats-5')}
-      onTouchStart={() => handleStatsHover(true, 'stats-5')}
-      onTouchEnd={() => handleStatsHover(false, 'stats-5')}
+      onMouseEnter={(e) => handleStatsHover(true, 'stats-5', e)}
+      onMouseLeave={(e) => handleStatsHover(false, 'stats-5', e)}
+      onTouchStart={(e) => handleStatsHover(true, 'stats-5', e)}
+      onTouchEnd={(e) => handleStatsHover(false, 'stats-5', e)}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -275,10 +280,10 @@ const ProjectCard = (props: ProjectCardProps) => {
     {/* Support Share */}
     {!mini ? <div
       className={`p-2 stats-6 flex justify-between items-center ${ STAT_UNDERLINE }`}
-      onMouseEnter={() => handleStatsHover(true, 'stats-6')}
-      onMouseLeave={() => handleStatsHover(false, 'stats-6')}
-      onTouchStart={() => handleStatsHover(true, 'stats-6')}
-      onTouchEnd={() => handleStatsHover(false, 'stats-6')}
+      onMouseEnter={(e) => handleStatsHover(true, 'stats-6', e)}
+      onMouseLeave={(e) => handleStatsHover(false, 'stats-6', e)}
+      onTouchStart={(e) => handleStatsHover(true, 'stats-6', e)}
+      onTouchEnd={(e) => handleStatsHover(false, 'stats-6', e)}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -298,10 +303,10 @@ const ProjectCard = (props: ProjectCardProps) => {
     {/* Minimum Support */}
     {!mini ? <div
       className={`p-2 stats-7 flex justify-between items-center`}
-      onMouseEnter={() => handleStatsHover(true, 'stats-7')}
-      onMouseLeave={() => handleStatsHover(false, 'stats-7')}
-      onTouchStart={() => handleStatsHover(true, 'stats-7')}
-      onTouchEnd={() => handleStatsHover(false, 'stats-7')}
+      onMouseEnter={(e) => handleStatsHover(true, 'stats-7', e)}
+      onMouseLeave={(e) => handleStatsHover(false, 'stats-7', e)}
+      onTouchStart={(e) => handleStatsHover(true, 'stats-7', e)}
+      onTouchEnd={(e) => handleStatsHover(false, 'stats-7', e)}
     >
       <div className='flex flex-row items-center gap-2'>
         <div className="w-5 h-5 rounded-full bg-tinkerYellow bg-opacity-20 flex items-center justify-center">
@@ -352,7 +357,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         </div> : null}
 
         <div
-          className={`relative stats-section grid grid-cols-1 gap-2 h-28 overflow-y-scroll tinker-scrollbar scrollbar-thumb-amber-300 scrollbar-thin scrollbar pr-3`}
+          className={`relative stats-section grid grid-cols-1 gap-2 ${ mini ? '' : 'h-28' } overflow-y-scroll tinker-scrollbar scrollbar-thumb-amber-300 scrollbar-thin scrollbar pr-3`}
           onScroll={(e) => {
             // Update the stored scroll position
             scrollPositionRef.current = (e.target as HTMLElement).scrollTop;

@@ -20,18 +20,19 @@ const useConnect = () => {
 
     if (extensions.length === 0) {
       setOpenModal({ name: modalName.USE_NOVA });
-
       return;
     }
 
-    const accounts = await web3Accounts({ ss58Format: 117, extensions: exts });
+    // Filter the exts based on the extensions that are enabled
+    const filteredExts = exts.filter(ext => extensions.some(enabledExt => enabledExt.name === ext));
+
+    const accounts = await web3Accounts({ ss58Format: 117, extensions: filteredExts });
 
     setAccounts(accounts);
 
     if (accounts.length === 1) {
       setSelectedAccount(accounts[0]);
       setOpenModal({ name: null });
-
       return;
     }
 
