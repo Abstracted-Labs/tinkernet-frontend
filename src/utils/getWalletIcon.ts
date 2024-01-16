@@ -9,7 +9,7 @@ export enum WalletNameEnum {
   TALISMAN = "talisman",
   NOVAWALLET = "nova wallet",
   PJS = "polkadot-js",
-  WALLETCONNECT = "wallet-connect"
+  // WALLETCONNECT = "wallet-connect"
 }
 
 export function getWalletIcon(type: string | undefined) {

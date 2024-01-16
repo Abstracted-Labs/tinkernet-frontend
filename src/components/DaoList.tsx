@@ -35,7 +35,7 @@ const DaoList = (props: DaoListProps) => {
   const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
   >([]);
 
-  const [rewardsCoreClaimedQuery, reexecuteQuery] = useQuery({
+  const [rewardsCoreClaimedQuery] = useQuery({
     query: TotalRewardsCoreClaimedQuery,
     variables: {},
     pause: !selectedAccount,
