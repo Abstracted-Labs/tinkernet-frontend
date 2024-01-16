@@ -7,7 +7,7 @@ import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
 import Identicon from '@polkadot/react-identicon';
 import { stringShorten } from "@polkadot/util";
 import { capitalizeFirst } from "../utils/capitalizeFirst";
-import { getWalletIcon } from "../utils/getWalletIcon";
+import { WalletNameEnum, getWalletIcon } from "../utils/getWalletIcon";
 import Button from "../components/Button";
 import { BG_GRADIENT } from "../utils/consts";
 
@@ -15,11 +15,13 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
   const closeCurrentModal = useModal((state) => state.closeCurrentModal);
 
-  const { selectedAccount, accounts, setSelectedAccount } = useAccount(
+  const { selectedAccount, accounts, setSelectedAccount, setExtensions, extensions } = useAccount(
     (state) => ({
       selectedAccount: state.selectedAccount,
       accounts: state.accounts,
       setSelectedAccount: state.setSelectedAccount,
+      setExtensions: state.setExtensions,
+      extensions: state.extensions,
     }),
     shallow
   );
@@ -33,15 +35,35 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
   ) => {
     if (!account) {
       setSelectedAccount(null);
-
-      closeCurrentModal();
+      closeModal();
 
       return;
     }
 
     setSelectedAccount(account);
+    closeModal();
+  };
 
-    closeCurrentModal();
+  const handleExtensionClick = async (walletName: string) => {
+    if (!walletName) {
+      console.error("Wallet name is not provided");
+      return;
+    }
+
+    if (!Object.values(WalletNameEnum).includes(walletName as WalletNameEnum)) {
+      console.error("Invalid wallet name");
+      return;
+    }
+
+    if (!extensions.includes(walletName)) {
+      setExtensions([...extensions, walletName]);
+    } else {
+      setExtensions(extensions.filter((extension) => extension !== walletName));
+
+      if (selectedAccount && selectedAccount.meta.source === walletName) {
+        setSelectedAccount(null);
+      }
+    }
   };
 
   return isOpen ? (
@@ -54,9 +76,26 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
       </button>
       <Dialog.Panel>
         <>
-          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] md:w-[530px] h-[472px] rounded-xl space-y-4 p-8 border border-[2px] border-tinkerLightGrey ${ BG_GRADIENT }`}>
-            <h2 className="text-md font-bold text-white w-[310px] md:w-[490px] fixed bg-tinkerDarkGrey flex flex-row items-stretch pb-4">Select your Wallet</h2>
-            <ul className="w-full h-90 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-auto mb-10 pt-8 pr-4">
+          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] md:w-[530px] rounded-xl space-y-4 px-8 p-8 gap-2 border border-[2px] border-tinkerLightGrey ${ BG_GRADIENT }`}>
+            <div>
+              <h2 className="text-md font-bold text-white w-[310px] md:w-[490px] bg-tinkerDarkGrey">
+                <span>Select your Wallet</span>
+              </h2>
+              <div className="flex-shrink flex flex-row justify-center gap-3 mt-3">
+                {Object.values(WalletNameEnum).map((walletName) => {
+                  const walletIcon = getWalletIcon(walletName);
+                  return (
+                    <button key={walletName} onClick={() => handleExtensionClick(walletName)} className={`rounded-lg p-3 border-1 bg-tinkerYellow bg-opacity-10 hover:border-tinkerYellow hover:border-opacity-80 hover:bg-opacity-20 ${ extensions.includes(walletName) ? 'bg-tinkerYellow bg-opacity-20 border border-tinkerYellow border-opacity-60' : 'border border-tinkerYellow border-opacity-20 hover:bg-opacity-10' }`}>
+
+                      <div className="flex flex-col items-center justify-center">
+                        <img src={walletIcon} alt={walletName} className={`h-5 w-5 ${ extensions.includes(walletName) ? '' : 'opacity-30' }`} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <ul className="w-full h-96 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 overflow-y-scroll pr-4">
               {accounts.filter(account => getWalletIcon(account.meta?.source) !== undefined).map((account, index) => {
                 return (
                   <li
