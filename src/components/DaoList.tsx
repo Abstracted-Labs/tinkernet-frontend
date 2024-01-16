@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ProjectCard from './ProjectCard';
 import LoadingSpinner from './LoadingSpinner';
-import { BalanceType, ChainPropertiesType, CoreEraStakeInfoType, CoreIndexedRewardsType, LockedType, StakingCore, TotalRewardsCoreClaimedQuery, TotalUserStakedData, UserStakedInfoType, getCoreInfo, getTotalUserStaked } from '../routes/staking';
+import { BalanceType, ChainPropertiesType, CoreEraStakeInfoType, CoreIndexedRewardsType, LockedType, StakingCore, TotalRewardsCoreClaimedQuery, TotalUserStakedData, UserStakedInfoType, getTotalUserStaked } from '../routes/staking';
 import { AnyJson, Codec } from '@polkadot/types/types';
 import { StakedDaoType } from '../routes/overview';
 import BigNumber from 'bignumber.js';
@@ -92,18 +92,15 @@ const DaoList = (props: DaoListProps) => {
       return;
     }
 
-    const coreInfoResults: { [key: number]: Partial<CoreEraStakeInfoType> | undefined; } = {};
-    const totalUserStakedResults: TotalUserStakedData = {};
+    setTotalUserStakedData(prevState => {
+      const totalUserStakedResults: TotalUserStakedData = { ...prevState };
+      for (const core of stakingCores) {
+        const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
+        totalUserStakedResults[core.key] = totalUserStaked;
+      }
 
-    for (const core of stakingCores) {
-      const coreInfo = getCoreInfo(coreEraStakeInfo, core);
-      const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
-
-      coreInfoResults[core.key] = coreInfo;
-      totalUserStakedResults[core.key] = totalUserStaked;
-    }
-
-    setTotalUserStakedData(totalUserStakedResults);
+      return totalUserStakedResults;
+    });
   }, [stakingCores, coreEraStakeInfo, userStakedInfo]);
 
   const loadAccountInfo = useCallback(async () => {
@@ -189,65 +186,63 @@ const DaoList = (props: DaoListProps) => {
 
     const currentEra = await api.query.ocifStaking.currentEra();
 
-    if (coreEraStakeInfo.length === 0) {
-      for (const stakingCore of stakingCores) {
-        await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
+    for (const stakingCore of stakingCores) {
+      await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
 
-          const info: {
-            total: string;
-            numberOfStakers: number;
-            rewardClaimed: boolean;
-            active: boolean;
-          } = inf.toPrimitive() as {
-            total: string;
-            numberOfStakers: number;
-            rewardClaimed: boolean;
-            active: boolean;
-          };
+        const info: {
+          total: string;
+          numberOfStakers: number;
+          rewardClaimed: boolean;
+          active: boolean;
+        } = inf.toPrimitive() as {
+          total: string;
+          numberOfStakers: number;
+          rewardClaimed: boolean;
+          active: boolean;
+        };
 
-          coreEraStakeInfoMap.set(stakingCore.key, {
-            totalStaked: info.total,
-            active: info.active,
-            rewardClaimed: info.rewardClaimed,
-            numberOfStakers: info.numberOfStakers,
-            coreId: stakingCore.key
+        coreEraStakeInfoMap.set(stakingCore.key, {
+          totalStaked: info.total,
+          active: info.active,
+          rewardClaimed: info.rewardClaimed,
+          numberOfStakers: info.numberOfStakers,
+          coreId: stakingCore.key
+        });
+
+        const coreEraStake = Array.from(coreEraStakeInfoMap.values());
+        setCoreEraStakeInfo(coreEraStake);
+      });
+    }
+
+    for (const stakingCore of stakingCores) {
+
+      await api.query.ocifStaking.generalStakerInfo(
+        stakingCore.key,
+        selectedAccount.address,
+        (generalStakerInfo: Codec) => {
+          const info = generalStakerInfo.toPrimitive() as StakesInfo;
+          const latestInfo = info.stakes.at(-1);
+
+          let era = -1;
+          let staked = new BigNumber(0);
+
+          if (latestInfo) {
+            era = parseInt(latestInfo.era);
+            staked = new BigNumber(latestInfo.staked);
+          }
+
+          userStakedInfoMap.set(stakingCore.key, {
+            coreId: stakingCore.key,
+            era: era,
+            staked: staked,
           });
 
-          const coreEraStake = Array.from(coreEraStakeInfoMap.values());
-          setCoreEraStakeInfo(coreEraStake);
-        });
-      }
-
-      for (const stakingCore of stakingCores) {
-
-        await api.query.ocifStaking.generalStakerInfo(
-          stakingCore.key,
-          selectedAccount.address,
-          (generalStakerInfo: Codec) => {
-            const info = generalStakerInfo.toPrimitive() as StakesInfo;
-            const latestInfo = info.stakes.at(-1);
-
-            let era = -1;
-            let staked = new BigNumber(0);
-
-            if (latestInfo) {
-              era = parseInt(latestInfo.era);
-              staked = new BigNumber(latestInfo.staked);
-            }
-
-            userStakedInfoMap.set(stakingCore.key, {
-              coreId: stakingCore.key,
-              era: era,
-              staked: staked,
-            });
-
-            const userStakedInfo = Array.from(userStakedInfoMap.values());
-            setUserStakedInfo(userStakedInfo);
-          }
-        );
-      }
+          const userStakedInfo = Array.from(userStakedInfoMap.values());
+          setUserStakedInfo(userStakedInfo);
+        }
+      );
     }
-  }, [api, stakingCores, coreEraStakeInfo, selectedAccount]);
+  }, [api, stakingCores, selectedAccount]);
 
   useEffect(() => {
     const setup = async () => {
@@ -279,12 +274,6 @@ const DaoList = (props: DaoListProps) => {
 
     loadDaos();
   }, [selectedAccount, stakingCores, api]);
-
-  useEffect(() => {
-    if (selectedAccount) {
-      reexecuteQuery();
-    }
-  }, [reexecuteQuery, selectedAccount]);
 
   useEffect(() => {
     if (!rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
