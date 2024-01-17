@@ -33,7 +33,6 @@ const useModal = createWithEqualityFn<ModalState>()((set) => ({
       if (modal) {
         // Check if the modal is already open
         if (state.openModals.some(openModal => openModal.name === modal.name)) {
-          console.log('Modal is already open');
           return state;
         }
 
@@ -47,7 +46,6 @@ const useModal = createWithEqualityFn<ModalState>()((set) => ({
   closeCurrentModal: () => {
     set((state) => {
       if (!state.openModals || state.openModals.length === 0) {
-        console.log('No open modals to close');
         return state;
       }
 
