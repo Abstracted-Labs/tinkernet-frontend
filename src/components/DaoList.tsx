@@ -13,6 +13,9 @@ import useAccount from '../stores/account';
 import { useQuery } from 'urql';
 import { StakesInfo } from '../routes/claim';
 import useModal, { modalName } from '../stores/modals';
+import Input from './Input';
+import Button from './Button';
+import FilterIcon from '../assets/filter-icon.svg';
 
 interface DaoListProps { mini: boolean; isOverview: boolean; }
 
@@ -305,7 +308,15 @@ const DaoList = (props: DaoListProps) => {
 
   return (
     <div>
-      <h4 className="text-white text-md mb-2">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
+      <div className='flex flex-col md:flex-row gap-2 md:gap-10 items-stretch md:items-center justify-between mb-4'>
+        <h4 className="text-white text-md">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
+        <div className="bg-neutral-950 bg-opacity-50 rounded-lg flex flex-row items-stretch gap-2 p-4">
+          <Input placeholder='Search' onChange={(e) => console.log(e.target.value)} />
+          <button type='button' className='rounded-lg bg-tinkerGrey hover:bg-tinkerDarkYellow p-3'>
+            <img src={FilterIcon} alt="Filter" className='h-5 w-5' />
+          </button>
+        </div>
+      </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stakingCores.map((core: StakingCore) => {
           const coreInfo = coreEraStakeInfo.find((info) => info.coreId === core.key);

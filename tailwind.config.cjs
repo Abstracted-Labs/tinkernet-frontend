@@ -8,6 +8,7 @@ module.exports = {
     extend: {
       colors: {
         tinkerYellow: '#f8ce46',
+        tinkerDarkYellow: 'rgba(248, 206, 70, .20)',
         tinkerGrey: '#202125', // Project card bg
         tinkerLightGrey: '#2D2E34', // Selected active account bg
         tinkerDarkGrey: '#16171b', // Project desc bg
