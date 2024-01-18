@@ -14,7 +14,6 @@ import { useQuery } from 'urql';
 import { StakesInfo } from '../routes/claim';
 import useModal, { modalName } from '../stores/modals';
 import Input from './Input';
-import Button from './Button';
 import FilterIcon from '../assets/filter-icon.svg';
 
 interface DaoListProps { mini: boolean; isOverview: boolean; }
@@ -22,6 +21,7 @@ interface DaoListProps { mini: boolean; isOverview: boolean; }
 const DaoList = (props: DaoListProps) => {
   const { mini, isOverview } = props;
   const api = useApi();
+  const initialCoresRef = useRef<StakingCore[]>([]);
   const descriptionRef = useRef<HTMLDivElement | null>(null);
   const projectCardRef = useRef<HTMLDivElement | null>(null);
   const setOpenModal = useModal((state) => state.setOpenModal);
@@ -37,6 +37,9 @@ const DaoList = (props: DaoListProps) => {
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
   const [userStakedInfo, setUserStakedInfo] = useState<UserStakedInfoType[]
   >([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   const [rewardsCoreClaimedQuery] = useQuery({
     query: TotalRewardsCoreClaimedQuery,
@@ -44,17 +47,23 @@ const DaoList = (props: DaoListProps) => {
     pause: !selectedAccount,
   });
 
-  const toggleViewMembers = (core: StakingCore, members: AnyJson[]) => {
+  const handleViewMembers = (core: StakingCore, members: AnyJson[]) => {
     setOpenModal({
       name: modalName.MEMBERS,
       metadata: { ...core.metadata, members },
     });
   };
 
-  const toggleReadMore = (core: StakingCore) => {
+  const handleReadMore = (core: StakingCore) => {
     setOpenModal({
       name: modalName.READ_MORE,
       metadata: core.metadata,
+    });
+  };
+
+  const handleFilters = () => {
+    setOpenModal({
+      name: modalName.FILTERS,
     });
   };
 
@@ -81,12 +90,34 @@ const DaoList = (props: DaoListProps) => {
     });
   };
 
+  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+
+    const newTimeout = setTimeout(() => {
+      if (value === '') {
+        setStakingCores(initialCoresRef.current);
+      } else {
+        const filteredCores = initialCoresRef.current.filter(core =>
+          core.metadata.name.toLowerCase().includes(value) ||
+          (core.metadata.description && core.metadata.description.toLowerCase().includes(value))
+        );
+        setStakingCores(filteredCores);
+      }
+    }, 300);
+
+    setDebounceTimeout(newTimeout);
+  };
+
   const loadCores = useCallback(async () => {
     if (!selectedAccount) return;
 
     const cores = await loadProjectCores(api);
     if (cores) {
-      setStakingCores(cores);
+      initialCoresRef.current = cores; // Store the initial list in the ref
+      setStakingCores(cores); // Set the displayed cores to the initial list
     }
   }, [selectedAccount, api]);
 
@@ -290,6 +321,12 @@ const DaoList = (props: DaoListProps) => {
     setCoreIndexedRewards(uniqueCoreIndexedRewards);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.data]);
 
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout) clearTimeout(debounceTimeout);
+    };
+  }, [debounceTimeout]);
+
   const stakedCoresCount = useMemo(() => {
     return isOverview
       ? stakingCores.filter(core =>
@@ -308,11 +345,11 @@ const DaoList = (props: DaoListProps) => {
 
   return (
     <div>
-      <div className='flex flex-col md:flex-row gap-2 md:gap-10 items-stretch md:items-center justify-between mb-4'>
+      <div className='flex flex-col md:flex-row gap-2 md:gap-10 items-stretch md:items-center justify-between mb-4 mt-14 md:mt-0'>
         <h4 className="text-white text-md">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
         <div className="bg-neutral-950 bg-opacity-50 rounded-lg flex flex-row items-stretch gap-2 p-4">
-          <Input placeholder='Search' onChange={(e) => console.log(e.target.value)} />
-          <button type='button' className='rounded-lg bg-tinkerGrey hover:bg-tinkerDarkYellow p-3'>
+          <Input type="text" id="filterDaos" placeholder='Search' onChange={handleSearch} value={searchTerm} />
+          <button type='button' className='rounded-lg bg-tinkerGrey hover:bg-tinkerDarkYellow p-3' onClick={handleFilters}>
             <img src={FilterIcon} alt="Filter" className='h-5 w-5' />
           </button>
         </div>
@@ -338,8 +375,8 @@ const DaoList = (props: DaoListProps) => {
               coreRewards={coreRewards}
               handleManageStaking={handleManageStaking}
               handleViewDetails={(mini) => handleViewDetails(mini, projectCard(false))}
-              toggleExpanded={toggleReadMore}
-              toggleViewMembers={toggleViewMembers}
+              toggleExpanded={handleReadMore}
+              toggleViewMembers={handleViewMembers}
               chainProperties={chainProperties}
               availableBalance={availableBalance}
               descriptionRef={minified ? projectCardRef : descriptionRef}

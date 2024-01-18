@@ -9,6 +9,7 @@ const modalName = {
   MEMBERS: "MEMBERS",
   VIEW_DETAILS: "VIEW_DETAILS",
   USE_NOVA: "USE_NOVA",
+  FILTERS: "FILTERS",
 } as const;
 
 type ModalName = (typeof modalName)[keyof typeof modalName];

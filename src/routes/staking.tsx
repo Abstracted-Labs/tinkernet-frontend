@@ -354,7 +354,7 @@ const Staking = () => {
     });
   };
 
-  const handleRegisterProject = async () => {
+  const handleRegisterProject = () => {
     setOpenModal({
       name: modalName.REGISTER_PROJECT,
     });
