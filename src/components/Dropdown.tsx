@@ -2,7 +2,7 @@ import { Fragment, useEffect, useState, ReactNode, isValidElement, memo } from '
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
-interface DropdownProps<T> {
+export interface DropdownProps<T> {
   list?: T[];
   onSelect: (value: T | null) => void;
   defaultOption?: string;
@@ -13,7 +13,8 @@ interface DropdownProps<T> {
 
 const DEFAULT_OPTION = "Available Balance";
 
-const Dropdown = memo(function Dropdown<T extends { name: string; }>({ initialValue, list, onSelect, defaultOption = DEFAULT_OPTION, currentValue, children }: DropdownProps<T>) {
+const Dropdown = memo(function Dropdown<T extends { name: string; }>(props: DropdownProps<T>) {
+  const { initialValue, list, onSelect, defaultOption = DEFAULT_OPTION, currentValue, children } = props;
   const [optionSelected, setOptionSelected] = useState<T | ReactNode | null>(null);
 
   const handleSelect = (value: T | ReactNode | null) => {

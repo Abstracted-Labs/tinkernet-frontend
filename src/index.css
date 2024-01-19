@@ -53,5 +53,18 @@ html {
       transform: translateY(-50%);
     }
   }
+
+  /* Range filter styles */
+  input[type='range']::-webkit-slider-thumb {
+    @apply w-6 h-6 bg-tinkerYellow rounded-full cursor-pointer;
+  }
+  
+  input[type='range']::-moz-range-thumb {
+    @apply w-6 h-6 bg-tinkerYellow rounded-full cursor-pointer;
+  }
+  
+  input[type='range']::-ms-thumb {
+    @apply w-6 h-6 bg-tinkerYellow rounded-full cursor-pointer;
+  }
 }
  
