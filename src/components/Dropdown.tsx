@@ -9,16 +9,18 @@ export interface DropdownProps<T> {
   currentValue?: T | null;
   initialValue?: T | null | string;
   children?: ReactNode[];
+  reset?: boolean;
+  onReset?: () => void;
 }
 
 const DEFAULT_OPTION = "Available Balance";
 
 const Dropdown = memo(function Dropdown<T extends { name: string; }>(props: DropdownProps<T>) {
-  const { initialValue, list, onSelect, defaultOption = DEFAULT_OPTION, currentValue, children } = props;
+  const { initialValue, list, onSelect, defaultOption = DEFAULT_OPTION, currentValue, children, reset, onReset } = props;
   const [optionSelected, setOptionSelected] = useState<T | ReactNode | null>(null);
 
   const handleSelect = (value: T | ReactNode | null) => {
-    setOptionSelected(value);
+    setOptionSelected(value || null);
     onSelect(value as T | null);
   };
 
@@ -46,6 +48,15 @@ const Dropdown = memo(function Dropdown<T extends { name: string; }>(props: Drop
       }
     }
   }, [currentValue, children]);
+
+  useEffect(() => {
+    if (reset) {
+      setOptionSelected(null);
+      if (onReset) {
+        onReset();
+      }
+    }
+  }, [reset, onReset]);
 
   return (
     <div className='flex-grow'>
@@ -79,7 +90,7 @@ const Dropdown = memo(function Dropdown<T extends { name: string; }>(props: Drop
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <Listbox.Options className={`absolute z-50 py-1 mt-1 overflow-auto text-xs bg-tinkerGrey rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm max-h-52 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 ${ children ? 'w-2/5' : 'w-4/5 md:w-2/5' }`}>
+          <Listbox.Options className={`absolute z-50 py-1 mt-1 overflow-auto text-xs bg-tinkerGrey rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm max-h-52 tinker-scrollbar scrollbar scrollbar-thumb-amber-300 ${ children ? 'w-2/5' : 'w-4/5' }`}>
             {children ? children.map((child, childIdx) => (
               <Listbox.Option
                 key={childIdx}
@@ -92,26 +103,30 @@ const Dropdown = memo(function Dropdown<T extends { name: string; }>(props: Drop
                 </div>
                 <div>{child}</div>
               </Listbox.Option>
-            )) : list?.map((item, itemIdx) => (
-              <Listbox.Option
-                id={item?.name}
-                key={itemIdx}
-                className={({ active }) =>
-                  `${ active ? 'text-tinkerYellow bg-tinkerLightGrey cursor-pointer' : 'text-white' } cursor-default select-none relative py-3 pr-4 pl-3`}
-                value={item}
-              >
-                <>
-                  <div className={`${ optionSelected === item ? 'font-medium' : 'font-normal' } text-xs`}>
-                    <div className='flex flex-row items-center'>
-                      <div className='h-4 w-4 mr-1 text-tinkerYellow'>
-                        {optionSelected === item ? <CheckIcon /> : null}
+            )) : list?.map((item, itemIdx) => {
+              return (
+                <Listbox.Option
+                  id={item?.name}
+                  key={itemIdx}
+                  className={({ active }) =>
+                    `${ active ? 'text-tinkerYellow bg-tinkerLightGrey cursor-pointer' : 'text-white' } cursor-default select-none relative py-3 pr-4 pl-3`}
+                  value={item}
+                >
+                  <>
+                    <div className={`${ optionSelected === item ? 'font-medium' : 'font-normal' } text-xs`}>
+                      <div className='flex flex-row items-center'>
+                        <div className='h-4 w-4 mr-1 text-tinkerYellow'>
+                          {(typeof optionSelected === 'object' && optionSelected !== null && 'name' in optionSelected && typeof item === 'object' && item !== null && 'name' in item && optionSelected.name === item.name) ? <CheckIcon /> : null}
+                        </div>
+                        <div>
+                          {typeof item === 'object' && 'name' in item && item.name === initialValue ? defaultOption : (typeof item === 'string' ? item : item?.name)}
+                        </div>
                       </div>
-                      <div>{item?.name === initialValue ? defaultOption : (typeof item === 'string' ? item : item?.name)}</div>
                     </div>
-                  </div>
-                </>
-              </Listbox.Option>
-            ))}
+                  </>
+                </Listbox.Option>
+              );
+            })}
           </Listbox.Options>
         </Transition>
       </Listbox>

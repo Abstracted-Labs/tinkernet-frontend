@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { shallow } from "zustand/shallow";
@@ -8,6 +8,8 @@ import { BG_GRADIENT } from "../utils/consts";
 import TriStateCheckbox from "../components/TriStateCheckbox";
 import MinMaxRange from "../components/MinMaxRange";
 import Dropdown from "../components/Dropdown";
+
+export const HR_BREAK = <hr className="border-t-1 border-tinkerGrey my-4" />;
 
 export interface CheckboxFilterState {
   isChecked: boolean;
@@ -33,7 +35,7 @@ export interface FilterStates {
   totalStakedRange: RangeFilterState;
   isMinSupportMet: CheckboxFilterState;
   isMyStakedDAOs: CheckboxFilterState;
-  orderBy: OrderByOption;
+  orderBy: OrderByOption | string;
 }
 
 export interface DaoListFiltersProps {
@@ -41,14 +43,27 @@ export interface DaoListFiltersProps {
   updateCores: (filters: FilterStates) => void;
 }
 
+const ORDER_BY = 'Order By';
+
+// Helper function to format the enum keys into a more readable string
+const formatOptionName = (option: string) => {
+  return option
+    .replace(/([A-Z])/g, ' $1') // insert a space before all caps
+    .replace(/^./, (str) => str.toUpperCase()) // capitalize the first letter
+    .trim();
+};
+
+const defaultFilters = (): FilterStates => ({
+  totalStakersRange: { minValue: 0, maxValue: 10000 },
+  totalStakedRange: { minValue: 0, maxValue: 99999 },
+  isMinSupportMet: { isChecked: false, isIndeterminate: false },
+  isMyStakedDAOs: { isChecked: false, isIndeterminate: false },
+  orderBy: ORDER_BY,
+});
+
 const DaoListFilters = ({ isOpen }: { isOpen: boolean; }) => {
-  const [filters, setFilters] = useState<FilterStates>({
-    totalStakersRange: { minValue: 0, maxValue: 99999 },
-    totalStakedRange: { minValue: 0, maxValue: 99999 },
-    isMinSupportMet: { isChecked: false },
-    isMyStakedDAOs: { isChecked: false },
-    orderBy: OrderByOption.NAME_ASC,
-  });
+  const [filters, setFilters] = useState<FilterStates>(defaultFilters());
+  const [reset, setReset] = useState<boolean>(false);
 
   const { closeCurrentModal } = useModal(
     (state) => state,
@@ -58,6 +73,15 @@ const DaoListFilters = ({ isOpen }: { isOpen: boolean; }) => {
   const closeModal = () => {
     closeCurrentModal();
   };
+
+  const resetFilters = () => {
+    setFilters(defaultFilters());
+    setReset(true);
+  };
+
+  useEffect(() => {
+    setReset(false);
+  }, []);
 
   return isOpen ? (
     <Dialog open={true} onClose={closeCurrentModal}>
@@ -70,53 +94,65 @@ const DaoListFilters = ({ isOpen }: { isOpen: boolean; }) => {
         </button>
         <Dialog.Panel>
           <>
-            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
+            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-auto rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
               <div>
                 <h2 className="text-md font-bold text-white bg-tinkerDarkGrey mb-5">
                   <span>Refine Search Results</span>
                 </h2>
                 <div className="text-white text-sm">
-                  <TriStateCheckbox
-                    checked={filters.isMinSupportMet.isChecked}
-                    indeterminate={filters.isMinSupportMet.isIndeterminate}
-                    onChange={(newState) => setFilters({ ...filters, isMinSupportMet: { isChecked: newState } })}
-                  /> Min Support Met
-                  <TriStateCheckbox
-                    checked={filters.isMyStakedDAOs.isChecked}
-                    indeterminate={filters.isMyStakedDAOs.isIndeterminate}
-                    onChange={(newState) => setFilters({ ...filters, isMyStakedDAOs: { isChecked: newState } })}
-                  /> My Staked DAOs
-                  {/* <MinMaxRange
-                    min={filters.totalStakersRange.minValue}
-                    max={filters.totalStakersRange.maxValue}
-                    minValue={filters.totalStakersRange.minValue}
-                    maxValue={filters.totalStakersRange.maxValue}
-                    onMinChange={(e) => setFilters({ ...filters, totalStakersRange: { ...filters.totalStakersRange, minValue: Number(e.target.value) } })}
-                    onMaxChange={(e) => setFilters({ ...filters, totalStakersRange: { ...filters.totalStakersRange, maxValue: Number(e.target.value) } })}
-                  /> Total Stakers */}
-                  <div className="my-4">
-                    <MinMaxRange
-                      min={0}
-                      max={99999}
-                      minValue={filters.totalStakedRange.minValue}
-                      maxValue={filters.totalStakedRange.maxValue}
-                      onMinChange={(newMinValue) => setFilters({ ...filters, totalStakedRange: { ...filters.totalStakedRange, minValue: newMinValue } })}
-                      onMaxChange={(newMaxValue) => setFilters({ ...filters, totalStakedRange: { ...filters.totalStakedRange, maxValue: newMaxValue } })}
-                    /> Total Staked
-                  </div>
                   <Dropdown
-                    list={Object.values(OrderByOption).map(option => ({ name: option }))}
+                    onReset={() => setReset(false)}
+                    reset={reset}
+                    list={Object.values(OrderByOption).map(option => ({ name: formatOptionName(option) }))}
                     onSelect={(value) => {
                       if (value) {
-                        setFilters({ ...filters, orderBy: OrderByOption[value.name as keyof typeof OrderByOption] });
+                        setFilters({ ...filters, orderBy: OrderByOption[value.name.replace(/ /g, '') as keyof typeof OrderByOption] });
                       }
                     }}
-                    defaultOption={OrderByOption.NAME_ASC}
-                    currentValue={{ name: filters.orderBy }}
-                    initialValue={{ name: OrderByOption.NAME_ASC }}
-                  /> Order By
+                    defaultOption={ORDER_BY}
+                  />
+                  {HR_BREAK}
+                  <div>
+                    <div className="text-sm text-white">Include/Don't Include</div>
+                    <div className="flex flex-row justify-between">
+                      <TriStateCheckbox
+                        label="Min. Support Met"
+                        checked={filters.isMinSupportMet.isChecked}
+                        indeterminate={filters.isMinSupportMet.isIndeterminate}
+                        onChange={(checked, indeterminate) => setFilters({ ...filters, isMinSupportMet: { isChecked: checked, isIndeterminate: indeterminate } })}
+                      />
+                      <TriStateCheckbox
+                        label="My Staked DAOs"
+                        checked={filters.isMyStakedDAOs.isChecked}
+                        indeterminate={filters.isMyStakedDAOs.isIndeterminate}
+                        onChange={(checked, indeterminate) => setFilters({ ...filters, isMyStakedDAOs: { isChecked: checked, isIndeterminate: indeterminate } })}
+                      />
+                    </div>
+                  </div>
+                  {HR_BREAK}
+                  <MinMaxRange
+                    label="Total Stakers"
+                    min={0}
+                    max={10000}
+                    step={500}
+                    minValue={filters.totalStakersRange.minValue}
+                    maxValue={filters.totalStakersRange.maxValue}
+                    onMinChange={(newMinValue) => setFilters(filters => ({ ...filters, totalStakersRange: { ...filters.totalStakersRange, minValue: newMinValue } }))}
+                    onMaxChange={(newMaxValue) => setFilters(filters => ({ ...filters, totalStakersRange: { ...filters.totalStakersRange, maxValue: newMaxValue } }))}
+                  />
+                  <MinMaxRange
+                    label="Total TNKR Staked"
+                    min={0}
+                    max={99999}
+                    minValue={filters.totalStakedRange.minValue}
+                    maxValue={filters.totalStakedRange.maxValue}
+                    onMinChange={(newMinValue) => setFilters(filters => ({ ...filters, totalStakedRange: { ...filters.totalStakedRange, minValue: newMinValue } }))}
+                    onMaxChange={(newMaxValue) => setFilters(filters => ({ ...filters, totalStakedRange: { ...filters.totalStakedRange, maxValue: newMaxValue } }))}
+                  />
+                  {HR_BREAK}
                 </div>
               </div>
+              <div onClick={resetFilters} className="text-center text-xs text-tinkerTextGrey hover:text-tinkerYellow hover:text-opacity-60 hover:underline hover:cursor-pointer hover:underline-offset-4">Reset Default Filters</div>
               <div>
                 <Button variant="primary" mini onClick={closeModal}>Apply Filters</Button>
               </div>
