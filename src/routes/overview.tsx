@@ -11,7 +11,7 @@ import { AnyJson, Codec } from "@polkadot/types/types";
 import { StakesInfo, VestingData, VestingSchedule } from "./claim";
 import MetricDashboard from "../components/MetricDashboard";
 import { loadProjectCores } from '../utils/stakingServices';
-import { StakingCore, CoreEraStakeInfoType, UserStakedInfoType, BalanceType, LockedType, TotalRewardsClaimedQuery, TotalRewardsCoreClaimedQuery, CoreEraType } from "./staking";
+import { StakingCore, CoreEraStakeInfoType, UserStakedInfoType, BalanceType, LockedType, TotalRewardsClaimedQuery, TotalRewardsCoreClaimedQuery, UnclaimedErasType } from "./staking";
 import { calculateVestingData, fetchSystemData } from "../utils/vestingServices";
 import DaoList from "../components/DaoList";
 
@@ -25,10 +25,7 @@ const Overview = () => {
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakeInfoType[]>([]);
   const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>();
   const [aggregateStaked, setAggregateStaked] = useState<BigNumber>();
-  const [unclaimedEras, setUnclaimedEras] = useState<{
-    cores: CoreEraType[];
-    total: number;
-  }>({ cores: [], total: 0 });
+  const [unclaimedEras, setUnclaimedEras] = useState<UnclaimedErasType>({ cores: [], total: 0 });
   const [availableBalance, setAvailableBalance] = useState<BigNumber>();
   const [lockedBalance, setLockedBalance] = useState<BigNumber>();
   const [isLoading, setLoading] = useState(true);

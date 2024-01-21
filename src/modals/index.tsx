@@ -7,6 +7,7 @@ import AccountSelector from "./AccountSelector";
 import ViewMembers from "./ViewMembers";
 import ViewDetails from "./ViewDetails";
 import UseNovaWallet from "./UseNovaWallet";
+import DaoListFilters from "./DaoListFilters";
 
 const Modals = () => {
   const { openModals } = useModal((state) => ({
@@ -22,6 +23,7 @@ const Modals = () => {
     [modalName.MEMBERS]: ViewMembers,
     [modalName.VIEW_DETAILS]: ViewDetails,
     [modalName.USE_NOVA]: UseNovaWallet,
+    [modalName.FILTERS]: DaoListFilters,
   };
 
   return (

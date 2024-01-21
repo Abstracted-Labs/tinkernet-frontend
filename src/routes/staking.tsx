@@ -175,10 +175,7 @@ const Staking = () => {
   const [totalUnclaimed, setTotalUnclaimed] = useState<BigNumber>(new BigNumber(0));
   const [totalClaimed, setTotalClaimed] = useState<BigNumber>(new BigNumber(0));
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakeInfoType[]>([]);
-  const [unclaimedEras, setUnclaimedEras] = useState<{
-    cores: CoreEraType[];
-    total: number;
-  }>({ cores: [], total: 0 });
+  const [unclaimedEras, setUnclaimedEras] = useState<UnclaimedErasType>({ cores: [], total: 0 });
   const [currentBlock, setCurrentBlock] = useState<number>(0);
   const [nextEraBlock, setNextEraBlock] = useState<number>(0);
   const [blocksPerEra, setBlocksPerEra] = useState<number>(0);
@@ -207,14 +204,13 @@ const Staking = () => {
     };
 
     const userStakedInfoMap: Map<number, UserStakedInfoType> = new Map();
-    let unclaimedErasUpdate = unclaimedEras;
 
     if (coreEraStakeInfo && coreEraStakeInfo.length > 0) {
-      for (const stakingCore of stakingCores) {
-        await api.query.ocifStaking.generalStakerInfo(
+      const promises = stakingCores.map((stakingCore) =>
+        api.query.ocifStaking.generalStakerInfo(
           stakingCore.key,
           selectedAccount.address,
-          (generalStakerInfo: Codec) => {
+          async (generalStakerInfo: Codec) => {
             const info = generalStakerInfo.toPrimitive() as StakesInfo;
             const latestInfo = info.stakes.at(-1);
 
@@ -225,32 +221,33 @@ const Staking = () => {
               const unclaimedEarliest = info.stakes.reduce((p, v) => parseInt(p.era) < parseInt(v.era) ? p : v).era;
 
               if (parseInt(unclaimedEarliest) < currentStakingEra) {
-                const unclaimedCore = unclaimedErasUpdate.cores.find(value => value.coreId === stakingCore.key);
+                setUnclaimedEras(prevState => {
+                  const unclaimedCore = prevState.cores.find(value => value.coreId === stakingCore.key);
 
-                if (unclaimedCore) {
-                  unclaimedCore.earliestEra = parseInt(unclaimedEarliest);
-                } else {
-                  unclaimedErasUpdate.cores.push({
-                    coreId: stakingCore.key,
-                    earliestEra: parseInt(unclaimedEarliest),
-                  });
-                }
+                  if (unclaimedCore) {
+                    unclaimedCore.earliestEra = parseInt(unclaimedEarliest);
+                  } else {
+                    prevState.cores.push({
+                      coreId: stakingCore.key,
+                      earliestEra: parseInt(unclaimedEarliest),
+                    });
+                  }
 
-                let total = unclaimedErasUpdate.total;
-                total = currentStakingEra - parseInt(unclaimedEarliest);
+                  let total = prevState.total;
+                  total = currentStakingEra - parseInt(unclaimedEarliest);
 
-                unclaimedErasUpdate = {
-                  cores: unclaimedErasUpdate.cores,
-                  total,
-                };
+                  return {
+                    cores: prevState.cores,
+                    total,
+                  };
+                });
               } else {
-                unclaimedErasUpdate = {
-                  ...unclaimedErasUpdate,
+                setUnclaimedEras(prevState => ({
+                  ...prevState,
                   total: 0,
-                };
+                }));
               }
             }
-
             if (latestInfo) {
               era = parseInt(latestInfo.era);
               staked = new BigNumber(latestInfo.staked);
@@ -267,12 +264,12 @@ const Staking = () => {
             ).reduce((acc, cur) => acc.plus(cur.staked), new BigNumber(0));
             setTotalUserStaked(newTotalStaked);
           }
-        );
-      }
-    }
+        )
+      );
 
-    setUnclaimedEras(unclaimedErasUpdate);
-  }, [api, currentStakingEra, stakingCores, unclaimedEras, selectedAccount, coreEraStakeInfo]);
+      await Promise.all(promises);
+    }
+  }, [api, currentStakingEra, stakingCores, selectedAccount, coreEraStakeInfo]);
 
   const loadCurrentEraAndStake = useCallback(async () => {
     const currentStakingEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
@@ -357,7 +354,7 @@ const Staking = () => {
     });
   };
 
-  const handleRegisterProject = async () => {
+  const handleRegisterProject = () => {
     setOpenModal({
       name: modalName.REGISTER_PROJECT,
     });
@@ -458,7 +455,7 @@ const Staking = () => {
     };
     setup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount, stakingCores, coreEraStakeInfo]);
+  }, [selectedAccount, setupSubscriptions]);
 
   useEffect(() => {
     initializeData(selectedAccount);
