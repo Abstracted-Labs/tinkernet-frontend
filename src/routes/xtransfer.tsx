@@ -631,7 +631,7 @@ const Transfer = () => {
                           disabled={isWaiting}
                           name="destination"
                           id="destination"
-                          value={encode(destinationField, 10041)}
+                          value={encode(destinationField, 63)}
                           onChange={(e) => handleChangedDestination(e.target.value)} />
                         <div className="flex flex-row justify-end mt-2">
                           <span className={MINI_BUTTON_STYLE} onClick={() =>
