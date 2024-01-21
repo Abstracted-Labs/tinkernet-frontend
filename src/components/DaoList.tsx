@@ -43,7 +43,6 @@ const DaoList = (props: DaoListProps) => {
   const [minStakeReward, setMinStakeReward] = useState<BigNumber>(new BigNumber(0));
   const [activeFilterCount, setActiveFilterCount] = useState(0);
 
-
   const [rewardsCoreClaimedQuery] = useQuery({
     query: TotalRewardsCoreClaimedQuery,
     variables: {},
@@ -324,6 +323,7 @@ const DaoList = (props: DaoListProps) => {
   const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       if (selectedAccount) {
+        localStorage.removeItem('daoListFilters');
         await loadAccountInfo();
         await loadCores();
         await loadStakingConstants();
