@@ -180,7 +180,7 @@ const DaoList = (props: DaoListProps) => {
           });
           break;
         default:
-          console.log('orderByOption not found');
+          console.log('Cannot sort by this option');
           break;
       }
     }

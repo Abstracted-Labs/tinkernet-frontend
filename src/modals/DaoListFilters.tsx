@@ -131,16 +131,19 @@ const DaoListFilters = (props: DaoListFiltersProps) => {
     if (checked || indeterminate) {
       setFilters(prevFilters => ({
         ...prevFilters,
-        isMinSupportMet: { isChecked: checked, isIndeterminate: indeterminate }
+        isMinSupportMet: { isChecked: checked, isIndeterminate: indeterminate },
+        isMyStakedDAOs: { isChecked: false, isIndeterminate: false }
       }));
     }
   }, []);
 
-  const handleMyStakedDAOsChange = useCallback((checked: boolean, indeterminate: boolean | undefined) => {
+  const handleMyStakedDAOsChange = useCallback((checked: boolean, indeterminate: boolean |
+    undefined) => {
     if (checked || indeterminate) {
       setFilters(prevFilters => ({
         ...prevFilters,
-        isMyStakedDAOs: { isChecked: checked, isIndeterminate: indeterminate }
+        isMyStakedDAOs: { isChecked: checked, isIndeterminate: indeterminate },
+        isMinSupportMet: { isChecked: false, isIndeterminate: false }
       }));
     }
   }, []);
@@ -161,6 +164,33 @@ const DaoListFilters = (props: DaoListFiltersProps) => {
     setFilters(filters => ({ ...filters, totalStakedRange: { ...filters.totalStakedRange, maxValue: newMaxValue } }));
   }, []);
 
+  const calculateActiveFilterLength = (filters: FilterStates) => {
+    let activeFilterCount = 0;
+
+    // Check checkbox filters
+    if (filters.isMinSupportMet.isChecked || filters.isMinSupportMet.isIndeterminate) {
+      activeFilterCount++;
+    }
+    if (filters.isMyStakedDAOs.isChecked || filters.isMyStakedDAOs.isIndeterminate) {
+      activeFilterCount++;
+    }
+
+    // Check range filters
+    if (filters.totalStakersRange.minValue !== 0 || filters.totalStakersRange.maxValue !== 1000) {
+      activeFilterCount++;
+    }
+    if (filters.totalStakedRange.minValue !== 0 || filters.totalStakedRange.maxValue !== 99999) {
+      activeFilterCount++;
+    }
+
+    // Check orderBy filter
+    if (filters.orderBy !== CHOOSE_ONE) {
+      activeFilterCount++;
+    }
+
+    return activeFilterCount;
+  };
+
   useEffect(() => {
     if (metadata) {
       setLocalMetadata(metadata as DaoListFiltersMetadata);
@@ -171,6 +201,8 @@ const DaoListFilters = (props: DaoListFiltersProps) => {
   }, [metadata]);
 
   const currentValue = useMemo(() => ({ name: formatOptionName(filters.orderBy) }), [filters.orderBy]);
+
+  const activeFilterCount = useMemo(() => calculateActiveFilterLength(filters), [filters]);
 
   if (!localMetadata) return null;
 
@@ -191,8 +223,9 @@ const DaoListFilters = (props: DaoListFiltersProps) => {
           <>
             <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-auto rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
               <div>
-                <h2 className="text-md font-bold text-white bg-tinkerDarkGrey mb-5">
+                <h2 className="text-md font-bold text-white bg-tinkerDarkGrey mb-5 flex flex-row items-center gap-2">
                   <span>Refine Search Results</span>
+                  {activeFilterCount > 0 && <span className="bg-tinkerYellow text-black px-[9px] py-[4px] rounded-full text-xs text-center">{activeFilterCount}</span>}
                 </h2>
                 <div className="text-white text-sm">
                   <div className="mb-1">Order By</div>
@@ -209,6 +242,7 @@ const DaoListFilters = (props: DaoListFiltersProps) => {
                     <div className="text-sm text-white">Include/Don't Include</div>
                     <div className="flex flex-row justify-between">
                       <TriStateCheckbox
+                        key={`MinSupportMet-${ filters.isMinSupportMet.isChecked }-${ filters.isMinSupportMet.isIndeterminate }`}
                         onReset={onReset}
                         reset={reset}
                         label="Min. Support Met"
@@ -217,6 +251,7 @@ const DaoListFilters = (props: DaoListFiltersProps) => {
                         onChange={handleMinSupportMetChange}
                       />
                       <TriStateCheckbox
+                        key={`MyStakedDAOs-${ filters.isMyStakedDAOs.isChecked }-${ filters.isMyStakedDAOs.isIndeterminate }`}
                         onReset={onReset}
                         reset={reset}
                         label="My Staked DAOs"
