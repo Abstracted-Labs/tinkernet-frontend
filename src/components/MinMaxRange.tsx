@@ -90,7 +90,7 @@ const MinMaxRange = (props: MinMaxRangeProps) => {
               style={props.style}
             >
               <div className="absolute bottom-4 text-tinkerTextGrey text-xxs px-3 rounded-lg">
-                {values[index] === max ? 'Max' : values[index]}
+                {values[index] === max && values[1 - index] <= 0 ? 'Max' : values[index]}
               </div>
               <div className={`h-2 w-2 p-1 rounded-lg ${ isDragged ? 'bg-white' : 'bg-tinkerGrey' }`} />
             </div>
