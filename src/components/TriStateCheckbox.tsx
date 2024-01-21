@@ -5,6 +5,8 @@ export interface TriStateCheckboxProps {
   indeterminate?: boolean;
   onChange: (checked: boolean, indeterminate?: boolean) => void;
   label?: string;
+  reset?: boolean;
+  onReset?: () => void;
 }
 
 export enum CheckboxState {
@@ -14,7 +16,7 @@ export enum CheckboxState {
 }
 
 const TriStateCheckbox = (props: TriStateCheckboxProps) => {
-  const { onChange, checked, label, indeterminate } = props;
+  const { onChange, checked, label, indeterminate, reset, onReset } = props;
   const [checkboxState, setCheckboxState] = useState<CheckboxState>(checked ? CheckboxState.Checked : CheckboxState.Unchecked);
   const checkboxRef = useRef<HTMLInputElement>(null);
 
@@ -45,16 +47,28 @@ const TriStateCheckbox = (props: TriStateCheckboxProps) => {
     }
     onChange(checkboxState === CheckboxState.Checked, checkboxState === CheckboxState.Indeterminate);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [checkboxState]);
+  }, [checkboxState, onChange]);
 
   useEffect(() => {
     if (indeterminate) {
       setCheckboxState(CheckboxState.Indeterminate);
-    } else {
+    }
+  }, [indeterminate]);
+
+  useEffect(() => {
+    if (checked) {
       setCheckboxState(checked ? CheckboxState.Checked : CheckboxState.Unchecked);
     }
-  }, [checked, indeterminate]);
+  }, [checked]);
+
+  useEffect(() => {
+    if (reset) {
+      setCheckboxState(CheckboxState.Unchecked);
+      if (onReset) {
+        onReset();
+      }
+    }
+  }, [reset, onReset]);
 
   return (
     <div className='flex flex-row items-center gap-2 my-2'>

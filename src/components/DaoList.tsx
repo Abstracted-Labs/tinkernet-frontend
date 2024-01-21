@@ -15,6 +15,7 @@ import { StakesInfo } from '../routes/claim';
 import useModal, { modalName } from '../stores/modals';
 import Input from './Input';
 import FilterIcon from '../assets/filter-icon.svg';
+import { CHOOSE_ONE, FilterStates, OrderByOption } from '../modals/DaoListFilters';
 
 interface DaoListProps { mini: boolean; isOverview: boolean; }
 
@@ -39,7 +40,9 @@ const DaoList = (props: DaoListProps) => {
   >([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [minStakeReward, setMinStakeReward] = useState<BigNumber>(new BigNumber(0));
+  const [activeFilterCount, setActiveFilterCount] = useState(0);
+
 
   const [rewardsCoreClaimedQuery] = useQuery({
     query: TotalRewardsCoreClaimedQuery,
@@ -64,8 +67,132 @@ const DaoList = (props: DaoListProps) => {
   const handleFilters = () => {
     setOpenModal({
       name: modalName.FILTERS,
+      metadata: { updateFilters }
     });
   };
+
+  const filterStakingCores = useCallback((filters: FilterStates) => {
+    let cores = [...initialCoresRef.current];
+    let activeFilterCount = 0;
+
+    // Filter by total stakers
+    if (filters.totalStakersRange.minValue > 0 || filters.totalStakersRange.maxValue < 1000) {
+      activeFilterCount++;
+      cores = cores.filter(core => {
+        const coreInfo = coreEraStakeInfo.find(info => info.coreId === core.key);
+        const totalStakers = coreInfo ? coreInfo.numberOfStakers : 0;
+        return totalStakers >= filters.totalStakersRange.minValue && totalStakers <= filters.totalStakersRange.maxValue;
+      });
+    }
+
+    // Filter by total staked
+    if (filters.totalStakedRange.minValue > 0 || filters.totalStakedRange.maxValue < 99999) {
+      activeFilterCount++;
+      cores = cores.filter(core => {
+        const totalStaked = totalUserStakedData[core.key]?.dividedBy(1e12).toNumber() || 0;
+        if (filters.totalStakedRange.maxValue === 99999) {
+          return totalStaked >= filters.totalStakedRange.minValue;
+        } else {
+          return totalStaked >= filters.totalStakedRange.minValue && totalStaked <= filters.totalStakedRange.maxValue;
+        }
+      });
+    }
+
+    // Filter by min support met
+    if (filters.isMinSupportMet.isIndeterminate) {
+      activeFilterCount++;
+      cores = cores.filter(core => {
+        const coreInfo = coreEraStakeInfo.find(info => info.coreId === core.key);
+        const totalStaked = coreInfo ? new BigNumber(coreInfo.totalStaked) : new BigNumber(0);
+        return totalStaked.comparedTo(minStakeReward) < 0;
+      });
+    } else if (filters.isMinSupportMet.isChecked) {
+      activeFilterCount++;
+      cores = cores.filter(core => {
+        const coreInfo = coreEraStakeInfo.find(info => info.coreId === core.key);
+        const totalStaked = coreInfo ? new BigNumber(coreInfo.totalStaked) : new BigNumber(0);
+        return totalStaked.comparedTo(minStakeReward) >= 0;
+      });
+    }
+
+    // Filter by my staked DAOs
+    if (filters.isMyStakedDAOs.isIndeterminate) {
+      activeFilterCount++;
+      cores = cores.filter(core => {
+        const userStaked = totalUserStakedData[core.key] ?? new BigNumber(0);
+        return userStaked.isEqualTo(0);
+      });
+    } else if (filters.isMyStakedDAOs.isChecked) {
+      activeFilterCount++;
+      cores = cores.filter(core => {
+        const userStaked = totalUserStakedData[core.key] ?? new BigNumber(0);
+        return userStaked.isGreaterThan(0);
+      });
+    }
+
+    // Filter by OrderByOption 
+    if (filters.orderBy !== CHOOSE_ONE) {
+      activeFilterCount++;
+      switch (filters.orderBy) {
+        case OrderByOption.NAME_ASCENDING:
+          cores = cores.sort((a, b) => a.metadata.name.localeCompare(b.metadata.name));
+          break;
+        case OrderByOption.NAME_DESCENDING:
+          cores = cores.sort((a, b) => b.metadata.name.localeCompare(a.metadata.name));
+          break;
+        case OrderByOption.TOTAL_STAKED_HIGH:
+          cores = cores.sort((a, b) => {
+            const aCoreInfo = coreEraStakeInfo.find(info => info.coreId === a.key);
+            const bCoreInfo = coreEraStakeInfo.find(info => info.coreId === b.key);
+            const aTotalStaked = new BigNumber(aCoreInfo?.totalStaked ?? 0);
+            const bTotalStaked = new BigNumber(bCoreInfo?.totalStaked ?? 0);
+            return bTotalStaked.comparedTo(aTotalStaked);
+          });
+          break;
+        case OrderByOption.TOTAL_STAKED_LOW:
+          cores = cores.sort((a, b) => {
+            const aCoreInfo = coreEraStakeInfo.find(info => info.coreId === a.key);
+            const bCoreInfo = coreEraStakeInfo.find(info => info.coreId === b.key);
+            const aTotalStaked = new BigNumber(aCoreInfo?.totalStaked ?? 0);
+            const bTotalStaked = new BigNumber(bCoreInfo?.totalStaked ?? 0);
+            return aTotalStaked.comparedTo(bTotalStaked);
+          });
+          break;
+        case OrderByOption.SUPPORT_SHARE_HIGH:
+          cores = cores.sort((a, b) => {
+            const aCoreInfo = coreEraStakeInfo.find(info => info.coreId === a.key);
+            const aTotalStaked = aCoreInfo ? new BigNumber(aCoreInfo.totalStaked) : new BigNumber(0);
+            const aSupportShare = aTotalStaked.dividedBy(minStakeReward).multipliedBy(100);
+            const bCoreInfo = coreEraStakeInfo.find(info => info.coreId === b.key);
+            const bTotalStaked = bCoreInfo ? new BigNumber(bCoreInfo.totalStaked) : new BigNumber(0);
+            const bSupportShare = bTotalStaked.dividedBy(minStakeReward).multipliedBy(100);
+            return bSupportShare.minus(aSupportShare).toNumber();
+          });
+          break;
+        case OrderByOption.SUPPORT_SHARE_LOW:
+          cores = cores.sort((a, b) => {
+            const aCoreInfo = coreEraStakeInfo.find(info => info.coreId === a.key);
+            const aTotalStaked = aCoreInfo ? new BigNumber(aCoreInfo.totalStaked) : new BigNumber(0);
+            const aSupport = aTotalStaked.dividedBy(minStakeReward).multipliedBy(100);
+            const bCoreInfo = coreEraStakeInfo.find(info => info.coreId === b.key);
+            const bTotalStaked = bCoreInfo ? new BigNumber(bCoreInfo.totalStaked) : new BigNumber(0);
+            const bSupport = bTotalStaked.dividedBy(minStakeReward).multipliedBy(100);
+            return aSupport.minus(bSupport).toNumber();
+          });
+          break;
+        default:
+          console.log('orderByOption not found');
+          break;
+      }
+    }
+
+    setStakingCores(cores);
+    setActiveFilterCount(activeFilterCount);
+  }, [initialCoresRef, coreEraStakeInfo, totalUserStakedData, minStakeReward]);
+
+  const updateFilters = useCallback((filters: FilterStates) => {
+    filterStakingCores(filters);
+  }, [filterStakingCores]);
 
   const handleViewDetails = (mini: boolean, children?: JSX.Element) => {
     if (!mini || !children) return;
@@ -110,6 +237,11 @@ const DaoList = (props: DaoListProps) => {
 
     setDebounceTimeout(newTimeout);
   };
+
+  const loadStakeRewardMinimum = useCallback(() => {
+    const minStakeReward = api.consts.ocifStaking.stakeThresholdForActiveCore.toPrimitive() as string;
+    setMinStakeReward(new BigNumber(minStakeReward));
+  }, [api]);
 
   const loadCores = useCallback(async () => {
     if (!selectedAccount) return;
@@ -196,6 +328,7 @@ const DaoList = (props: DaoListProps) => {
         await loadCores();
         await loadStakingConstants();
         await loadCoreEraStake();
+        loadStakeRewardMinimum();
       }
 
     } catch (error) {
@@ -204,7 +337,7 @@ const DaoList = (props: DaoListProps) => {
       setLoading(false);
       setDataLoaded(true);
     }
-  }, [loadAccountInfo, loadCores, loadStakingConstants, loadCoreEraStake]);
+  }, [loadAccountInfo, loadCores, loadStakingConstants, loadCoreEraStake, loadStakeRewardMinimum]);
 
   const setupSubscriptions = useCallback(async () => {
     if (!selectedAccount) {
@@ -284,12 +417,15 @@ const DaoList = (props: DaoListProps) => {
         await setupSubscriptions();
       }
     };
+
     setup();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccount, stakingCores]);
 
   useEffect(() => {
     initializeData(selectedAccount);
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccount]);
 
@@ -300,9 +436,12 @@ const DaoList = (props: DaoListProps) => {
   useEffect(() => {
     const loadDaos = async () => {
       if (!selectedAccount) return;
+
       const daos = await loadStakedDaos(stakingCores, selectedAccount.address, api);
+
       setStakedDaos(daos);
     };
+
     if (!selectedAccount) return;
     if (!stakingCores) return;
 
@@ -348,10 +487,16 @@ const DaoList = (props: DaoListProps) => {
       <div className='flex flex-col md:flex-row gap-2 md:gap-10 items-stretch md:items-center justify-between mb-4 mt-14 md:mt-0'>
         <h4 className="text-white text-md">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
         <div className="bg-neutral-950 bg-opacity-50 rounded-lg flex flex-row items-stretch gap-2 p-4">
-          <Input type="text" id="filterDaos" placeholder='Search' onChange={handleSearch} value={searchTerm} />
-          <button type='button' className='rounded-lg bg-tinkerGrey hover:bg-tinkerDarkYellow p-3' onClick={handleFilters}>
-            <img src={FilterIcon} alt="Filter" className='h-5 w-5' />
-          </button>
+          <div className='relative'>
+            <Input type="text" id="filterDaos" placeholder='Search' onChange={handleSearch} value={searchTerm} className='pr-12' />
+            {searchTerm && <button type='button' className='absolute -translate-x-10 pt-[4px] translate-y-1/2 hover:underline-offset-2 hover:underline text-tinkerYellow text-xxs' onClick={() => setSearchTerm('')}>clear</button>}
+          </div>
+          <div className='relative'>
+            <button type='button' className='rounded-lg bg-tinkerGrey hover:bg-tinkerDarkYellow p-3' onClick={handleFilters}>
+              <img src={FilterIcon} alt="Filter" className='h-5 w-5' />
+            </button>
+            {activeFilterCount > 0 && <span className='absolute -right-[8px] -top-[6px] rounded-full px-[6px] bg-tinkerYellow text-center text-black font-bold text-xxs'>{activeFilterCount}</span>}
+          </div>
         </div>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

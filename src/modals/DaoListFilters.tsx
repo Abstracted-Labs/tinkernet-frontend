@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { shallow } from "zustand/shallow";
-import useModal from "../stores/modals";
+import useModal, { Metadata, modalName } from "../stores/modals";
 import Button from "../components/Button";
 import { BG_GRADIENT } from "../utils/consts";
 import TriStateCheckbox from "../components/TriStateCheckbox";
 import MinMaxRange from "../components/MinMaxRange";
 import Dropdown from "../components/Dropdown";
+import { loadFiltersFromLocalStorage, saveFiltersToLocalStorage } from "../utils/filterServices";
 
 export const HR_BREAK = <hr className="border-t-1 border-tinkerGrey my-4" />;
 
@@ -22,8 +23,8 @@ export interface RangeFilterState {
 }
 
 export enum OrderByOption {
-  NAME_ASC = 'nameAsc',
-  NAME_DESC = 'nameDesc',
+  NAME_ASCENDING = 'nameAscending',
+  NAME_DESCENDING = 'nameDescending',
   TOTAL_STAKED_HIGH = 'totalStakedHigh',
   TOTAL_STAKED_LOW = 'totalStakedLow',
   SUPPORT_SHARE_HIGH = 'supportShareHigh',
@@ -40,10 +41,13 @@ export interface FilterStates {
 
 export interface DaoListFiltersProps {
   isOpen: boolean;
-  updateCores: (filters: FilterStates) => void;
 }
 
-const ORDER_BY = 'Order By';
+export interface DaoListFiltersMetadata extends Metadata {
+  updateFilters?: (newFilters: FilterStates, reset?: boolean) => void;
+}
+
+export const CHOOSE_ONE = 'Choose One';
 
 // Helper function to format the enum keys into a more readable string
 const formatOptionName = (option: string) => {
@@ -53,35 +57,126 @@ const formatOptionName = (option: string) => {
     .trim();
 };
 
-const defaultFilters = (): FilterStates => ({
-  totalStakersRange: { minValue: 0, maxValue: 10000 },
+// Calculate the value once outside of your component
+const orderByOptions = Object.values(OrderByOption).map(option => ({ name: formatOptionName(option) }));
+
+export const defaultFilters = (): FilterStates => ({
+  totalStakersRange: { minValue: 0, maxValue: 1000 },
   totalStakedRange: { minValue: 0, maxValue: 99999 },
   isMinSupportMet: { isChecked: false, isIndeterminate: false },
   isMyStakedDAOs: { isChecked: false, isIndeterminate: false },
-  orderBy: ORDER_BY,
+  orderBy: CHOOSE_ONE,
 });
 
-const DaoListFilters = ({ isOpen }: { isOpen: boolean; }) => {
-  const [filters, setFilters] = useState<FilterStates>(defaultFilters());
-  const [reset, setReset] = useState<boolean>(false);
-
-  const { closeCurrentModal } = useModal(
+const DaoListFilters = (props: DaoListFiltersProps) => {
+  const { isOpen } = props;
+  const lsFilters = loadFiltersFromLocalStorage();
+  const [filters, setFilters] = useState<FilterStates>(lsFilters);
+  const [reset, setReset] = useState(false);
+  const resetDefaultFilters = useRef(false);
+  const { closeCurrentModal, openModals } = useModal(
     (state) => state,
     shallow
   );
+  const [localMetadata, setLocalMetadata] = useState<DaoListFiltersMetadata | null>(null);
+  const targetModal = openModals.find(modal => modal.name === modalName.FILTERS);
+  const metadata = targetModal ? targetModal.metadata : undefined;
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     closeCurrentModal();
-  };
+  }, [closeCurrentModal]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setFilters(defaultFilters());
     setReset(true);
-  };
+    resetDefaultFilters.current = true;
+  }, []);
 
-  useEffect(() => {
+  const onReset = useCallback(() => {
     setReset(false);
   }, []);
+
+  const onSelect = useCallback((value: { name: string; } | null) => {
+    if (value) {
+      const orderByKey = value.name.replace(/ /g, '_').toUpperCase() as keyof typeof OrderByOption;
+      const orderBy = OrderByOption[orderByKey];
+      if (orderBy) {
+        setFilters((prevFilters) => ({ ...prevFilters, orderBy }));
+      }
+    }
+  }, []);
+
+  const applyFilters = useCallback(() => {
+    try {
+      if (!localMetadata || !localMetadata.updateFilters) {
+        throw new Error('Metadata or updateFilters is not defined');
+      }
+
+      const { updateFilters } = localMetadata;
+
+      if (typeof updateFilters !== 'function') {
+        throw new Error('updateFilters is not a function');
+      }
+
+      updateFilters(filters, reset);
+      saveFiltersToLocalStorage(filters);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      closeModal();
+    }
+  }, [filters, localMetadata, closeModal, reset]);
+
+  const handleMinSupportMetChange = useCallback((checked: boolean, indeterminate: boolean | undefined) => {
+    if (checked || indeterminate) {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        isMinSupportMet: { isChecked: checked, isIndeterminate: indeterminate }
+      }));
+    }
+  }, []);
+
+  const handleMyStakedDAOsChange = useCallback((checked: boolean, indeterminate: boolean | undefined) => {
+    if (checked || indeterminate) {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        isMyStakedDAOs: { isChecked: checked, isIndeterminate: indeterminate }
+      }));
+    }
+  }, []);
+
+  const handleTotalStakersMinChange = useCallback((newMinValue: number) => {
+    setFilters(filters => ({ ...filters, totalStakersRange: { ...filters.totalStakersRange, minValue: newMinValue } }));
+  }, []);
+
+  const handleTotalStakersMaxChange = useCallback((newMaxValue: number) => {
+    setFilters(filters => ({ ...filters, totalStakersRange: { ...filters.totalStakersRange, maxValue: newMaxValue } }));
+  }, []);
+
+  const handleTotalTNKRStakedMinChange = useCallback((newMinValue: number) => {
+    setFilters(filters => ({ ...filters, totalStakedRange: { ...filters.totalStakedRange, minValue: newMinValue } }));
+  }, []);
+
+  const handleTotalTNKRStakedMaxChange = useCallback((newMaxValue: number) => {
+    setFilters(filters => ({ ...filters, totalStakedRange: { ...filters.totalStakedRange, maxValue: newMaxValue } }));
+  }, []);
+
+  useEffect(() => {
+    if (metadata) {
+      setLocalMetadata(metadata as DaoListFiltersMetadata);
+    }
+    return () => {
+      setLocalMetadata(null);
+    };
+  }, [metadata]);
+
+  const currentValue = useMemo(() => ({ name: formatOptionName(filters.orderBy) }), [filters.orderBy]);
+
+  if (!localMetadata) return null;
+
+  const { updateFilters } = localMetadata;
+
+  if (!updateFilters) return null;
 
   return isOpen ? (
     <Dialog open={true} onClose={closeCurrentModal}>
@@ -100,61 +195,66 @@ const DaoListFilters = ({ isOpen }: { isOpen: boolean; }) => {
                   <span>Refine Search Results</span>
                 </h2>
                 <div className="text-white text-sm">
+                  <div className="mb-1">Order By</div>
                   <Dropdown
-                    onReset={() => setReset(false)}
+                    onReset={onReset}
                     reset={reset}
-                    list={Object.values(OrderByOption).map(option => ({ name: formatOptionName(option) }))}
-                    onSelect={(value) => {
-                      if (value) {
-                        setFilters({ ...filters, orderBy: OrderByOption[value.name.replace(/ /g, '') as keyof typeof OrderByOption] });
-                      }
-                    }}
-                    defaultOption={ORDER_BY}
+                    list={orderByOptions}
+                    onSelect={onSelect}
+                    defaultOption={CHOOSE_ONE}
+                    currentValue={currentValue}
                   />
                   {HR_BREAK}
                   <div>
                     <div className="text-sm text-white">Include/Don't Include</div>
                     <div className="flex flex-row justify-between">
                       <TriStateCheckbox
+                        onReset={onReset}
+                        reset={reset}
                         label="Min. Support Met"
                         checked={filters.isMinSupportMet.isChecked}
                         indeterminate={filters.isMinSupportMet.isIndeterminate}
-                        onChange={(checked, indeterminate) => setFilters({ ...filters, isMinSupportMet: { isChecked: checked, isIndeterminate: indeterminate } })}
+                        onChange={handleMinSupportMetChange}
                       />
                       <TriStateCheckbox
+                        onReset={onReset}
+                        reset={reset}
                         label="My Staked DAOs"
                         checked={filters.isMyStakedDAOs.isChecked}
                         indeterminate={filters.isMyStakedDAOs.isIndeterminate}
-                        onChange={(checked, indeterminate) => setFilters({ ...filters, isMyStakedDAOs: { isChecked: checked, isIndeterminate: indeterminate } })}
+                        onChange={handleMyStakedDAOsChange}
                       />
                     </div>
                   </div>
                   {HR_BREAK}
-                  <MinMaxRange
-                    label="Total Stakers"
-                    min={0}
-                    max={10000}
-                    step={500}
-                    minValue={filters.totalStakersRange.minValue}
-                    maxValue={filters.totalStakersRange.maxValue}
-                    onMinChange={(newMinValue) => setFilters(filters => ({ ...filters, totalStakersRange: { ...filters.totalStakersRange, minValue: newMinValue } }))}
-                    onMaxChange={(newMaxValue) => setFilters(filters => ({ ...filters, totalStakersRange: { ...filters.totalStakersRange, maxValue: newMaxValue } }))}
-                  />
-                  <MinMaxRange
-                    label="Total TNKR Staked"
-                    min={0}
-                    max={99999}
-                    minValue={filters.totalStakedRange.minValue}
-                    maxValue={filters.totalStakedRange.maxValue}
-                    onMinChange={(newMinValue) => setFilters(filters => ({ ...filters, totalStakedRange: { ...filters.totalStakedRange, minValue: newMinValue } }))}
-                    onMaxChange={(newMaxValue) => setFilters(filters => ({ ...filters, totalStakedRange: { ...filters.totalStakedRange, maxValue: newMaxValue } }))}
-                  />
+                  <div className="flex flex-col gap-3">
+                    <MinMaxRange
+                      label="Total Stakers"
+                      min={0}
+                      max={1000}
+                      step={50}
+                      minValue={filters.totalStakersRange.minValue}
+                      maxValue={filters.totalStakersRange.maxValue}
+                      onMinChange={handleTotalStakersMinChange}
+                      onMaxChange={handleTotalStakersMaxChange}
+                    />
+                    <MinMaxRange
+                      label="Total TNKR Staked"
+                      min={0}
+                      max={99999}
+                      step={5000}
+                      minValue={filters.totalStakedRange.minValue}
+                      maxValue={filters.totalStakedRange.maxValue}
+                      onMinChange={handleTotalTNKRStakedMinChange}
+                      onMaxChange={handleTotalTNKRStakedMaxChange}
+                    />
+                  </div>
                   {HR_BREAK}
                 </div>
               </div>
               <div onClick={resetFilters} className="text-center text-xs text-tinkerTextGrey hover:text-tinkerYellow hover:text-opacity-60 hover:underline hover:cursor-pointer hover:underline-offset-4">Reset Default Filters</div>
               <div>
-                <Button variant="primary" mini onClick={closeModal}>Apply Filters</Button>
+                <Button variant="primary" mini onClick={applyFilters}>Apply Filters</Button>
               </div>
             </div>
           </>

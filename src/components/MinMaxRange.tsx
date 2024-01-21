@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Range, getTrackBackground } from 'react-range';
 
 interface MinMaxRangeProps {
@@ -31,7 +31,7 @@ const MinMaxRange = (props: MinMaxRangeProps) => {
     setValues([adjustedMinValue, adjustedMaxValue]);
   }, [minValue, maxValue, min, max, step]);
 
-  const onChange = (values: number[]) => {
+  const onChange = useCallback((values: number[]) => {
     const adjustedValues = values.map(value => {
       const adjustedValue = Math.round(value / step) * step;
       return Math.max(min, Math.min(max, adjustedValue));
@@ -39,7 +39,12 @@ const MinMaxRange = (props: MinMaxRangeProps) => {
     setValues(adjustedValues);
     onMinChange(adjustedValues[0]);
     onMaxChange(adjustedValues[1]);
-  };
+  }, [min, max, step, onMinChange, onMaxChange]);
+
+  if (values.some(isNaN)) {
+    console.error('Invalid values:', values);
+    return null;
+  }
 
   if (!Array.isArray(values) || values.some(value => typeof value !== 'number')) {
     return null;
@@ -85,7 +90,7 @@ const MinMaxRange = (props: MinMaxRangeProps) => {
               style={props.style}
             >
               <div className="absolute bottom-4 text-tinkerTextGrey text-xxs px-3 rounded-lg">
-                {values[index]}
+                {values[index] === max ? 'Max' : values[index]}
               </div>
               <div className={`h-2 w-2 p-1 rounded-lg ${ isDragged ? 'bg-white' : 'bg-tinkerGrey' }`} />
             </div>
