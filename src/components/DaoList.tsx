@@ -466,6 +466,12 @@ const DaoList = (props: DaoListProps) => {
     };
   }, [debounceTimeout]);
 
+  useEffect(() => {
+    if (searchTerm === '') {
+      setStakingCores(initialCoresRef.current);
+    }
+  }, [searchTerm]);
+
   const stakedCoresCount = useMemo(() => {
     return isOverview
       ? stakingCores.filter(core =>
