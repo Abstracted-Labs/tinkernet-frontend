@@ -8,7 +8,7 @@ import { BG_GRADIENT } from "../utils/consts";
 import TriStateCheckbox from "../components/TriStateCheckbox";
 import MinMaxRange from "../components/MinMaxRange";
 import Dropdown from "../components/Dropdown";
-import { loadFiltersFromLocalStorage, saveFiltersToLocalStorage } from "../utils/filterServices";
+import { loadFiltersFromLocalStorage, saveFiltersToLocalStorage } from "../utils/filterStorage";
 
 export const HR_BREAK = <hr className="border-t-1 border-tinkerGrey my-4" />;
 

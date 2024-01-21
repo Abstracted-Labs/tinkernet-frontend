@@ -16,6 +16,7 @@ import useModal, { modalName } from '../stores/modals';
 import Input from './Input';
 import FilterIcon from '../assets/filter-icon.svg';
 import { CHOOSE_ONE, FilterStates, OrderByOption } from '../modals/DaoListFilters';
+import { clearFiltersFromLocalStorage } from '../utils/filterStorage';
 
 interface DaoListProps { mini: boolean; isOverview: boolean; }
 
@@ -323,7 +324,7 @@ const DaoList = (props: DaoListProps) => {
   const initializeData = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       if (selectedAccount) {
-        localStorage.removeItem('daoListFilters');
+        clearFiltersFromLocalStorage();
         await loadAccountInfo();
         await loadCores();
         await loadStakingConstants();
