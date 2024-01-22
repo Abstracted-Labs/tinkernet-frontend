@@ -10,6 +10,7 @@ import { capitalizeFirst } from "../utils/capitalizeFirst";
 import { WalletNameEnum, getWalletIcon } from "../utils/getWalletIcon";
 import Button from "../components/Button";
 import { BG_GRADIENT } from "../utils/consts";
+import toast from "react-hot-toast";
 
 const AccountSelector = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
@@ -66,6 +67,15 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
     }
   };
 
+  const handleCopy = (e: React.MouseEvent<HTMLElement>, value: string | undefined) => {
+    e.stopPropagation();
+
+    if (!value) return;
+
+    navigator.clipboard.writeText(value);
+    toast.success("Copied to clipboard");
+  };
+
   return isOpen ? (
     <Dialog open={true} onClose={closeModal}>
       <Dialog.Title className="sr-only">Select your Wallet</Dialog.Title>
@@ -115,16 +125,16 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
                     <div className={`rounded-full p-1 flex items-center ${ account.address !== selectedAccount?.address ? 'bg-tinkerLightGrey' : 'bg-tinkerGrey' }`}>
                       <Identicon value={account.address} size={47} theme="substrate" />
                     </div>
-                    <div className="flex flex-col gap-0">
+                    <div className="flex flex-col gap-0 truncate">
                       <div className="flex flex-row gap-1 items-center">
                         {typeof getWalletIcon(account.meta?.source) === 'undefined' ?
-                          <span className="text-xxs text-ellipsis">{account.meta?.source}</span> :
+                          <div className="text-xxs text-ellipsis truncate">{account.meta?.source}</div> :
                           <img src={getWalletIcon(account.meta?.source)} alt={account.meta?.source} className="w-4 h-4 mr-1" />
                         }
-                        <span className="text-md font-normal text-ellipsis">{capitalizeFirst(account.meta?.name)}</span>
+                        <span className="text-md leading-[20px] font-normal text-ellipsis truncate">{capitalizeFirst(account.meta?.name)}</span>
                       </div>
-                      <span className="block overflow-hidden text-ellipsis text-xs md:text-sm  text-gray-500 hover:underline hover:underline-offset-4">
-                        {stringShorten(account.address, 17)}
+                      <span onClick={(e) => handleCopy(e, account.address)} className="block overflow-hidden text-ellipsis text-xs text-gray-500 hover:underline hover:underline-offset-2 truncate mt-[2px]">
+                        {stringShorten(account.address, 20)}
                       </span>
                     </div>
                   </li>
