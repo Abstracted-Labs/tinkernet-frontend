@@ -493,8 +493,8 @@ const DaoList = (props: DaoListProps) => {
     <div>
       <div className='flex flex-col md:flex-row gap-2 md:gap-10 items-stretch md:items-center justify-between mb-4 mt-14 md:mt-0'>
         <h4 className="text-white text-md">{isOverview ? 'My Staked DAOs' : 'All Registered DAOs'} ({stakedCoresCount || '0'})</h4>
-        <div className="bg-neutral-950 bg-opacity-50 rounded-lg flex flex-row items-stretch gap-2 p-4">
-          <div className='relative'>
+        <div className="bg-neutral-950 bg-opacity-50 rounded-lg flex flex-row gap-2 p-4">
+          <div className='relative w-full'>
             <Input type="text" id="filterDaos" placeholder='Search' onChange={handleSearch} value={searchTerm} className='pr-12' />
             {searchTerm && <button type='button' className='absolute -translate-x-10 pt-[4px] translate-y-1/2 hover:underline-offset-2 hover:underline text-tinkerYellow text-xxs' onClick={() => setSearchTerm('')}>clear</button>}
           </div>
