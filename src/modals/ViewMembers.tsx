@@ -172,7 +172,7 @@ const ViewMembers = (props: ViewMembersProps) => {
                           {memberIdentity && (
                             <div className="flex flex-row justify-between mb-[2px]">
                               <div className="flex flex-row items-center">
-                                {typeof memberIdentity.judgements === 'string' && memberIdentity.judgements === 'KnownGood' ? <img src={CheckIcon} alt="KnownGood" className="h-4 w-4 bg-red mr-1" /> : null}
+                                {typeof memberIdentity.judgements === 'string' && memberIdentity.judgements === 'KnownGood' ? <img src={CheckIcon} alt="KnownGood" className="h-3 w-3 bg-red mr-1" /> : null}
                                 <div className="font-bold text-md">{typeof memberIdentity.display === 'string' ? memberIdentity.display : null}</div>
                               </div>
                               <div className="flex flex-row gap-2 items-center">
