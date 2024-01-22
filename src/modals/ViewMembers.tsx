@@ -164,13 +164,13 @@ const ViewMembers = (props: ViewMembersProps) => {
                     Object.entries(rawMemberIdentity).filter(([_, value]) => typeof value !== 'object')
                   ) : null;
                   return (
-                    <div className="rounded-lg bg-tinkerGrey p-4" key={member?.toString()}>
-                      <div className="flex flex-row gap-3 items-center">
+                    <div className="rounded-lg bg-tinkerGrey hover:bg-tinkerLightGrey transition-colors hover:text-tinkerYellow px-4 py-3" key={member?.toString()}>
+                      <div className="flex flex-row gap-2 items-center">
                         <Avatar src={memberIdentity && typeof memberIdentity.image === 'string' ? memberIdentity.image : undefined} alt="Member Image" mini />
 
-                        <div>
+                        <div className="truncate">
                           {memberIdentity && (
-                            <div className="flex flex-row justify-between mb-1">
+                            <div className="flex flex-row justify-between mb-[2px]">
                               <div className="flex flex-row items-center">
                                 {typeof memberIdentity.judgements === 'string' && memberIdentity.judgements === 'KnownGood' ? <img src={CheckIcon} alt="KnownGood" className="h-4 w-4 bg-red mr-1" /> : null}
                                 <div className="font-bold text-md">{typeof memberIdentity.display === 'string' ? memberIdentity.display : null}</div>
@@ -191,7 +191,7 @@ const ViewMembers = (props: ViewMembersProps) => {
                             </div>
                           )}
 
-                          <div onClick={() => handleCopy(member?.toString())} className="text-xs hover:cursor-copy hover:text-tinkerYellow hover:underline-offset-4 hover:underline truncate">
+                          <div onClick={() => handleCopy(member?.toString())} className="text-xs hover:cursor-copy truncate text-tinkerTextGrey hover:underline underline-offset-2">
                             {member?.toString()}
                           </div>
                         </div>
