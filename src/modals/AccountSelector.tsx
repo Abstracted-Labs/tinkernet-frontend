@@ -102,7 +102,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
                     role="menuitem"
                     tabIndex={0}
                     key={`${ account.address }-${ index }}`}
-                    className={`flex flex-row items-center gap-4 cursor-pointer p-6 transition-colors hover:text-amber-300 ${ account.address === selectedAccount?.address ? 'rounded-xl bg-tinkerGrey text-white hover:bg-tinkerLightGrey' : 'text-white' }`}
+                    className={`flex flex-row items-center gap-4 cursor-pointer p-6 transition-colors hover:text-tinkerYellow ${ account.address === selectedAccount?.address ? 'rounded-xl bg-tinkerGrey text-white hover:bg-tinkerLightGrey' : 'text-white' }`}
                     onClick={() => {
                       handleAccountSelection(account);
                     }}
@@ -123,7 +123,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
                         }
                         <span className="text-md font-normal text-ellipsis">{capitalizeFirst(account.meta?.name)}</span>
                       </div>
-                      <span className="block overflow-hidden text-ellipsis text-xs md:text-sm  text-gray-500">
+                      <span className="block overflow-hidden text-ellipsis text-xs md:text-sm  text-gray-500 hover:underline hover:underline-offset-4">
                         {stringShorten(account.address, 17)}
                       </span>
                     </div>
