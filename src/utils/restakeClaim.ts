@@ -76,7 +76,10 @@ export const restakeClaim = async ({
     };
 
     // Get the fee that the entire batch transaction will cost
-    const info = await api.tx.utility.batchAll(batch as Vec<Call>).paymentInfo(selectedAccount.address, { signer: injector.signer });
+    // FIX: Changed the batchAll to batch to solve the claim issues.
+    // Issue is caused by batchAll failing when trying to claim an era where stake == 0, prob due to stake being moved to another core.
+    // TODO: Proper solution is to still use batchAll but not attempt to claim eras where stake == 0
+    const info = await api.tx.utility.batch(batch as Vec<Call>).paymentInfo(selectedAccount.address, { signer: injector.signer });
     const batchTxFees: Balance = info.partialFee;
 
     // Rebuild the batch exactly like we did before,
@@ -107,7 +110,11 @@ export const restakeClaim = async ({
     // Send the transaction batch
     // Casting batch to the correct type to satisfy the linting error
     const castedBatch = rebuildBatch as Vec<Call>;
-    await api.tx.utility.batchAll(castedBatch).signAndSend(
+    
+    // FIX: Changed the batchAll to batch to solve the claim issues.
+    // Issue is caused by batchAll failing when trying to claim an era where stake == 0, prob due to stake being moved to another core.
+    // TODO: Proper solution is to still use batchAll but not attempt to claim eras where stake == 0
+    await api.tx.utility.batch(castedBatch).signAndSend(
       selectedAccount.address,
       { signer: injector.signer },
       getSignAndSendCallbackWithPromise({
