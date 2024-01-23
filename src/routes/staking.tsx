@@ -410,6 +410,11 @@ const Staking = () => {
       handleRestakingLogic,
     });
 
+    if (!result) {
+      // Halt if there is a restake error
+      return;
+    }
+
     if (initialUnclaimed.current !== null) {
       setTotalClaimed(prevTotalClaimed => prevTotalClaimed.plus(initialUnclaimed.current || new BigNumber(0)));
     }
