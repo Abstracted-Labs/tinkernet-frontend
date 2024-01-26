@@ -62,7 +62,8 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 
               <Route path="claim" element={<Claim />} />
 
-              <Route path="transfer" element={<Transfer />} />
+              {/* Disabled temporarily */}
+              {/* <Route path="transfer" element={<Transfer />} /> */}
 
               <Route path="staking" element={<Staking />} />
 
