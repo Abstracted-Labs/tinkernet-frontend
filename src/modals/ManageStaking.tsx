@@ -276,7 +276,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
     stakeForm.setValue(
       "amount",
-      balance
+      balance.replace(/,/g, '')
     );
 
     stakeForm.trigger("amount", {
@@ -291,7 +291,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       "amount",
       new BigNumber(metadata.totalUserStaked as string)
         .dividedBy(new BigNumber(10).pow(12))
-        .toString()
+        .toString().replace(/,/g, '')
     );
 
     unstakeForm.trigger("amount", {
@@ -367,7 +367,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       const currentAmount = parseFloat(stakeForm.getValues('amount'));
       const maxBalance = parseFloat(coreStakedBalance);
       if (currentAmount > maxBalance) {
-        stakeForm.setValue('amount', maxBalance.toString());
+        stakeForm.setValue('amount', maxBalance.toString().replace(/,/g, ''));
       }
     }
   }, [altBalance, coreStakedBalance, stakeForm]);
@@ -491,8 +491,12 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                             <div className="relative flex flex-row items-center">
                               <Input {...stakeForm.register("amount", {
                                 required: true,
-                              })} type="text" id="stakeAmount"
-                              />
+                              })} type="text" id="stakeAmount" onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^[0-9]*\.?[0-9]*$/.test(value)) {
+                                  stakeForm.setValue("amount", value);
+                                }
+                              }} />
                               <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
                                 <span
                                   className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
@@ -534,8 +538,12 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           <div className="relative flex flex-row items-center">
                             <Input {...unstakeForm.register("amount", {
                               required: true,
-                            })} type="text" id="unstakeAmount"
-                            />
+                            })} type="text" id="unstakeAmount" onChange={(e) => {
+                              const value = e.target.value;
+                              if (/^[0-9]*\.?[0-9]*$/.test(value)) {
+                                unstakeForm.setValue("amount", value);
+                              }
+                            }} />
                             <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
                               <span
                                 className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
