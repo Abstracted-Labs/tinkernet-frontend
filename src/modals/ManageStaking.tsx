@@ -269,14 +269,20 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     if (!metadata) throw new Error(NO_METADATA_ERROR);
 
     const availableBalance = new BigNumber(metadata.availableBalance as string)
-      .dividedBy(new BigNumber(10).pow(12))
-      .toString();
+      .dividedBy(new BigNumber(10).pow(12));
 
-    const balance = altBalance ? coreStakedBalance : availableBalance;
+    let balance = altBalance ? coreStakedBalance : availableBalance.toString();
+    // Remove commas before performing the subtraction
+    balance = balance.replace(/,/g, '');
+
+    // Subtract 1 TNKR to cover fees if balance is greater than 1
+    const balanceToStake = new BigNumber(balance).gte(new BigNumber(1))
+      ? new BigNumber(balance).minus(new BigNumber(1)).toString()
+      : balance;
 
     stakeForm.setValue(
       "amount",
-      balance
+      balanceToStake
     );
 
     stakeForm.trigger("amount", {
@@ -287,11 +293,21 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const handleUnstakeMax = () => {
     if (!metadata) throw new Error(NO_METADATA_ERROR);
 
+    const totalUserStaked = new BigNumber(metadata.totalUserStaked as string)
+      .dividedBy(new BigNumber(10).pow(12));
+
+    let balance = totalUserStaked.toString();
+    // Remove commas before performing the subtraction
+    balance = balance.replace(/,/g, '');
+
+    // Subtract 1 TNKR to cover fees if balance is greater than 1
+    const balanceToUnstake = new BigNumber(balance).gt(1)
+      ? new BigNumber(balance).minus(1).toString()
+      : balance;
+
     unstakeForm.setValue(
       "amount",
-      new BigNumber(metadata.totalUserStaked as string)
-        .dividedBy(new BigNumber(10).pow(12))
-        .toString()
+      balanceToUnstake
     );
 
     unstakeForm.trigger("amount", {
@@ -367,10 +383,26 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       const currentAmount = parseFloat(stakeForm.getValues('amount'));
       const maxBalance = parseFloat(coreStakedBalance);
       if (currentAmount > maxBalance) {
-        stakeForm.setValue('amount', maxBalance.toString());
+        stakeForm.setValue('amount', maxBalance.toString().replace(/,/g, ''));
       }
     }
   }, [altBalance, coreStakedBalance, stakeForm]);
+
+  // Watch for changes in stakeForm.amount
+  useEffect(() => {
+    const value = stakeForm.getValues('amount');
+    if (value && !/^[0-9]*\.?[0-9]*$/.test(value)) {
+      stakeForm.setValue('amount', value.replace(/[^0-9.]/g, ''));
+    }
+  }, [stakeForm, watchedStakeAmount]);
+
+  // Watch for changes in unstakeForm.amount
+  useEffect(() => {
+    const value = unstakeForm.getValues('amount');
+    if (value && !/^[0-9]*\.?[0-9]*$/.test(value)) {
+      unstakeForm.setValue('amount', value.replace(/[^0-9.]/g, ''));
+    }
+  }, [unstakeForm, watchedUnstakeAmount]);
 
   const RestakingDropdown = memo(() => {
     const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }) as SelectedCoreInfo);
@@ -491,8 +523,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                             <div className="relative flex flex-row items-center">
                               <Input {...stakeForm.register("amount", {
                                 required: true,
-                              })} type="text" id="stakeAmount"
-                              />
+                              })} type="text" id="stakeAmount" />
                               <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
                                 <span
                                   className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
@@ -534,8 +565,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           <div className="relative flex flex-row items-center">
                             <Input {...unstakeForm.register("amount", {
                               required: true,
-                            })} type="text" id="unstakeAmount"
-                            />
+                            })} type="text" id="unstakeAmount" />
                             <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
                               <span
                                 className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"

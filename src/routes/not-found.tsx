@@ -2,18 +2,20 @@ import { Link } from "react-router-dom";
 
 const NotFound = () => {
   return (
-    <>
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-2 sm:px-8 xl:p-0">
-        <h1 className="text-4xl font-bold">Page not found</h1>
+    <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
+      <div className="z-10 w-full">
+        <h2 className="lg:text-xl font-bold mt-[8px] lg:mt-[12px] mb-[20px] lg:mb-[24px] flex flex-row items-center gap-4">
+          <span>Page not found</span>
+        </h2>
 
-        <span>
+        <span className="text-sm">
           I think you&apos;re lost. Let&apos;s get you back on track.{" "}
           <Link to="/" className="text-amber-400">
             Go to Home
           </Link>
         </span>
       </div>
-    </>
+    </div>
   );
 };
 
