@@ -532,10 +532,6 @@ const Staking = () => {
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.fetching, rewardsCoreClaimedQuery.data]);
 
-  useEffect(() => {
-    console.log('unclaimedEras', unclaimedEras);
-  }, [unclaimedEras]);
-
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
