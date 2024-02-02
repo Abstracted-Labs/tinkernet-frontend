@@ -235,20 +235,26 @@ const Staking = () => {
             setTotalUserStaked(newTotalStaked);
 
             setUnclaimedEras(prevState => {
-              // Filter out the entries from userStakedInfoMap where staked is greater than 0 and era is not -1
+              // Filter out the entries from userStakedInfoMap where era is not -1
               const filteredEntries = Array.from(userStakedInfoMap.entries()).filter(([, info]) => info.era !== -1);
 
               // Map the filtered entries to get an array of cores with coreId and earliestEra
-              const cores = filteredEntries.map(([key, info]) => ({
+              const newCores = filteredEntries.map(([key, info]) => ({
                 coreId: key,
                 earliestEra: info.era, // Using the era as the earliestEra value
               }));
 
-              // The total is the length of filteredEntries
-              const total = filteredEntries.length;
+              // Combine with previous cores and filter out duplicates
+              const combinedCores = [...prevState.cores, ...newCores];
+              const uniqueCores = combinedCores.filter((core, index, self) =>
+                index === self.findIndex((t) => t.coreId === core.coreId)
+              );
+
+              // The total is the length of uniqueCores
+              const total = uniqueCores.length;
 
               return {
-                cores: [...prevState.cores, ...cores],
+                cores: uniqueCores,
                 total,
               };
             });
@@ -311,6 +317,38 @@ const Staking = () => {
 
     if (cores) {
       setStakingCores(cores);
+
+      const coreEraStakeInfoMap: Map<
+        number, CoreEraStakeInfoType> = new Map();
+
+      const currentEra = await api.query.ocifStaking.currentEra();
+
+      for (const stakingCore of cores) {
+        const inf = await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra);
+
+        const info: {
+          total: string;
+          numberOfStakers: number;
+          rewardClaimed: boolean;
+          active: boolean;
+        } = inf.toPrimitive() as {
+          total: string;
+          numberOfStakers: number;
+          rewardClaimed: boolean;
+          active: boolean;
+        };
+
+        coreEraStakeInfoMap.set(stakingCore.key, {
+          totalStaked: info.total,
+          active: info.active,
+          rewardClaimed: info.rewardClaimed,
+          numberOfStakers: info.numberOfStakers,
+          coreId: stakingCore.key
+        });
+
+        const coreEraStake = Array.from(coreEraStakeInfoMap.values());
+        setCoreEraStakeInfo(coreEraStake);
+      }
     }
   }, [api]);
 
@@ -423,8 +461,8 @@ const Staking = () => {
   };
 
   const disableClaiming = useMemo(() => {
-    return unclaimedEras.total === 0 || isWaiting;
-  }, [unclaimedEras, isWaiting]);
+    return totalUnclaimed.isEqualTo(0) || isWaiting;
+  }, [totalUnclaimed, isWaiting]);
 
   useEffect(() => {
     // Load auto-restake value from local storage
@@ -493,6 +531,10 @@ const Staking = () => {
 
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.fetching, rewardsCoreClaimedQuery.data]);
+
+  useEffect(() => {
+    console.log('unclaimedEras', unclaimedEras);
+  }, [unclaimedEras]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
