@@ -468,8 +468,8 @@ const Staking = () => {
   };
 
   const disableClaiming = useMemo(() => {
-    return totalUnclaimed.isEqualTo(0) || isWaiting;
-  }, [totalUnclaimed, isWaiting]);
+    return isWaiting || unclaimedEras.total === 0 && totalUnclaimed.toNumber() > 0;
+  }, [isWaiting, unclaimedEras, totalUnclaimed]);
 
   useEffect(() => {
     // Load auto-restake value from local storage
