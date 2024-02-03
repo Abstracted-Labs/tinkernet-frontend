@@ -456,16 +456,16 @@ const Staking = () => {
 
     setTotalUnclaimed(new BigNumber(0));
     setUnclaimedEras({ cores: [], total: 0 });
-    setClaimAllSuccess(result);
+    setClaimAllSuccess(true);
     refreshQuery();
   };
 
-  const refreshQuery = () => {
+  const refreshQuery = useCallback(() => {
     if (!claimAllSuccess) return;
     reexecuteQuery({ requestPolicy: 'network-only' });
     reexecuteCoreQuery({ requestPolicy: 'network-only' });
     setClaimAllSuccess(false);
-  };
+  }, [claimAllSuccess, reexecuteQuery, reexecuteCoreQuery]);
 
   const disableClaiming = useMemo(() => {
     return isWaiting || unclaimedEras.total === 0 && totalUnclaimed.toNumber() === 0;
@@ -525,7 +525,7 @@ const Staking = () => {
     if (initialUnclaimed.current === null) {
       initialUnclaimed.current = totalUnclaimed;
     }
-  }, [selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data, claimAllSuccess]);
+  }, [selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data, claimAllSuccess, refreshQuery]);
 
   useEffect(() => {
     if (rewardsCoreClaimedQuery.fetching || !rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
