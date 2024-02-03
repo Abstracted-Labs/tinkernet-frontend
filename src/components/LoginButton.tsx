@@ -11,7 +11,7 @@ import { formatBalanceToTwoDecimals } from "../utils/formatNumber";
 import { useBalance } from "../providers/balance";
 
 const LoginButton = () => {
-  const { availableBalance, reloadAccountInfo } = useBalance();
+  const { availableBalance } = useBalance();
   const [isHovered, setIsHovered] = useState(false);
   const [showFirstSpan, setShowFirstSpan] = useState(true);
   const { handleConnect } = useConnect();
@@ -53,10 +53,6 @@ const LoginButton = () => {
 
     return () => clearInterval(intervalId);
   }, []);
-
-  useEffect(() => {
-    reloadAccountInfo();
-  }, [reloadAccountInfo]);
 
   const formattedBalance = availableBalance ? formatBalanceToTwoDecimals(availableBalance) : 0;
 
