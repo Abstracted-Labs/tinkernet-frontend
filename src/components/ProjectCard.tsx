@@ -133,7 +133,7 @@ const ProjectCard = (props: ProjectCardProps) => {
         htmlElement.style.backgroundColor = '';
       }
     });
-  }, []);
+  }, [mini]);
 
   useEffect(() => {
     loadAggregateStaked();
