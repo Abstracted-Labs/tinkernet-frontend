@@ -2,21 +2,19 @@ import Button from "./Button";
 import DisconnectIcon from "../assets/disconnect-icon.svg";
 import TinkerYellowIcon from "../assets/tinker-yellow-icon.svg";
 import TinkerBlackIcon from "../assets/tinker-black-icon.svg";
-import { useCallback, useEffect, useState } from "react";
-import BigNumber from "bignumber.js";
+import { useEffect, useState } from "react";
 import { shallow } from "zustand/shallow";
-import useApi from "../hooks/useApi";
 import useConnect from "../hooks/useConnect";
 import useAccount from "../stores/account";
 import useModal from "../stores/modals";
 import { formatBalanceToTwoDecimals } from "../utils/formatNumber";
+import { useBalance } from "../providers/balance";
 
 const LoginButton = () => {
-  const [balance, setBalance] = useState<BigNumber>();
+  const { availableBalance } = useBalance();
   const [isHovered, setIsHovered] = useState(false);
   const [showFirstSpan, setShowFirstSpan] = useState(true);
   const { handleConnect } = useConnect();
-  const api = useApi();
   const closeCurrentModal = useModal((state) => state.closeCurrentModal);
   const { selectedAccount, setSelectedAccount } = useAccount(
     (state) => ({
@@ -30,21 +28,6 @@ const LoginButton = () => {
     setSelectedAccount(null);
     closeCurrentModal();
   };
-
-  const loadBalance = useCallback(async () => {
-    if (!selectedAccount) return;
-
-    await api.query.system.account(selectedAccount.address, ({ data }) => {
-      const balance = data.toPrimitive() as {
-        free: string;
-        reserved: string;
-        miscFrozen: string;
-        feeFrozen: string;
-      };
-
-      setBalance(new BigNumber(balance.free));
-    });
-  }, [selectedAccount, api]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -64,10 +47,6 @@ const LoginButton = () => {
   }, []);
 
   useEffect(() => {
-    loadBalance();
-  }, [loadBalance]);
-
-  useEffect(() => {
     const intervalId = setInterval(() => {
       setShowFirstSpan(prev => !prev);
     }, 3000);
@@ -75,7 +54,7 @@ const LoginButton = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  const formattedBalance = balance ? formatBalanceToTwoDecimals(balance) : 0;
+  const formattedBalance = availableBalance ? formatBalanceToTwoDecimals(availableBalance) : 0;
 
   return <Button
     mini

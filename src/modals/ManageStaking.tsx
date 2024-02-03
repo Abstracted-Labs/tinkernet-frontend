@@ -2,7 +2,6 @@ import { Dialog, Tab } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
-import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -19,6 +18,8 @@ import Button from "../components/Button";
 import { StakingCore, TotalUserStakedData } from "../routes/staking";
 import Dropdown from "../components/Dropdown";
 import { BG_GRADIENT } from "../utils/consts";
+import { formatBalanceSafely } from "../utils/formatBalanceSafely";
+import { useBalance } from "../providers/balance";
 
 export interface SelectedCoreInfo extends Metadata {
   id: number;
@@ -42,6 +43,7 @@ const schema = z.object({
 
 const ManageStaking = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
+  const { reloadAccountInfo } = useBalance();
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [selectedCore, setSelectedCore] = useState<StakingCore | null>(null);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
@@ -154,6 +156,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
         onSuccess: () => {
           toast.dismiss();
           toast.success("Staked successfully");
+          reloadAccountInfo();
         },
         onDropped: () => {
           toast.dismiss();
@@ -250,6 +253,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
             onSuccess: () => {
               toast.dismiss();
               toast.success("Unstaked successfully");
+              reloadAccountInfo();
             },
             onDropped: () => {
               toast.dismiss();
@@ -364,11 +368,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       isAltBalance(true);
 
       if (selectedCoreInfo?.userStaked) {
-        const stakedBalance = formatBalance(selectedCoreInfo?.userStaked?.toString(), {
-          decimals: 12,
-          withUnit: false,
-          forceUnit: "-",
-        }).slice(0, -2) || "0";
+        const stakedBalance = formatBalanceSafely(selectedCoreInfo?.userStaked?.toString());
         setCoreStakedBalance(stakedBalance);
       }
       return;
@@ -428,17 +428,10 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
               <div className="flex flex-row justify-around gap-4 sm:flex-auto mb-4">
                 <div className="text-sm text-white text-center">
                   <div className="font-bold">
-                    {formatBalance(
+                    {formatBalanceSafely(
                       metadata?.availableBalance
                         ? metadata.availableBalance.toString()
-                        : "0",
-                      {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }
-                    ).slice(0, -2) || "0"}{" "}
-                    TNKR
+                        : "0")}
                   </div>
                   <div className="text-xxs/none">Available Balance</div>
                 </div>
@@ -447,11 +440,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                   metadata?.totalUserStaked.toString() !== "0" ? (
                   <div className="text-sm text-white text-center">
                     <div className="font-bold">
-                      {formatBalance(metadata?.totalUserStaked?.toString(), {
-                        decimals: 12,
-                        withUnit: false,
-                        forceUnit: "-",
-                      }).slice(0, -2) || "0"} TNKR
+                      {formatBalanceSafely(metadata?.totalUserStaked?.toString())}
                     </div>
                     <div className="text-xxs/none">Currently Staked</div>
                   </div>
@@ -512,12 +501,12 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           <div className="flex-grow">
                             <label
                               htmlFor="stakeAmount"
-                              className="block text-xxs font-medium text-white mb-1"
+                              className="block text-xxs font-medium text-white mb-1 truncate"
                             >
                               <span>Stake Amount</span>
                               {altBalance ?
                                 <span className="float-right">
-                                  Balance: <span className="font-bold">{coreStakedBalance}</span> TNKR
+                                  Balance: <span className="font-bold">{coreStakedBalance}</span>
                                 </span> : null}
                             </label>
                             <div className="relative flex flex-row items-center">

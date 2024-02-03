@@ -13,7 +13,7 @@ const Avatar = (props: AvatarProps) => {
   const handleError = () => {
     setHasError(true);
   };
-  console.log('Avatar', src);
+
   return (
     <div className="flex flex-shrink-0">
       {src === undefined || hasError ? (

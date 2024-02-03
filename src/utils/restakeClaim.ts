@@ -61,7 +61,7 @@ export const restakeClaim = async ({
       uniqueCores.forEach(core => {
         if (!core?.earliestEra) return;
         const restakeUnclaimedAmount = handleRestakingLogic(undefined, uniqueCores.length);
-        if (restakeUnclaimedAmount && !restakeUnclaimedAmount.isZero()) {
+        if (restakeUnclaimedAmount && restakeUnclaimedAmount.isGreaterThan(0)) {
           const restakeAmountInteger = restakeUnclaimedAmount.integerValue().toString();
           batch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
         }
@@ -110,7 +110,7 @@ export const restakeClaim = async ({
     // Send the transaction batch
     // Casting batch to the correct type to satisfy the linting error
     const castedBatch = rebuildBatch as Vec<Call>;
-    
+
     // FIX: Changed the batchAll to batch to solve the claim issues.
     // Issue is caused by batchAll failing when trying to claim an era where stake == 0, prob due to stake being moved to another core.
     // TODO: Proper solution is to still use batchAll but not attempt to claim eras where stake == 0

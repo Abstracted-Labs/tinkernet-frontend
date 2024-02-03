@@ -1,8 +1,8 @@
-import { formatBalance } from "@polkadot/util";
 import BigNumber from "bignumber.js";
 import { VestingScheduleLineItem, DataResultType, LockType, SystemAccount, VestingSchedule } from "../routes/claim";
 import { ApiPromise } from "@polkadot/api";
 import { InjectedAccountWithMeta } from "@polkadot/extension-inject/types";
+import { formatBalanceSafely } from "./formatBalanceSafely";
 
 export const fetchSystemData = async (selectedAccount: InjectedAccountWithMeta, api: ApiPromise): Promise<DataResultType> => {
   if (!selectedAccount || !api) {
@@ -129,11 +129,17 @@ export const calculateVestingData = (results: DataResultType, vestingSchedules: 
   // Calculate the end of the vesting period
   const endOfVestingPeriod = new Date(currentDate.getTime() + remainingVestingPeriodInSeconds * 1000);
 
+  // Use formatBalanceSafely instead of formatBalance in your calculations
+  const vestedClaimable = formatBalanceSafely(unlockedClaimableTokens);
+  const vestedRemaining = formatBalanceSafely(totalFutureLockedTokens);
+  const frozenFormatted = formatBalanceSafely(frozen);
+  const availableFormatted = formatBalanceSafely(available);
+
   return {
-    vestedClaimable: formatBalance(unlockedClaimableTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
-    vestedRemaining: formatBalance(totalFutureLockedTokens.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
-    frozen: formatBalance(frozen.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
-    available: formatBalance(available.toString(), { decimals: 12, withUnit: "TNKR", forceUnit: "-" }),
+    vestedClaimable,
+    vestedRemaining,
+    frozen: frozenFormatted,
+    available: availableFormatted,
     remainingVestingPeriod: new Intl.NumberFormat("en-US", {}).format(remainingVestingPeriod),
     endOfVestingPeriod
   };
