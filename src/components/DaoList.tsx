@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ProjectCard from './ProjectCard';
 import LoadingSpinner from './LoadingSpinner';
-import { BalanceType, ChainPropertiesType, CoreEraStakeInfoType, CoreIndexedRewardsType, LockedType, StakingCore, TotalRewardsCoreClaimedQuery, TotalUserStakedData, UserStakedInfoType, getTotalUserStaked } from '../routes/staking';
+import { ChainPropertiesType, CoreEraStakeInfoType, CoreIndexedRewardsType, StakingCore, TotalRewardsCoreClaimedQuery, TotalUserStakedData, UserStakedInfoType, getTotalUserStaked } from '../routes/staking';
 import { AnyJson, Codec } from '@polkadot/types/types';
 import { StakedDaoType } from '../routes/overview';
 import BigNumber from 'bignumber.js';
@@ -17,6 +17,7 @@ import Input from './Input';
 import FilterIcon from '../assets/filter-icon.svg';
 import { CHOOSE_ONE, FilterStates, OrderByOption } from '../modals/DaoListFilters';
 import { clearFiltersFromLocalStorage } from '../utils/filterStorage';
+import { useBalance } from '../providers/balance';
 
 interface DaoListProps { mini: boolean; isOverview: boolean; }
 
@@ -27,12 +28,12 @@ const DaoList = (props: DaoListProps) => {
   const descriptionRef = useRef<HTMLDivElement | null>(null);
   const projectCardRef = useRef<HTMLDivElement | null>(null);
   const setOpenModal = useModal((state) => state.setOpenModal);
+  const { availableBalance } = useBalance();
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const [isLoading, setLoading] = useState(true);
   const [isDataLoaded, setDataLoaded] = useState(false);
   const [stakedDaos, setStakedDaos] = useState<StakedDaoType[]>([]);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
-  const [availableBalance, setAvailableBalance] = useState<BigNumber>();
   const [chainProperties, setChainProperties] = useState<ChainPropertiesType>();
   const [coreEraStakeInfo, setCoreEraStakeInfo] = useState<CoreEraStakeInfoType[]>([]);
   const [coreIndexedRewards, setCoreIndexedRewards] = useState<CoreIndexedRewardsType[]>([]);
@@ -269,16 +270,6 @@ const DaoList = (props: DaoListProps) => {
     });
   }, [stakingCores, coreEraStakeInfo, userStakedInfo]);
 
-  const loadAccountInfo = useCallback(async () => {
-    if (!selectedAccount) return;
-    const account = await api.query.system.account(selectedAccount.address);
-    const balance = account.toPrimitive() as BalanceType;
-    const locked = (await api.query.ocifStaking.ledger(selectedAccount.address)).toPrimitive() as LockedType;
-    const currentBalance = new BigNumber(balance.data.free).minus(new BigNumber(locked.locked));
-
-    setAvailableBalance(currentBalance);
-  }, [api, selectedAccount]);
-
   const loadStakingConstants = useCallback(async () => {
     const maxStakersPerCore = api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
     const inflationErasPerYear = api.consts.checkedInflation.erasPerYear.toPrimitive() as number;
@@ -325,7 +316,6 @@ const DaoList = (props: DaoListProps) => {
     try {
       if (selectedAccount) {
         clearFiltersFromLocalStorage();
-        await loadAccountInfo();
         await loadCores();
         await loadStakingConstants();
         await loadCoreEraStake();
@@ -338,7 +328,7 @@ const DaoList = (props: DaoListProps) => {
       setLoading(false);
       setDataLoaded(true);
     }
-  }, [loadAccountInfo, loadCores, loadStakingConstants, loadCoreEraStake, loadStakeRewardMinimum]);
+  }, [loadCores, loadStakingConstants, loadCoreEraStake, loadStakeRewardMinimum]);
 
   const setupSubscriptions = useCallback(async () => {
     if (!selectedAccount) {

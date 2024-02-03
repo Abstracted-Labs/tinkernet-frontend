@@ -10,7 +10,6 @@ import {
 } from "urql";
 import { createClient as createWSClient } from "graphql-ws";
 import Claim from "./routes/claim";
-import Transfer from "./routes/xtransfer";
 import Staking from "./routes/staking";
 import NotFound from "./routes/not-found";
 import "./index.css";
@@ -19,6 +18,7 @@ import ApiProvider from "./providers/api";
 import Layout from "./components/Layout";
 import Modals from "./modals";
 import Overview from "./routes/overview";
+import { BalanceProvider } from "./providers/balance";
 
 const wsClient = createWSClient({
   url: "wss://squid.subsquid.io/ocif-squid/v/v4/graphql",
@@ -51,28 +51,30 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <Toaster position="bottom-right" />
     <BrowserRouter>
       <ApiProvider>
-        <URQLProvider value={client}>
-          <Modals />
+        <BalanceProvider>
+          <URQLProvider value={client}>
+            <Modals />
 
-          <Routes>
-            <Route index element={<Navigate to="overview" replace={true} />} />
+            <Routes>
+              <Route index element={<Navigate to="overview" replace={true} />} />
 
-            <Route path="/" element={<Layout />}>
-              <Route path="overview" element={<Overview />} />
+              <Route path="/" element={<Layout />}>
+                <Route path="overview" element={<Overview />} />
 
-              <Route path="claim" element={<Claim />} />
+                <Route path="claim" element={<Claim />} />
 
-              {/* Disabled temporarily */}
-              {/* <Route path="transfer" element={<Transfer />} /> */}
+                {/* Disabled temporarily */}
+                {/* <Route path="transfer" element={<Transfer />} /> */}
 
-              <Route path="staking" element={<Staking />} />
+                <Route path="staking" element={<Staking />} />
 
-              <Route path="404" element={<NotFound />} />
+                <Route path="404" element={<NotFound />} />
 
-              <Route path="*" element={<Navigate to="/404" replace={true} />} />
-            </Route>
-          </Routes>
-        </URQLProvider>
+                <Route path="*" element={<Navigate to="/404" replace={true} />} />
+              </Route>
+            </Routes>
+          </URQLProvider>
+        </BalanceProvider>
       </ApiProvider>
     </BrowserRouter>
   </>
