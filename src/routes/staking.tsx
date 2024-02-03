@@ -468,7 +468,7 @@ const Staking = () => {
   };
 
   const disableClaiming = useMemo(() => {
-    return isWaiting || unclaimedEras.total === 0 && totalUnclaimed.toNumber() > 0;
+    return isWaiting || unclaimedEras.total === 0 && totalUnclaimed.toNumber() === 0;
   }, [isWaiting, unclaimedEras, totalUnclaimed]);
 
   useEffect(() => {
