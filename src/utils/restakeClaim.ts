@@ -23,7 +23,7 @@ export interface RestakeClaimProps {
 export const restakeClaim = async ({
   selectedAccount,
   unclaimedEras,
-  currentStakingEra,
+  // currentStakingEra,
   api,
   setWaiting,
   disableClaiming,
@@ -59,12 +59,7 @@ export const restakeClaim = async ({
 
     // Create claim transactions for cores where the user has a stake
     coresWithStake.forEach(core => {
-      // Use currentStakingEra as a fallback if earliestEra is not available
-      const startEra = core.earliestEra ?? currentStakingEra;
-
-      for (let i = startEra; i <= currentStakingEra; i++) {
-        batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
-      }
+      batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
     });
 
     // Optionally create restake transactions
