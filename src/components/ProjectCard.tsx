@@ -36,6 +36,7 @@ export interface ProjectCardProps {
   selectedAccount: InjectedAccountWithMeta | null;
   members: AnyJson[];
   mini: boolean;
+  totalStakedInSystem: BigNumber;
 }
 
 const STAT_UNDERLINE = `border-b border-b-[#2B2C30]`;
@@ -55,13 +56,14 @@ const ProjectCard = (props: ProjectCardProps) => {
     toggleViewMembers,
     selectedAccount,
     members,
-    mini
+    mini,
+    totalStakedInSystem
   } = props;
   const api = useApi();
   const scrollPositionRef = useRef(0);
   const [isHovered, setIsHovered] = useState(false);
   const [minSupportMet, setMinSupportMet] = useState(false);
-  const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber(0));
+  // const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber(0));
   const [minStakeReward, setMinStakeReward] = useState<BigNumber>(new BigNumber(0));
   const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>(new BigNumber(0));
 
@@ -78,11 +80,11 @@ const ProjectCard = (props: ProjectCardProps) => {
     toggleViewMembers(core, members);
   };
 
-  const loadAggregateStaked = useCallback(async () => {
-    const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
-    const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
-    setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
-  }, [api]);
+  // const loadAggregateStaked = useCallback(async () => {
+  //   const totalIssuance = (await api.query.balances.totalIssuance()).toPrimitive() as string;
+  //   const inactiveIssuance = (await api.query.balances.inactiveIssuance()).toPrimitive() as string;
+  //   setAggregateStaked(new BigNumber(totalIssuance).minus(new BigNumber(inactiveIssuance)));
+  // }, [api]);
 
   const loadStakeRewardMinimum = useCallback(() => {
     const minStakeReward = api.consts.ocifStaking.stakeThresholdForActiveCore.toPrimitive() as string;
@@ -136,9 +138,11 @@ const ProjectCard = (props: ProjectCardProps) => {
   }, [mini]);
 
   useEffect(() => {
-    loadAggregateStaked();
+    // loadAggregateStaked();
     loadStakeRewardMinimum();
-  }, [loadAggregateStaked, loadStakeRewardMinimum]);
+  }, [
+    // loadAggregateStaked, 
+    loadStakeRewardMinimum]);
 
   useEffect(() => {
     calcMinSupportMet();
@@ -294,8 +298,8 @@ const ProjectCard = (props: ProjectCardProps) => {
         </div>
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-        {coreInfo?.totalStaked && aggregateStaked
-          ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(aggregateStaked).toFixed(2) }%`
+        {coreInfo?.totalStaked
+          ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(totalStakedInSystem).toFixed(2) }%`
           : '--'}
       </div>
     </div> : null}
