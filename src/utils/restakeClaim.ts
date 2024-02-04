@@ -112,10 +112,10 @@ export const restakeClaim = async ({
             const restakeAmountInteger = adjustedRestakeAmount.integerValue().toString();
             rebuildBatch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
           } else {
-            console.log(`Skipping core ID: ${ core.coreId } due to zero adjusted restake amount.`);
+            console.warn(`Skipping core ID: ${ core.coreId } due to zero adjusted restake amount.`);
           }
         } else {
-          console.log(`Skipping core ID: ${ core.coreId } due to insufficient unclaimed rewards to cover transaction fees.`);
+          console.warn(`Skipping core ID: ${ core.coreId } due to insufficient unclaimed rewards to cover transaction fees.`);
         }
       });
     }
