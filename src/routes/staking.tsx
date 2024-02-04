@@ -613,7 +613,7 @@ const Staking = () => {
             unclaimedEras={unclaimedEras}
           />
 
-          <DaoList mini={false} isOverview={false} />
+          <DaoList mini={false} isOverview={false} totalStakedInSystem={totalStaked || new BigNumber(0)} />
         </div>
       ) : <div className="text-center">
         <h5 className="text-sm font-bold text-white">
