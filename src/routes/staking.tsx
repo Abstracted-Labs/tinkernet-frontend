@@ -478,7 +478,7 @@ const Staking = () => {
     setUnclaimedEras({ cores: [], total: 0 });
     setClaimAllSuccess(true);
     refreshQuery();
-  }, [api, currentStakingEra, enableAutoRestake, selectedAccount, unclaimedEras, userStakedInfoMap, handleRestakingLogic, disableClaiming, refreshQuery]);;
+  }, [api, currentStakingEra, enableAutoRestake, selectedAccount, unclaimedEras, userStakedInfoMap, handleRestakingLogic, disableClaiming, refreshQuery]);
 
   useEffect(() => {
     // Load auto-restake value from local storage
@@ -504,7 +504,7 @@ const Staking = () => {
     };
     setup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount, setupSubscriptions]);
+  }, [selectedAccount]);
 
   useEffect(() => {
     initializeData(selectedAccount);
@@ -548,6 +548,7 @@ const Staking = () => {
     setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
   }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.fetching, rewardsCoreClaimedQuery.data]);
 
+  console.log('uhoh', selectedAccount);
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
