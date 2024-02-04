@@ -23,7 +23,7 @@ export interface RestakeClaimProps {
 export const restakeClaim = async ({
   selectedAccount,
   unclaimedEras,
-  // currentStakingEra,
+  currentStakingEra,
   api,
   setWaiting,
   disableClaiming,
@@ -40,8 +40,8 @@ export const restakeClaim = async ({
     if (disableClaiming) {
       setWaiting(false);
       toast.dismiss();
-      toast.error("Can only claim when unclaimed VARCH is greater than the existential deposit");
-      throw new Error("Can only claim when unclaimed VARCH is greater than the existential deposit");
+      toast.error("Can only claim when unclaimed TNKR is greater than the existential deposit");
+      throw new Error("Can only claim when unclaimed TNKR is greater than the existential deposit");
     }
 
     await web3Enable('Tinkernet');
@@ -57,18 +57,22 @@ export const restakeClaim = async ({
       return hasStake;
     });
 
-    // Create claim transactions for cores where the user has a stake
-    coresWithStake.forEach(core => {
-      batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+    // Create claim transactions
+    uniqueCores.forEach(core => {
+      if (!core?.earliestEra) return;
+      for (let i = core.earliestEra; i <= currentStakingEra; i++) {
+        batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+      }
     });
 
     // Optionally create restake transactions
     if (enableAutoRestake) {
       coresWithStake.forEach(core => {
+        if (!core?.earliestEra) return;
         const restakeUnclaimedAmount = handleRestakingLogic(undefined, coresWithStake.length);
         if (restakeUnclaimedAmount && restakeUnclaimedAmount.isGreaterThan(0)) {
           const restakeAmountInteger = restakeUnclaimedAmount.integerValue().toString();
-          console.log(`Restaking ${ restakeAmountInteger } VARCH for core ID: ${ core.coreId }`);
+          console.log(`Restaking ${ restakeAmountInteger } TNKR for core ID: ${ core.coreId }`);
           batch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
         }
       });
@@ -89,13 +93,17 @@ export const restakeClaim = async ({
     const rebuildBatch: unknown[] = [];
 
     // Rebuild the batch with only the cores where the user has a non-zero stake
-    coresWithStake.forEach(core => {
-      rebuildBatch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+    uniqueCores.forEach(core => {
+      if (!core?.earliestEra) return;
+      for (let i = core.earliestEra; i <= currentStakingEra; i++) {
+        rebuildBatch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+      }
     });
 
     // Adjust the restake logic to account for transaction fees
     if (enableAutoRestake) {
       coresWithStake.forEach(core => {
+        if (!core?.earliestEra) return;
         const restakeUnclaimedAmount = handleRestakingLogic(batchTxFees, coresWithStake.length);
         if (restakeUnclaimedAmount && restakeUnclaimedAmount.isGreaterThan(new BigNumber(batchTxFees.toString()))) {
           // Ensure the restake amount is adjusted for the transaction fees
