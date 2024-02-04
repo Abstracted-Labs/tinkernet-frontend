@@ -19,10 +19,10 @@ import { CHOOSE_ONE, FilterStates, OrderByOption } from '../modals/DaoListFilter
 import { clearFiltersFromLocalStorage } from '../utils/filterStorage';
 import { useBalance } from '../providers/balance';
 
-interface DaoListProps { mini: boolean; isOverview: boolean; }
+interface DaoListProps { mini: boolean; isOverview: boolean; totalStakedInSystem: BigNumber | undefined; }
 
 const DaoList = (props: DaoListProps) => {
-  const { mini, isOverview } = props;
+  const { mini, isOverview, totalStakedInSystem } = props;
   const api = useApi();
   const initialCoresRef = useRef<StakingCore[]>([]);
   const descriptionRef = useRef<HTMLDivElement | null>(null);
@@ -523,6 +523,7 @@ const DaoList = (props: DaoListProps) => {
               availableBalance={availableBalance}
               descriptionRef={minified ? projectCardRef : descriptionRef}
               selectedAccount={selectedAccount}
+              totalStakedInSystem={totalStakedInSystem || new BigNumber(0)}
             />
           );
 

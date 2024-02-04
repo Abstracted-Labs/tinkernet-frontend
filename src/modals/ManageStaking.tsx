@@ -405,7 +405,10 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [unstakeForm, watchedUnstakeAmount]);
 
   const RestakingDropdown = memo(() => {
-    const list = stakingCores.map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }) as SelectedCoreInfo);
+    const list = stakingCores
+      .map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }) as SelectedCoreInfo)
+      .filter(core => core.userStaked && core.userStaked.gt(new BigNumber(0)));
+
     if (!list || list.length === 0) return null;
 
     return <Dropdown initialValue={(initialSelectedCore.current?.metadata as SelectedCoreInfo)?.name as string} currentValue={selectedCoreInfo} list={list} onSelect={handleSelect} />;

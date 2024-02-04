@@ -5,16 +5,19 @@ import useAccount from '../stores/account';
 
 interface BalanceContextType {
   availableBalance: BigNumber;
+  totalBalance: BigNumber;
   reloadAccountInfo: () => void;
 }
 
 const BalanceContext = createContext<BalanceContextType>({
   availableBalance: new BigNumber(0),
+  totalBalance: new BigNumber(0),
   reloadAccountInfo: () => { },
 });
 
 export const BalanceProvider = ({ children }: { children: ReactNode; }) => {
   const [availableBalance, setAvailableBalance] = useState(new BigNumber(0));
+  const [totalBalance, setTotalBalance] = useState(new BigNumber(0));
   const api = useApi();
   const { selectedAccount } = useAccount();
 
@@ -23,9 +26,11 @@ export const BalanceProvider = ({ children }: { children: ReactNode; }) => {
     const account = await api.query.system.account(selectedAccount.address);
     const balance = account.toPrimitive() as { data: { free: string; }; };
     const locked = (await api.query.ocifStaking.ledger(selectedAccount.address)).toPrimitive() as { locked: string; };
-    const currentBalance = new BigNumber(balance.data.free).minus(new BigNumber(locked.locked));
+    const currentAvailableBalance = new BigNumber(balance.data.free).minus(new BigNumber(locked.locked));
+    const currentTotalBalance = new BigNumber(balance.data.free);
 
-    setAvailableBalance(currentBalance);
+    setAvailableBalance(currentAvailableBalance);
+    setTotalBalance(currentTotalBalance);
   }, [api, selectedAccount]);
 
   useEffect(() => {
@@ -33,7 +38,7 @@ export const BalanceProvider = ({ children }: { children: ReactNode; }) => {
   }, [selectedAccount, api, loadAccountInfo]);
 
   return (
-    <BalanceContext.Provider value={{ availableBalance, reloadAccountInfo: loadAccountInfo }}>
+    <BalanceContext.Provider value={{ availableBalance, totalBalance, reloadAccountInfo: loadAccountInfo }}>
       {children}
     </BalanceContext.Provider>
   );

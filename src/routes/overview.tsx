@@ -271,7 +271,7 @@ const Overview = () => {
             unclaimedEras={undefined}
           />
 
-          <DaoList mini={true} isOverview={true} />
+          <DaoList mini={true} isOverview={true} totalStakedInSystem={undefined} />
         </div>
       ) : <div className="text-center">
         <h5 className="text-sm font-bold text-white">
