@@ -60,7 +60,7 @@ export const restakeClaim = async ({
     // Create claim transactions
     uniqueCores.forEach(core => {
       if (!core?.earliestEra) return;
-      for (let i = core.earliestEra; i <= currentStakingEra; i++) {
+      for (let i = core.earliestEra; i < currentStakingEra; i++) {
         batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
       }
     });
@@ -79,7 +79,7 @@ export const restakeClaim = async ({
     }
 
     if (batch.length === 0) {
-      const message = "No transactions to send";
+      const message = "Please wait until the next era to claim rewards.";
       setWaiting(false);
       toast.dismiss();
       toast.error(message);
@@ -95,7 +95,7 @@ export const restakeClaim = async ({
     // Rebuild the batch with only the cores where the user has a non-zero stake
     uniqueCores.forEach(core => {
       if (!core?.earliestEra) return;
-      for (let i = core.earliestEra; i <= currentStakingEra; i++) {
+      for (let i = core.earliestEra; i < currentStakingEra; i++) {
         rebuildBatch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
       }
     });
@@ -133,6 +133,7 @@ export const restakeClaim = async ({
           toast.dismiss();
           toast.error("Invalid transaction");
           setWaiting(false);
+          result = false;
         },
         onExecuted: () => {
           toast.dismiss();
@@ -166,7 +167,6 @@ export const restakeClaim = async ({
     toast.error(`${ error }`);
     console.error(error);
     setWaiting(false);
-    result = false;
   }
 
   return result;
