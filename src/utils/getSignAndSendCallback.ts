@@ -80,6 +80,7 @@ export const getSignAndSendCallback = (props: ISignAndSendCallback) => {
               onError?.(message); // Use onError callback for custom error handling
             }
           });
+          hasFinished = true;
         }
       });
 
