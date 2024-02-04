@@ -6,7 +6,7 @@ import { Vec } from "@polkadot/types";
 import { Balance, Call } from "@polkadot/types/interfaces";
 import toast from "react-hot-toast";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
-import { RegistryError } from "@polkadot/types/types";
+import { getSignAndSendCallbackWithPromise } from "./getSignAndSendCallback";
 
 export interface RestakeClaimProps {
   selectedAccount: InjectedAccountWithMeta;
@@ -128,57 +128,36 @@ export const restakeClaim = async ({
     await api.tx.utility.batch(castedBatch).signAndSend(
       selectedAccount.address,
       { signer: injector.signer },
-      ({ status, events, dispatchError }) => {
-        if (status.isInBlock || status.isFinalized) {
-          let batchInterruptedHandled = false; // Flag to track if BatchInterrupted has been handled
-          events.forEach(({ event: { data, method, section } }) => {
-            if (method === 'BatchInterrupted' && !batchInterruptedHandled) {
-              batchInterruptedHandled = true; // Set the flag to true to prevent handling again
-              data.forEach((d) => {
-                const moduleError = d as unknown as { isModule: boolean; asModule: { index: number, error: number; }; };
-                if (moduleError.isModule) {
-                  const { index, error } = moduleError.asModule;
-                  const decoded = api.registry.findMetaError(new Uint8Array([index, error]));
-                  const message = `${ section }.${ method } at [${ decoded.index }]: ${ decoded.name }`;
-                  toast.dismiss();
-                  toast.error(message);
-                  setWaiting(false);
-                  throw new Error(message);
-                }
-              });
-            }
-          });
-
-          if (dispatchError) {
-            if (dispatchError.isModule) {
-              // for module errors, we have the section indexed, lookup
-              const decoded: RegistryError = api.registry.findMetaError(dispatchError.asModule);
-              const { docs, method, section, index } = decoded; decoded;
-              const message = `${ section }.${ method }: ${ docs.join(' ') } (${ index })`;
-              console.error(message);
-              toast.error(message);
-            } else {
-              // Other, CannotLookup, BadOrigin, no extra info
-              console.error(dispatchError.toString());
-              toast.error(dispatchError.toString());
-            }
-            setWaiting(false);
-            result = false;
-          } else {
-            // Check for specific success events if necessary
-            const isSuccess = events.some(({ event }) => api.events.system.ExtrinsicSuccess.is(event));
-
-            if (isSuccess) {
-              toast.dismiss();
-              toast.success("Claimed successfully");
-            } else {
-              toast.error("Transaction did not succeed");
-            }
-            setWaiting(false);
-            result = isSuccess;
-          }
+      getSignAndSendCallbackWithPromise({
+        onInvalid: () => {
+          toast.dismiss();
+          toast.error("Invalid transaction");
+          setWaiting(false);
+        },
+        onExecuted: () => {
+          toast.dismiss();
+          toast.loading("Waiting for confirmation...");
+          setWaiting(true);
+        },
+        onSuccess: () => {
+          toast.dismiss();
+          toast.success("Claimed successfully");
+          setWaiting(false);
+          result = true;
+        },
+        onDropped: () => {
+          toast.dismiss();
+          toast.error("Transaction dropped");
+          setWaiting(false);
+          result = false;
+        },
+        onError: (error) => {
+          toast.dismiss();
+          toast.error(error);
+          setWaiting(false);
+          result = false;
         }
-      }
+      }, api)
     );
 
     toast.dismiss();

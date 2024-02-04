@@ -67,7 +67,12 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
 
             toast.error("Transaction dropped");
           },
-        })
+          onError: (error) => {
+            toast.dismiss();
+
+            toast.error(error);
+          }
+        }, api)
       );
 
       closeCurrentModal();

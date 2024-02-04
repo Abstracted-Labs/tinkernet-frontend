@@ -116,7 +116,12 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
 
                 toast.error("Registration dropped");
               },
-            })
+              onError: (error) => {
+                toast.dismiss();
+
+                toast.error(error);
+              },
+            }, api)
           );
 
         closeCurrentModal();

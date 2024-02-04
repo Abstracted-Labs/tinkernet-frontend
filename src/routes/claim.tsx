@@ -213,7 +213,12 @@ const Claim = () => {
             toast.error("Transaction dropped");
             setClaimWaiting(false);
           },
-        })
+          onError: (error) => {
+            toast.dismiss();
+            toast.error(error);
+            setClaimWaiting(false);
+          }
+        }, api)
       );
 
       toast.dismiss();
