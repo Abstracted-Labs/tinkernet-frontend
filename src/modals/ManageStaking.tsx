@@ -47,7 +47,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [selectedCore, setSelectedCore] = useState<StakingCore | null>(null);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
-  const [altBalance, isAltBalance] = useState<boolean>(false);
+  const [altBalance, setAltBalance] = useState<boolean>(false);
   const [coreStakedBalance, setCoreStakedBalance] = useState<string>("0");
   const { closeCurrentModal, openModals } = useModal<ModalState>(
     (state) => state,
@@ -288,19 +288,13 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     // Extract numeric part from coreStakedBalance
     const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
 
-    console.log("numericCoreStakedBalance (post-conversion):", numericCoreStakedBalance);
-
     const balance = altBalance
       ? new BigNumber(numericCoreStakedBalance)
       : availableBalance;
 
-    console.log("balance (selected or available):", balance.toString());
-
     const balanceToStake = balance.gte(new BigNumber(1))
       ? balance.minus(new BigNumber(1)).toString()
       : balance.toString();
-
-    console.log("balanceToStake (final value):", balanceToStake);
 
     if (!isNaN(parseFloat(balanceToStake))) {
       stakeForm.setValue("amount", balanceToStake);
@@ -346,23 +340,11 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     unstakeForm.reset();
   };
 
-  const handleDropdownChange = (selectedOption: { name: string; } | null) => {
-    if (selectedOption && selectedOption.name === 'Available Balance') {
-      const availableBalanceBN = new BigNumber(metadata?.availableBalance as string);
-      const oneTNKR = new BigNumber(10).pow(12); // Adjust the exponent according to your token's decimals
-      const stakeAmount = availableBalanceBN.minus(oneTNKR).dividedBy(oneTNKR);
-
-      // Update the stake amount in the form
-      stakeForm.setValue('amount', stakeAmount.toString());
-    }
-  };
-
   const handleSelect = (selected: { name: string; } | null) => {
     if (selected) {
       const selectCore = stakingCores.find(core => core.metadata.name === selected.name);
       if (selectCore) {
         setSelectedCore(selectCore);
-        handleDropdownChange(selected);
       }
     }
   };
@@ -394,8 +376,31 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [isOpen]);
 
   useEffect(() => {
+    if (!metadata) {
+      console.error("Metadata not available");
+      return;
+    }
+
+    let balanceBN;
+    const oneTNKR = new BigNumber(1);
+
+    if (altBalance) {
+      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
+      balanceBN = new BigNumber(numericCoreStakedBalance);
+    } else {
+      balanceBN = new BigNumber(metadata.availableBalance as string);
+    }
+
+    // Subtract one TNKR from the balance to cover fees or maintain a minimum balance
+    const stakeAmount = balanceBN.minus(oneTNKR);
+
+    // Update the stake amount in the form, converting it to a string
+    stakeForm.setValue('amount', stakeAmount.toString());
+  }, [coreStakedBalance, altBalance, metadata, stakeForm]);
+
+  useEffect(() => {
     if (selectedCoreInfo && initialCore && selectedCoreInfo?.name !== initialCore?.name) {
-      isAltBalance(true);
+      setAltBalance(true);
 
       if (selectedCoreInfo?.userStaked) {
         const stakedBalance = formatBalanceSafely(selectedCoreInfo?.userStaked?.toString());
@@ -404,14 +409,15 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    isAltBalance(false);
+    setAltBalance(false);
     setCoreStakedBalance("0");
   }, [selectedCoreInfo, initialCore, metadata]);
 
   useEffect(() => {
     if (altBalance) {
       const currentAmount = parseFloat(stakeForm.getValues('amount'));
-      const maxBalance = parseFloat(coreStakedBalance);
+      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
+      const maxBalance = parseFloat(numericCoreStakedBalance);
       if (currentAmount > maxBalance) {
         stakeForm.setValue('amount', maxBalance.toString().replace(/,/g, ''));
       }
@@ -447,46 +453,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     // Set the initial stake amount in the form
     stakeForm.setValue('amount', initialStakeAmount.toString());
   }, [metadata, stakeForm]);
-
-  useEffect(() => {
-    const recalculateMaxAmount = () => {
-      if (!metadata || !selectedCoreInfo) return;
-
-      let maxStake;
-      let maxUnstake;
-      if (selectedCoreInfo && selectedCoreInfo.userStaked) {
-        maxUnstake = new BigNumber(selectedCoreInfo.userStaked.toString());
-      }
-      maxStake = new BigNumber(metadata.availableBalance as string);
-
-      // Adjust oneTNKR to match the unit scale of the balance
-      const oneTNKR = new BigNumber(10).pow(12); // Represents 1 TNKR in the smallest unit
-
-      if (maxStake.gt(oneTNKR)) {
-        maxStake = maxStake.minus(oneTNKR);
-      } else {
-        // If the balance is less than 1 TNKR, set it to 0
-        maxStake = new BigNumber(0);
-      }
-
-      if (maxUnstake && maxUnstake.gt(oneTNKR)) {
-        maxUnstake = maxUnstake.minus(oneTNKR);
-      } else {
-        // If the balance is less than 1 TNKR, set it to 0
-        maxUnstake = new BigNumber(0);
-      }
-
-      // Convert back to a more user-friendly unit if necessary
-      const userFriendlyMaxStake = maxStake.dividedBy(new BigNumber(10).pow(12));
-      const userFriendlyMaxUnstake = maxUnstake ? maxUnstake.dividedBy(new BigNumber(10).pow(12)) : 0;
-
-      // Set the initial stake/unstake amount in the form if needed
-      stakeForm.setValue("amount", userFriendlyMaxStake.toString());
-      unstakeForm.setValue("amount", userFriendlyMaxUnstake.toString());
-    };
-
-    recalculateMaxAmount();
-  }, [metadata, selectedCoreInfo, stakeForm, unstakeForm]);
 
   const RestakingDropdown = memo(() => {
     const list = stakingCores
@@ -545,7 +511,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           classNames(
                             "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700 focus:outline-none",
                             selected
-                              ? "bg-white shadow border-[1px] border-tinkerYellow"
+                              ? "bg-white shadow border-[1px] border-tinkerYellow cursor-not-allowed"
                               : "border-[1px] border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
                           )
                         }
@@ -558,7 +524,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           classNames(
                             "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700 focus:outline-none",
                             selected
-                              ? "bg-white shadow border-[1px] border-tinkerYellow"
+                              ? "bg-white shadow border-[1px] border-tinkerYellow cursor-not-allowed"
                               : "border-[1px] border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
                           )
                         }
