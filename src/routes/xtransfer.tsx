@@ -72,6 +72,37 @@ const Transfer = () => {
     new BigNumber(0)
   );
 
+  const toasts = getSignAndSendCallbackWithPromise({
+    onInvalid: () => {
+      toast.dismiss();
+
+      toast.error("Invalid transaction");
+
+      setWaiting(false);
+    },
+    onExecuted: () => {
+      toast.dismiss();
+
+      toast.loading("Waiting for confirmation...");
+
+      setWaiting(true);
+    },
+    onSuccess: () => {
+      toast.dismiss();
+
+      toast.success("Transferred successfully");
+
+      setWaiting(false);
+    },
+    onDropped: () => {
+      toast.dismiss();
+
+      toast.error("Transaction dropped");
+
+      setWaiting(false);
+    },
+  }, api);
+
   const setupSubscriptions = useCallback(({
     selectedAccount,
   }: {
@@ -308,36 +339,7 @@ const Transfer = () => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallbackWithPromise({
-            onInvalid: () => {
-              toast.dismiss();
-
-              toast.error("Invalid transaction");
-
-              setWaiting(false);
-            },
-            onExecuted: () => {
-              toast.dismiss();
-
-              toast.loading("Waiting for confirmation...");
-
-              setWaiting(true);
-            },
-            onSuccess: () => {
-              toast.dismiss();
-
-              toast.success("Transferred successfully");
-
-              setWaiting(false);
-            },
-            onDropped: () => {
-              toast.dismiss();
-
-              toast.error("Transaction dropped");
-
-              setWaiting(false);
-            },
-          })
+          toasts
         );
     } catch (error) {
       console.error(error);
@@ -398,36 +400,7 @@ const Transfer = () => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallbackWithPromise({
-            onInvalid: () => {
-              toast.dismiss();
-
-              toast.error("Invalid transaction");
-
-              setWaiting(false);
-            },
-            onExecuted: () => {
-              toast.dismiss();
-
-              toast.loading("Waiting for confirmation...");
-
-              setWaiting(true);
-            },
-            onSuccess: () => {
-              toast.dismiss();
-
-              toast.success("Transferred successfully");
-
-              setWaiting(false);
-            },
-            onDropped: () => {
-              toast.dismiss();
-
-              toast.error("Transaction dropped");
-
-              setWaiting(false);
-            },
-          })
+          toasts
         );
     } catch (error) {
       console.error(error);

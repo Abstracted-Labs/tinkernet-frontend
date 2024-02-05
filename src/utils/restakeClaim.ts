@@ -6,7 +6,7 @@ import { Vec } from "@polkadot/types";
 import { Balance, Call } from "@polkadot/types/interfaces";
 import toast from "react-hot-toast";
 import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
-import { RegistryError } from "@polkadot/types/types";
+import { getSignAndSendCallbackWithPromise } from "./getSignAndSendCallback";
 
 export interface RestakeClaimProps {
   selectedAccount: InjectedAccountWithMeta;
@@ -18,6 +18,7 @@ export interface RestakeClaimProps {
   enableAutoRestake: boolean;
   handleRestakingLogic: (partialFee?: Balance | undefined, stakedDaos?: number) => void | BigNumber;
   userStakedInfoMap: Map<number, UserStakedInfoType>;
+  callback?: (result: boolean) => void;
 }
 
 export const restakeClaim = async ({
@@ -30,9 +31,8 @@ export const restakeClaim = async ({
   enableAutoRestake,
   handleRestakingLogic,
   userStakedInfoMap,
-}: RestakeClaimProps): Promise<boolean> => {
-  let result = false;
-
+  callback
+}: RestakeClaimProps): Promise<void> => {
   try {
     setWaiting(true);
     toast.loading("Claiming...");
@@ -44,7 +44,7 @@ export const restakeClaim = async ({
       throw new Error("Can only claim when unclaimed TNKR is greater than the existential deposit");
     }
 
-    await web3Enable('Tinkernet');
+    await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
     const uniqueCores = [...new Map(unclaimedEras.cores.map((x) => [x['coreId'], x])).values()];
@@ -60,10 +60,18 @@ export const restakeClaim = async ({
     // Create claim transactions
     uniqueCores.forEach(core => {
       if (!core?.earliestEra) return;
-      for (let i = core.earliestEra; i <= currentStakingEra; i++) {
+      for (let i = core.earliestEra; i < currentStakingEra; i++) {
         batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
       }
     });
+
+    if (batch.length === 0) {
+      const message = "Please wait until the next era to claim rewards.";
+      setWaiting(false);
+      toast.dismiss();
+      toast.error(message);
+      throw new Error(message);
+    };
 
     // Optionally create restake transactions
     if (enableAutoRestake) {
@@ -72,19 +80,10 @@ export const restakeClaim = async ({
         const restakeUnclaimedAmount = handleRestakingLogic(undefined, coresWithStake.length);
         if (restakeUnclaimedAmount && restakeUnclaimedAmount.isGreaterThan(0)) {
           const restakeAmountInteger = restakeUnclaimedAmount.integerValue().toString();
-          console.log(`Restaking ${ restakeAmountInteger } TNKR for core ID: ${ core.coreId }`);
           batch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
         }
       });
     }
-
-    if (batch.length === 0) {
-      const message = "No transactions to send";
-      setWaiting(false);
-      toast.dismiss();
-      toast.error(message);
-      throw new Error(message);
-    };
 
     // Calculate the transaction fees for the initial batch
     // TODO: Proper solution is to still use batchAll but not attempt to claim eras where stake == 0
@@ -95,7 +94,7 @@ export const restakeClaim = async ({
     // Rebuild the batch with only the cores where the user has a non-zero stake
     uniqueCores.forEach(core => {
       if (!core?.earliestEra) return;
-      for (let i = core.earliestEra; i <= currentStakingEra; i++) {
+      for (let i = core.earliestEra; i < currentStakingEra; i++) {
         rebuildBatch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
       }
     });
@@ -128,67 +127,52 @@ export const restakeClaim = async ({
     await api.tx.utility.batch(castedBatch).signAndSend(
       selectedAccount.address,
       { signer: injector.signer },
-      ({ status, events, dispatchError }) => {
-        if (status.isInBlock || status.isFinalized) {
-          let batchInterruptedHandled = false; // Flag to track if BatchInterrupted has been handled
-          events.forEach(({ event: { data, method, section } }) => {
-            if (method === 'BatchInterrupted' && !batchInterruptedHandled) {
-              batchInterruptedHandled = true; // Set the flag to true to prevent handling again
-              data.forEach((d) => {
-                const moduleError = d as unknown as { isModule: boolean; asModule: { index: number, error: number; }; };
-                if (moduleError.isModule) {
-                  const { index, error } = moduleError.asModule;
-                  const decoded = api.registry.findMetaError(new Uint8Array([index, error]));
-                  const message = `${ section }.${ method } at [${ decoded.index }]: ${ decoded.name }`;
-                  toast.dismiss();
-                  toast.error(message);
-                  setWaiting(false);
-                  throw new Error(message);
-                }
-              });
-            }
-          });
-
-          if (dispatchError) {
-            if (dispatchError.isModule) {
-              // for module errors, we have the section indexed, lookup
-              const decoded: RegistryError = api.registry.findMetaError(dispatchError.asModule);
-              const { docs, method, section, index } = decoded; decoded;
-              const message = `${ section }.${ method }: ${ docs.join(' ') } (${ index })`;
-              console.error(message);
-              toast.error(message);
-            } else {
-              // Other, CannotLookup, BadOrigin, no extra info
-              console.error(dispatchError.toString());
-              toast.error(dispatchError.toString());
-            }
-            setWaiting(false);
-            result = false;
-          } else {
-            // Check for specific success events if necessary
-            const isSuccess = events.some(({ event }) => api.events.system.ExtrinsicSuccess.is(event));
-
-            if (isSuccess) {
-              toast.dismiss();
-              toast.success("Claimed successfully");
-            } else {
-              toast.error("Transaction did not succeed");
-            }
-            setWaiting(false);
-            result = isSuccess;
-          }
-        }
-      }
+      getSignAndSendCallbackWithPromise({
+        onInvalid: () => {
+          toast.dismiss();
+          toast.error("Invalid transaction");
+          console.error("Invalid transaction");
+          setWaiting(false);
+          callback?.(false);
+        },
+        onExecuted: () => {
+          toast.dismiss();
+          toast.loading("Waiting for confirmation...");
+          setWaiting(true);
+        },
+        onSuccess: () => {
+          toast.dismiss();
+          toast.success("Claimed successfully");
+          setWaiting(false);
+          callback?.(true);
+        },
+        onDropped: () => {
+          toast.dismiss();
+          toast.error("Transaction dropped");
+          console.error("Transaction dropped");
+          setWaiting(false);
+          callback?.(false);
+        },
+        onError: (error) => {
+          toast.dismiss();
+          toast.error(error);
+          console.error('error', error);
+          setWaiting(false);
+          callback?.(false);
+        },
+        onInterrupt: (message) => {
+          toast.dismiss();
+          toast.error(message);
+          console.error('message', message);
+          setWaiting(false);
+          callback?.(true);
+        },
+      }, api)
     );
-
-    toast.dismiss();
   } catch (error) {
     toast.dismiss();
     toast.error(`${ error }`);
     console.error(error);
     setWaiting(false);
-    result = false;
   }
-
-  return result;
 };

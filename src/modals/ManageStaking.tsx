@@ -76,6 +76,30 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [selectedCore, totalUserStakedData]);
   const initialCore = initialSelectedCore.current?.metadata as SelectedCoreInfo;
 
+  const toasts: ISignAndSendCallback = {
+    onInvalid: () => {
+      toast.dismiss();
+      toast.error("Invalid transaction");
+    },
+    onExecuted: () => {
+      toast.dismiss();
+      toast.loading("Waiting for confirmation...");
+    },
+    onSuccess: () => {
+      toast.dismiss();
+      toast.success("Staked successfully");
+      reloadAccountInfo();
+    },
+    onDropped: () => {
+      toast.dismiss();
+      toast.error("Transaction dropped");
+    },
+    onError: (error) => {
+      toast.dismiss();
+      toast.error(error);
+    }
+  };
+
   const handleStake = stakeForm.handleSubmit(async ({ amount }) => {
     if (!selectedAccount) return;
 
@@ -144,26 +168,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     const injector = await web3FromAddress(selectedAccount.address);
 
     try {
-      const toasts: ISignAndSendCallback = {
-        onInvalid: () => {
-          toast.dismiss();
-          toast.error("Invalid transaction");
-        },
-        onExecuted: () => {
-          toast.dismiss();
-          toast.loading("Waiting for confirmation...");
-        },
-        onSuccess: () => {
-          toast.dismiss();
-          toast.success("Staked successfully");
-          reloadAccountInfo();
-        },
-        onDropped: () => {
-          toast.dismiss();
-          toast.error("Transaction dropped");
-        },
-      };
-
       if (!altBalance) {
         const fromCore = metadata.key;
         const amount = parsedStakeAmount.toString();
@@ -173,7 +177,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
           .signAndSend(
             selectedAccount.address,
             { signer: injector.signer },
-            getSignAndSendCallbackWithPromise(toasts)
+            getSignAndSendCallbackWithPromise(toasts, api)
           );
       } else {
         const toCore = metadata.key;
@@ -185,7 +189,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
           .signAndSend(
             selectedAccount.address,
             { signer: injector.signer },
-            getSignAndSendCallbackWithPromise(toasts)
+            getSignAndSendCallbackWithPromise(toasts, api)
           );
       }
     } catch (error) {
@@ -241,25 +245,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
         .signAndSend(
           selectedAccount.address,
           { signer: injector.signer },
-          getSignAndSendCallbackWithPromise({
-            onInvalid: () => {
-              toast.dismiss();
-              toast.error("Invalid transaction");
-            },
-            onExecuted: () => {
-              toast.dismiss();
-              toast.loading("Waiting for confirmation...");
-            },
-            onSuccess: () => {
-              toast.dismiss();
-              toast.success("Unstaked successfully");
-              reloadAccountInfo();
-            },
-            onDropped: () => {
-              toast.dismiss();
-              toast.error("Transaction dropped");
-            },
-          })
+          getSignAndSendCallbackWithPromise(toasts, api)
         );
     } catch (error) {
       toast.dismiss();
