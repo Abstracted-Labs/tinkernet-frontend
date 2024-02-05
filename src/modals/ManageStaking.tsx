@@ -508,7 +508,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       </button>
       <Dialog.Panel>
         <>
-          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
+          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col w-[350px] md:w-[530px] rounded-xl space-y-4 p-8 border border-[1px] border-neutral-700 ${ BG_GRADIENT }`}>
             <h2 className="text-md font-bold text-white bg-tinkerDarkGrey w-[calc(100%-2rem)] max-w-lg truncate">Manage Staking for {(initialSelectedCore.current?.metadata as { name: string; })?.name}</h2>
 
             <div className="flex flex-col justify-between gap-4">
@@ -545,8 +545,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           classNames(
                             "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700 focus:outline-none",
                             selected
-                              ? "bg-white shadow border-2 border-tinkerYellow"
-                              : "border-2 border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
+                              ? "bg-white shadow border-[1px] border-tinkerYellow"
+                              : "border-[1px] border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
                           )
                         }
                       >
@@ -558,8 +558,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           classNames(
                             "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700 focus:outline-none",
                             selected
-                              ? "bg-white shadow border-2 border-tinkerYellow"
-                              : "border-2 border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
+                              ? "bg-white shadow border-[1px] border-tinkerYellow"
+                              : "border-[1px] border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
                           )
                         }
                       >

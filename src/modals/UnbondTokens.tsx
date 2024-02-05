@@ -133,7 +133,7 @@ const UnbondTokens = ({ isOpen }: { isOpen: boolean; }) => {
         <span className="block">Close</span>
       </button>
       <Dialog.Panel>
-        <div className={`fixed left-1/2 top-1/2 z-50 mx-auto block w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-2 border-neutral-700 p-4 sm:w-full ${ BG_GRADIENT }`}>
+        <div className={`fixed left-1/2 top-1/2 z-50 mx-auto block w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 transform flex-col overflow-auto rounded-md border border-[1px] border-neutral-700 p-4 sm:w-full ${ BG_GRADIENT }`}>
           <h2 className="text-md font-bold text-white w-[calc(100%-2rem)] max-w-lg truncate">Claim Unbonded TNKR</h2>
 
           <div className="mt-4 flex flex-col justify-between gap-4">

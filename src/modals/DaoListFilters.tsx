@@ -221,7 +221,7 @@ const DaoListFilters = (props: DaoListFiltersProps) => {
         </button>
         <Dialog.Panel>
           <>
-            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-auto rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
+            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-auto rounded-xl space-y-4 p-8 border border-[1px] border-neutral-700 ${ BG_GRADIENT }`}>
               <div>
                 <h2 className="text-md font-bold text-white bg-tinkerDarkGrey mb-5 flex flex-row items-center gap-2">
                   <span>Refine Search Results</span>

@@ -165,7 +165,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
         </button>
         <Dialog.Panel>
           <>
-            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] bg-tinkerGrey rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
+            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] bg-tinkerGrey rounded-xl space-y-4 p-8 border border-[1px] border-neutral-700 ${ BG_GRADIENT }`}>
               {/* <div className="flex flex-row gap-4">
                 <div className="relative w-full flex flex-col gap-4 overflow-hidden rounded-md border border-gray-50 bg-neutral-900 p-6 sm:flex-row">
                   <div className="flex w-full flex-col gap-4">

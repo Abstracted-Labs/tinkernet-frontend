@@ -255,7 +255,7 @@ const Claim = () => {
         ) : null}
 
         {!isBalanceLoading && selectedAccount && vestingSummary ? (
-          <div className="overflow-hidden rounded-md border border-gray-50 backdrop-blur-sm shadow">
+          <div className="overflow-hidden rounded-md border-[1px] border-neutral-700 bg-black bg-opacity-70 backdrop-blur-sm shadow">
             <div className="p-4 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="flex flex-col-reverse sm:flex-col justify-between p-6 gap-4">
                 <div className="flex flex-col">
@@ -300,7 +300,7 @@ const Claim = () => {
               </div>
             </div>
 
-            <div className="border-t border-gray-50 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
+            <div className="border-t border-neutral-700 px-4 py-5 sm:grid sm:w-full sm:grid-cols-2 sm:px-6">
               <div className="px-6 py-2">
                 <span className="text-sm font-bold leading-6 text-white">
                   Available:
