@@ -26,7 +26,7 @@ const UseNovaWallet = ({ isOpen }: { isOpen: boolean; }) => {
         </button>
         <Dialog.Panel>
           <>
-            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] rounded-xl space-y-4 p-8 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
+            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] rounded-xl space-y-4 p-8 border border-[1px] border-neutral-700 ${ BG_GRADIENT }`}>
               <p className="text-white text-sm">
                 Greetings, traveler! <br /><br />If you're viewing this from a mobile device, you will need a wallet browser to connect your existing Polkadot-based wallet address to view our dApp, such as the one found inside the Nova Wallet app. Download Nova Wallet for iOS and Android, located <a target="_blank" className="text-tinkerYellow hover:underline underline-offset-2" rel="noreferrer" href="https://novawallet.io/">here</a>. <br /><br />If you're viewing this from a desktop browser, download and install the Talisman Wallet extension, located <a target="_blank" className="text-tinkerYellow hover:underline underline-offset-2" rel="noreferrer" href="https://www.talisman.xyz/download">here</a>. <br /><br />For an all-in-one solution, there is also Sub Wallet app, located <a target="_blank" className="text-tinkerYellow hover:underline underline-offset-2" rel="noreferrer" href="https://subwallet.app/">here</a>.
               </p>

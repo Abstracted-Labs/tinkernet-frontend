@@ -1,6 +1,7 @@
-import { Fragment, useEffect, useState, ReactNode, isValidElement, memo } from 'react';
+import { Fragment, useEffect, useState, ReactNode, isValidElement, memo, useMemo } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { debounce } from '../utils/debounce';
 
 export interface DropdownProps<T> {
   list?: T[];
@@ -19,10 +20,10 @@ const Dropdown = memo(function Dropdown<T extends { name: string; }>(props: Drop
   const { initialValue, list, onSelect, defaultOption = DEFAULT_OPTION, currentValue, children, reset, onReset } = props;
   const [optionSelected, setOptionSelected] = useState<T | ReactNode | null>(null);
 
-  const handleSelect = (value: T | ReactNode | null) => {
+  const debouncedHandleSelect = useMemo(() => debounce((value: T | ReactNode | null) => {
     setOptionSelected(value || null);
     onSelect(value as T | null);
-  };
+  }, 200), [onSelect]);
 
   useEffect(() => {
     if (list) {
@@ -60,7 +61,7 @@ const Dropdown = memo(function Dropdown<T extends { name: string; }>(props: Drop
 
   return (
     <div className='flex-grow'>
-      <Listbox value={optionSelected} onChange={handleSelect}>
+      <Listbox value={optionSelected} onChange={debouncedHandleSelect}>
         <Listbox.Button className={`relative rounded-md w-full h-[45px] py-2 px-3 text-white text-sm leading-tight bg-tinkerGrey border-transparent focus:outline-none focus:ring-0 focus:border-tinkerYellow hover:bg-tinkerYellow hover:bg-opacity-20`}>
           {({ value, open }) => {
             let displayValue;

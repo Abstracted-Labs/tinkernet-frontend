@@ -465,8 +465,8 @@ const Transfer = () => {
         ) : null}
 
         {!isLoading && selectedAccount ? (
-          <div className="overflow-hidden w-full rounded-md border border-neutral-50 backdrop-blur-sm shadow">
-            <div className="border-b border-neutral-50 p-4">
+          <div className="overflow-hidden w-full rounded-md border border-neutral-700 backdrop-blur-sm bg-black bg-opacity-70 shadow">
+            <div className="border-b border-neutral-700 p-4">
               <div className="flex flex-row items-center justify-around gap-4">
                 <div className="flex flex-col items-center">
                   <span className="text-lg font-bold text-white leading-none">

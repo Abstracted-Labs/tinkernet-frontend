@@ -86,7 +86,7 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
       </button>
       <Dialog.Panel>
         <>
-          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] md:w-[530px] rounded-xl space-y-4 px-8 p-8 gap-2 border border-[2px] border-tinkerLightGrey ${ BG_GRADIENT }`}>
+          <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] md:w-[530px] rounded-xl space-y-4 px-8 p-8 gap-2 border border-[1px] border-tinkerLightGrey ${ BG_GRADIENT }`}>
             <div>
               <h2 className="text-md font-bold text-white w-[310px] md:w-[490px] bg-tinkerDarkGrey">
                 <span>Select your Wallet</span>

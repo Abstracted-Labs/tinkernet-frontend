@@ -298,9 +298,9 @@ const ProjectCard = (props: ProjectCardProps) => {
         </div>
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-        {coreInfo?.totalStaked
-          ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(totalStakedInSystem).toFixed(2) }%`
-          : '--'}
+        {coreInfo?.totalStaked && new BigNumber(totalStakedInSystem).isGreaterThan(new BigNumber(0))
+          ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(new BigNumber(totalStakedInSystem)).toFixed(2) }%`
+          : '0%'}
       </div>
     </div> : null}
 
@@ -333,7 +333,7 @@ const ProjectCard = (props: ProjectCardProps) => {
   return (
     <div
       key={core.account}
-      className={`flex flex-col justify-between w-full rounded-xl space-y-4 border border-2 border-neutral-700 ${ BG_GRADIENT }`}>
+      className={`flex flex-col justify-between w-full rounded-xl space-y-4 border border-[1px] border-neutral-700 ${ BG_GRADIENT }`}>
       <div className={`relative p-8 flex flex-col gap-6 justify-start h-auto`}>
 
         {/* Avatar, Name, Members */}
