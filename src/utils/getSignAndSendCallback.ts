@@ -7,6 +7,7 @@ export interface ISignAndSendCallback {
   onSuccess?: () => void;
   onDropped?: () => void;
   onError?: (message: string) => void;
+  onInterrupt?: (message: string) => void;
   api?: ApiPromise;
 }
 
@@ -37,6 +38,11 @@ export const getSignAndSendCallbackWithPromise = (callbacks: ISignAndSendCallbac
         callbacks.onError(message);
       }
     },
+    onInterrupt: async (message: string) => {
+      if (callbacks.onInterrupt) {
+        callbacks.onInterrupt(message);
+      }
+    },
     api
   };
   return getSignAndSendCallback(wrappedCallbacks);
@@ -49,6 +55,7 @@ export const getSignAndSendCallback = (props: ISignAndSendCallback) => {
     onSuccess,
     onDropped,
     onError,
+    onInterrupt,
     api
   } = props;
   let hasFinished = false;
@@ -76,11 +83,10 @@ export const getSignAndSendCallback = (props: ISignAndSendCallback) => {
             if (moduleError.isModule) {
               const { index, error } = moduleError.asModule;
               const decoded = api.registry.findMetaError(new Uint8Array([index, error]));
-              const message = `${ section }.${ method } at [${ decoded.index }]: ${ decoded.name }`;
-              onError?.(message); // Use onError callback for custom error handling
+              const message = `${ section }.${ method }: ${ decoded.name }`;
+              onInterrupt?.(message);
             }
           });
-          hasFinished = true;
         }
       });
 
@@ -88,21 +94,21 @@ export const getSignAndSendCallback = (props: ISignAndSendCallback) => {
         if (result.dispatchError.isModule) {
           const decoded = api.registry.findMetaError(result.dispatchError.asModule);
           const message = `${ decoded.section }.${ decoded.method }: ${ decoded.docs.join(' ') } (${ decoded.index })`;
-          onError?.(message); // Use onError callback for custom error handling
+          onError?.(message);
         } else {
           const message = result.dispatchError.toString();
-          onError?.(message); // Use onError callback for custom error handling
+          onError?.(message);
         }
-        hasFinished = true;
       } else {
         const isSuccess = result.events.some(({ event }) => api.events.system.ExtrinsicSuccess.is(event));
         if (isSuccess) {
+          console.log("Transaction succeeded");
           onSuccess?.();
         } else {
-          onError?.("Transaction did not succeed"); // Use onError callback for custom error handling
+          onError?.("Transaction did not succeed");
         }
-        hasFinished = true;
       }
+      hasFinished = true;
     }
   };
 };
