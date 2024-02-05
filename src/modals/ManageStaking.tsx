@@ -446,12 +446,14 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [selectedCoreInfo, stakeForm, unstakeForm]);
 
   useEffect(() => {
-    const availableBalanceBN = new BigNumber(metadata?.availableBalance as string);
-    const oneTNKR = new BigNumber(10).pow(12); // Adjust the exponent according to your token's decimals
-    const initialStakeAmount = availableBalanceBN.minus(oneTNKR).dividedBy(oneTNKR);
+    if (!metadata || !metadata.availableBalance) return;
 
-    // Set the initial stake amount in the form
-    stakeForm.setValue('amount', initialStakeAmount.toString());
+    const availableBalanceBN = new BigNumber(metadata.availableBalance as string);
+    const oneTNKR = new BigNumber(10).pow(12);
+    const initialStakeAmount = availableBalanceBN.minus(oneTNKR);
+    const stakeValue = initialStakeAmount.dividedBy(oneTNKR).toString();
+
+    stakeForm.setValue('amount', stakeValue);
   }, [metadata, stakeForm]);
 
   const RestakingDropdown = memo(() => {
@@ -574,7 +576,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                                 {
                                   showStakeMaxButton && (
                                     <span
-                                      className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
+                                      className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none hover:underline underline-offset-2"
                                       onClick={handleStakeMax}
                                       tabIndex={0}
                                     >
@@ -609,7 +611,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                       >
                         <div>
                           <label
-                            htmlFor="stakeAmount"
+                            htmlFor="unstakeAmount"
                             className="block text-xxs font-medium text-white mb-1"
                           >Unstake Amount</label>
                           <div className="relative flex flex-row items-center">
@@ -618,7 +620,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                             })} type="text" id="unstakeAmount" />
                             <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
                               <span
-                                className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
+                                className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none hover:underline underline-offset-2"
                                 onClick={handleUnstakeMax}
                                 tabIndex={0}
                               >
