@@ -298,9 +298,9 @@ const ProjectCard = (props: ProjectCardProps) => {
         </div>
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-        {coreInfo?.totalStaked
-          ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(totalStakedInSystem).toFixed(2) }%`
-          : '--'}
+        {coreInfo?.totalStaked && new BigNumber(totalStakedInSystem).isGreaterThan(new BigNumber(0))
+          ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(new BigNumber(totalStakedInSystem)).toFixed(2) }%`
+          : '0%'}
       </div>
     </div> : null}
 
