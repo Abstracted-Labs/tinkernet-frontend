@@ -47,7 +47,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [selectedCore, setSelectedCore] = useState<StakingCore | null>(null);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
-  const [altBalance, isAltBalance] = useState<boolean>(false);
+  const [altBalance, setAltBalance] = useState<boolean>(false);
   const [coreStakedBalance, setCoreStakedBalance] = useState<string>("0");
   const { closeCurrentModal, openModals } = useModal<ModalState>(
     (state) => state,
@@ -77,8 +77,15 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [selectedCore, totalUserStakedData]);
 
   const showStakeMaxButton = useMemo(() => {
-    return metadata ? new BigNumber(metadata.availableBalance as string).dividedBy(new BigNumber(10).pow(12)).gte(1) : false;
-  }, [metadata]);
+    let balance;
+    if (altBalance) {
+      const numericValue = coreStakedBalance.replace(/[^\d.]/g, '');
+      balance = new BigNumber(numericValue);
+    } else {
+      balance = metadata ? new BigNumber(metadata.availableBalance as string).dividedBy(new BigNumber(10).pow(12)) : new BigNumber(0);
+    }
+    return balance.gte(1);
+  }, [metadata, altBalance, coreStakedBalance]);
 
   const stakeError = useMemo(() => {
     return stakeForm.formState.errors.amount?.message;
@@ -235,7 +242,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    // Assuming minValue is defined somewhere in your code. If not, define it as needed.
     const minValue = new BigNumber(10);
     if (parsedAmount.isLessThan(minValue)) {
       unstakeForm.setError("amount", {
@@ -285,22 +291,15 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     const availableBalance = new BigNumber(metadata.availableBalance as string)
       .dividedBy(new BigNumber(10).pow(12));
 
-    // Extract numeric part from coreStakedBalance
     const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
-
-    console.log("numericCoreStakedBalance (post-conversion):", numericCoreStakedBalance);
 
     const balance = altBalance
       ? new BigNumber(numericCoreStakedBalance)
       : availableBalance;
 
-    console.log("balance (selected or available):", balance.toString());
-
     const balanceToStake = balance.gte(new BigNumber(1))
       ? balance.minus(new BigNumber(1)).toString()
       : balance.toString();
-
-    console.log("balanceToStake (final value):", balanceToStake);
 
     if (!isNaN(parseFloat(balanceToStake))) {
       stakeForm.setValue("amount", balanceToStake);
@@ -346,23 +345,11 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     unstakeForm.reset();
   };
 
-  const handleDropdownChange = (selectedOption: { name: string; } | null) => {
-    if (selectedOption && selectedOption.name === 'Available Balance') {
-      const availableBalanceBN = new BigNumber(metadata?.availableBalance as string);
-      const oneTNKR = new BigNumber(10).pow(12); // Adjust the exponent according to your token's decimals
-      const stakeAmount = availableBalanceBN.minus(oneTNKR).dividedBy(oneTNKR);
-
-      // Update the stake amount in the form
-      stakeForm.setValue('amount', stakeAmount.toString());
-    }
-  };
-
   const handleSelect = (selected: { name: string; } | null) => {
     if (selected) {
       const selectCore = stakingCores.find(core => core.metadata.name === selected.name);
       if (selectCore) {
         setSelectedCore(selectCore);
-        handleDropdownChange(selected);
       }
     }
   };
@@ -394,8 +381,31 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [isOpen]);
 
   useEffect(() => {
+    if (!metadata) {
+      console.error("Metadata not available");
+      return;
+    }
+
+    let balanceBN;
+    const oneVARCH = new BigNumber(1);
+
+    if (altBalance) {
+      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
+      balanceBN = new BigNumber(numericCoreStakedBalance);
+    } else {
+      balanceBN = new BigNumber(metadata.availableBalance as string);
+    }
+
+    // Subtract one VARCH from the balance to cover fees or maintain a minimum balance
+    const stakeAmount = balanceBN.minus(oneVARCH);
+
+    // Update the stake amount in the form, converting it to a string
+    stakeForm.setValue('amount', stakeAmount.toString());
+  }, [coreStakedBalance, altBalance, metadata, stakeForm]);
+
+  useEffect(() => {
     if (selectedCoreInfo && initialCore && selectedCoreInfo?.name !== initialCore?.name) {
-      isAltBalance(true);
+      setAltBalance(true);
 
       if (selectedCoreInfo?.userStaked) {
         const stakedBalance = formatBalanceSafely(selectedCoreInfo?.userStaked?.toString());
@@ -404,14 +414,15 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    isAltBalance(false);
+    setAltBalance(false);
     setCoreStakedBalance("0");
   }, [selectedCoreInfo, initialCore, metadata]);
 
   useEffect(() => {
     if (altBalance) {
       const currentAmount = parseFloat(stakeForm.getValues('amount'));
-      const maxBalance = parseFloat(coreStakedBalance);
+      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
+      const maxBalance = parseFloat(numericCoreStakedBalance);
       if (currentAmount > maxBalance) {
         stakeForm.setValue('amount', maxBalance.toString().replace(/,/g, ''));
       }
@@ -440,53 +451,30 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [selectedCoreInfo, stakeForm, unstakeForm]);
 
   useEffect(() => {
-    const availableBalanceBN = new BigNumber(metadata?.availableBalance as string);
-    const oneTNKR = new BigNumber(10).pow(12); // Adjust the exponent according to your token's decimals
-    const initialStakeAmount = availableBalanceBN.minus(oneTNKR).dividedBy(oneTNKR);
+    if (!metadata) {
+      console.error("Metadata not available");
+      return;
+    }
 
-    // Set the initial stake amount in the form
-    stakeForm.setValue('amount', initialStakeAmount.toString());
-  }, [metadata, stakeForm]);
+    let balanceBN;
+    const oneVARCH = new BigNumber(1);
 
-  useEffect(() => {
-    const recalculateMaxAmount = () => {
-      if (!metadata || !selectedCoreInfo) return;
+    if (altBalance) {
+      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
+      balanceBN = new BigNumber(numericCoreStakedBalance);
+    } else {
+      balanceBN = new BigNumber(metadata.availableBalance as string).dividedBy(new BigNumber(10).pow(12));
+    }
 
-      let maxStake;
-      let maxUnstake;
-      if (selectedCoreInfo && selectedCoreInfo.userStaked) {
-        maxUnstake = new BigNumber(selectedCoreInfo.userStaked.toString());
-      }
-      maxStake = new BigNumber(metadata.availableBalance as string);
+    // Subtract one VARCH from the balance to cover fees or maintain a minimum balance
+    const stakeAmount = balanceBN.minus(oneVARCH);
 
-      // Adjust oneTNKR to match the unit scale of the balance
-      const oneTNKR = new BigNumber(10).pow(12); // Represents 1 TNKR in the smallest unit
+    // Ensure stakeAmount is not negative; if it is, set it to 0
+    const finalStakeAmount = stakeAmount.isNegative() ? new BigNumber(0) : stakeAmount;
 
-      if (maxStake.gt(oneTNKR)) {
-        maxStake = maxStake.minus(oneTNKR);
-      } else {
-        // If the balance is less than 1 TNKR, set it to 0
-        maxStake = new BigNumber(0);
-      }
-
-      if (maxUnstake && maxUnstake.gt(oneTNKR)) {
-        maxUnstake = maxUnstake.minus(oneTNKR);
-      } else {
-        // If the balance is less than 1 TNKR, set it to 0
-        maxUnstake = new BigNumber(0);
-      }
-
-      // Convert back to a more user-friendly unit if necessary
-      const userFriendlyMaxStake = maxStake.dividedBy(new BigNumber(10).pow(12));
-      const userFriendlyMaxUnstake = maxUnstake ? maxUnstake.dividedBy(new BigNumber(10).pow(12)) : 0;
-
-      // Set the initial stake/unstake amount in the form if needed
-      stakeForm.setValue("amount", userFriendlyMaxStake.toString());
-      unstakeForm.setValue("amount", userFriendlyMaxUnstake.toString());
-    };
-
-    recalculateMaxAmount();
-  }, [metadata, selectedCoreInfo, stakeForm, unstakeForm]);
+    // Update the stake amount in the form, converting it to a string
+    stakeForm.setValue('amount', finalStakeAmount.toString());
+  }, [coreStakedBalance, altBalance, metadata, stakeForm]);
 
   const RestakingDropdown = memo(() => {
     const list = stakingCores
@@ -514,7 +502,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
             <div className="flex flex-col justify-between gap-4">
               <div className="flex flex-row justify-around gap-4 sm:flex-auto mb-4">
                 <div className="text-sm text-white text-center">
-                  <div className="font-bold">
+                  <div className="font-bold truncate">
                     {formatBalanceSafely(
                       metadata?.availableBalance
                         ? metadata.availableBalance.toString()
@@ -526,7 +514,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                 {metadata?.totalUserStaked &&
                   metadata?.totalUserStaked.toString() !== "0" ? (
                   <div className="text-sm text-white text-center">
-                    <div className="font-bold">
+                    <div className="font-bold truncate">
                       {formatBalanceSafely(metadata?.totalUserStaked?.toString())}
                     </div>
                     <div className="text-xxs/none">Currently Staked</div>
@@ -545,7 +533,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           classNames(
                             "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700 focus:outline-none",
                             selected
-                              ? "bg-white shadow border-[1px] border-tinkerYellow"
+                              ? "bg-white shadow border-[1px] border-tinkerYellow cursor-not-allowed"
                               : "border-[1px] border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
                           )
                         }
@@ -558,7 +546,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           classNames(
                             "w-full rounded-md py-2.5 text-sm font-medium leading-5 text-neutral-700 focus:outline-none",
                             selected
-                              ? "bg-white shadow border-[1px] border-tinkerYellow"
+                              ? "bg-white shadow border-[1px] border-tinkerYellow cursor-not-allowed"
                               : "border-[1px] border-white/[0.12] bg-neutral-900 text-neutral-100 transition-colors hover:bg-white/[0.12] hover:text-white"
                           )
                         }
@@ -590,16 +578,16 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           <div className="w-full">
                             <label
                               htmlFor="stakeAmount"
-                              className="block text-xxs font-medium text-white mb-1 truncate"
+                              className="block text-xxs font-medium text-white mb-1 flex flex-row justify-between gap-2 truncate"
                             >
                               <span>Stake Amount</span>
                               {altBalance ?
-                                <span className="float-right">
+                                <span className="float-right truncate">
                                   Balance: <span className="font-bold">{coreStakedBalance}</span>
                                 </span> : null}
                             </label>
                             <div className="relative flex flex-row items-center">
-                              <div className="w-full ">
+                              <div className="w-full">
                                 <Input {...stakeForm.register("amount", {
                                   required: true,
                                 })} type="text" id="stakeAmount" />
@@ -608,7 +596,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                                 {
                                   showStakeMaxButton && (
                                     <span
-                                      className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
+                                      className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none hover:underline underline-offset-2"
                                       onClick={handleStakeMax}
                                       tabIndex={0}
                                     >
@@ -643,8 +631,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                       >
                         <div>
                           <label
-                            htmlFor="stakeAmount"
-                            className="block text-xxs font-medium text-white mb-1"
+                            htmlFor="unstakeAmount"
+                            className="block text-xxs font-medium text-white mb-1 flex flex-row justify-between gap-2 truncate"
                           >Unstake Amount</label>
                           <div className="relative flex flex-row items-center">
                             <Input {...unstakeForm.register("amount", {
@@ -652,7 +640,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                             })} type="text" id="unstakeAmount" />
                             <div className="absolute inset-y-0 right-0 flex flex-row items-center gap-4 transform -translate-x-1/2">
                               <span
-                                className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none"
+                                className="block cursor-pointer text-white hover:text-tinkerYellow text-xs focus:outline-none hover:underline underline-offset-2"
                                 onClick={handleUnstakeMax}
                                 tabIndex={0}
                               >
