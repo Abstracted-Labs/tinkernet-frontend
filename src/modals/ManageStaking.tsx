@@ -77,8 +77,15 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [selectedCore, totalUserStakedData]);
 
   const showStakeMaxButton = useMemo(() => {
-    return metadata ? new BigNumber(metadata.availableBalance as string).dividedBy(new BigNumber(10).pow(12)).gte(1) : false;
-  }, [metadata]);
+    let balance;
+    if (altBalance) {
+      const numericValue = coreStakedBalance.replace(/[^\d.]/g, '');
+      balance = new BigNumber(numericValue);
+    } else {
+      balance = metadata ? new BigNumber(metadata.availableBalance as string).dividedBy(new BigNumber(10).pow(12)) : new BigNumber(0);
+    }
+    return balance.gte(1);
+  }, [metadata, altBalance, coreStakedBalance]);
 
   const stakeError = useMemo(() => {
     return stakeForm.formState.errors.amount?.message;
@@ -235,7 +242,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    // Assuming minValue is defined somewhere in your code. If not, define it as needed.
     const minValue = new BigNumber(10);
     if (parsedAmount.isLessThan(minValue)) {
       unstakeForm.setError("amount", {
@@ -285,7 +291,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     const availableBalance = new BigNumber(metadata.availableBalance as string)
       .dividedBy(new BigNumber(10).pow(12));
 
-    // Extract numeric part from coreStakedBalance
     const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
 
     const balance = altBalance
@@ -382,7 +387,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     }
 
     let balanceBN;
-    const oneTNKR = new BigNumber(1);
+    const oneVARCH = new BigNumber(1);
 
     if (altBalance) {
       const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
@@ -391,8 +396,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       balanceBN = new BigNumber(metadata.availableBalance as string);
     }
 
-    // Subtract one TNKR from the balance to cover fees or maintain a minimum balance
-    const stakeAmount = balanceBN.minus(oneTNKR);
+    // Subtract one VARCH from the balance to cover fees or maintain a minimum balance
+    const stakeAmount = balanceBN.minus(oneVARCH);
 
     // Update the stake amount in the form, converting it to a string
     stakeForm.setValue('amount', stakeAmount.toString());
@@ -446,15 +451,30 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [selectedCoreInfo, stakeForm, unstakeForm]);
 
   useEffect(() => {
-    if (!metadata || !metadata.availableBalance) return;
+    if (!metadata) {
+      console.error("Metadata not available");
+      return;
+    }
 
-    const availableBalanceBN = new BigNumber(metadata.availableBalance as string);
-    const oneTNKR = new BigNumber(10).pow(12);
-    const initialStakeAmount = availableBalanceBN.minus(oneTNKR);
-    const stakeValue = initialStakeAmount.dividedBy(oneTNKR).toString();
+    let balanceBN;
+    const oneVARCH = new BigNumber(1);
 
-    stakeForm.setValue('amount', stakeValue);
-  }, [metadata, stakeForm]);
+    if (altBalance) {
+      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
+      balanceBN = new BigNumber(numericCoreStakedBalance);
+    } else {
+      balanceBN = new BigNumber(metadata.availableBalance as string).dividedBy(new BigNumber(10).pow(12));
+    }
+
+    // Subtract one VARCH from the balance to cover fees or maintain a minimum balance
+    const stakeAmount = balanceBN.minus(oneVARCH);
+
+    // Ensure stakeAmount is not negative; if it is, set it to 0
+    const finalStakeAmount = stakeAmount.isNegative() ? new BigNumber(0) : stakeAmount;
+
+    // Update the stake amount in the form, converting it to a string
+    stakeForm.setValue('amount', finalStakeAmount.toString());
+  }, [coreStakedBalance, altBalance, metadata, stakeForm]);
 
   const RestakingDropdown = memo(() => {
     const list = stakingCores
@@ -558,16 +578,16 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                           <div className="w-full">
                             <label
                               htmlFor="stakeAmount"
-                              className="block text-xxs font-medium text-white mb-1 truncate"
+                              className="block text-xxs font-medium text-white mb-1 flex flex-row justify-between gap-2 truncate"
                             >
                               <span>Stake Amount</span>
                               {altBalance ?
-                                <span className="float-right">
+                                <span className="float-right truncate">
                                   Balance: <span className="font-bold">{coreStakedBalance}</span>
                                 </span> : null}
                             </label>
                             <div className="relative flex flex-row items-center">
-                              <div className="w-full ">
+                              <div className="w-full">
                                 <Input {...stakeForm.register("amount", {
                                   required: true,
                                 })} type="text" id="stakeAmount" />
@@ -612,7 +632,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                         <div>
                           <label
                             htmlFor="unstakeAmount"
-                            className="block text-xxs font-medium text-white mb-1"
+                            className="block text-xxs font-medium text-white mb-1 flex flex-row justify-between gap-2 truncate"
                           >Unstake Amount</label>
                           <div className="relative flex flex-row items-center">
                             <Input {...unstakeForm.register("amount", {
