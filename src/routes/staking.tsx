@@ -196,13 +196,6 @@ const Staking = () => {
     pause: !selectedAccount,
   });
 
-  const [rewardsCoreClaimedQuery, reexecuteCoreQuery] = useQuery({
-    query: TotalRewardsCoreClaimedQuery,
-    variables: {},
-
-    pause: !selectedAccount,
-  });
-
   const setupSubscriptions = useCallback(async () => {
     if (!selectedAccount) {
       throw new Error("selectedAccount is null");
@@ -223,7 +216,7 @@ const Staking = () => {
             if (info.stakes.length > 0) {
               const unclaimedEarliest = info.stakes.reduce((p, v) => parseInt(p.era) < parseInt(v.era) ? p : v).era;
 
-              if (parseInt(unclaimedEarliest) < currentStakingEra) {
+              if (parseInt(unclaimedEarliest) <= currentStakingEra) {
                 setUnclaimedEras(prevState => {
                   const unclaimedCore = prevState.cores.find(value => value.coreId === stakingCore.key);
 
@@ -283,8 +276,8 @@ const Staking = () => {
 
       await Promise.all(promises);
     }
-
-  }, [api, stakingCores, selectedAccount, coreEraStakeInfo, currentStakingEra, userStakedInfoMap]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api, stakingCores, selectedAccount, coreEraStakeInfo, currentStakingEra]);
 
   const loadCurrentEraAndStake = useCallback(async () => {
     const currentStakingEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
@@ -446,9 +439,8 @@ const Staking = () => {
   const refreshQuery = useCallback(() => {
     if (!claimAllSuccess) return;
     reexecuteQuery({ requestPolicy: 'network-only' });
-    reexecuteCoreQuery({ requestPolicy: 'network-only' });
     setClaimAllSuccess(false);
-  }, [claimAllSuccess, reexecuteQuery, reexecuteCoreQuery]);
+  }, [claimAllSuccess, reexecuteQuery]);
 
   const handleClaimRewards = useCallback(async () => {
     if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
@@ -506,7 +498,7 @@ const Staking = () => {
     };
     setup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccount]);
+  }, [selectedAccount, setupSubscriptions]);
 
   useEffect(() => {
     initializeData(selectedAccount);
@@ -519,7 +511,7 @@ const Staking = () => {
     if (!rewardsUserClaimedQuery.data?.stakers?.length) {
       setTotalClaimed(new BigNumber(0));
       setTotalUnclaimed(new BigNumber(0));
-      setUnclaimedEras({ cores: [], total: 0 });
+      // setUnclaimedEras({ cores: [], total: 0 });
       return;
     }
 
@@ -538,17 +530,17 @@ const Staking = () => {
     }
   }, [selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data, claimAllSuccess, refreshQuery]);
 
-  useEffect(() => {
-    if (rewardsCoreClaimedQuery.fetching || !rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
+  // useEffect(() => {
+  //   if (rewardsCoreClaimedQuery.fetching || !rewardsCoreClaimedQuery.data?.cores?.length || !selectedAccount) return;
 
-    const coreEraStakeInfoMap: CoreEraStakeInfoType[] = rewardsCoreClaimedQuery.data.cores;
+  //   const coreEraStakeInfoMap: CoreEraStakeInfoType[] = rewardsCoreClaimedQuery.data.cores;
 
-    const uniqueCoreEraStakeInfo = coreEraStakeInfoMap.filter((core, index, self) =>
-      index === self.findIndex((item) => item.coreId === core.coreId)
-    );
+  //   const uniqueCoreEraStakeInfo = coreEraStakeInfoMap.filter((core, index, self) =>
+  //     index === self.findIndex((item) => item.coreId === core.coreId)
+  //   );
 
-    setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
-  }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.fetching, rewardsCoreClaimedQuery.data]);
+  //   setCoreEraStakeInfo(uniqueCoreEraStakeInfo);
+  // }, [selectedAccount, stakingCores, rewardsCoreClaimedQuery.fetching, rewardsCoreClaimedQuery.data]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
