@@ -342,7 +342,7 @@ const DaoList = (props: DaoListProps) => {
 
     const currentEra = await api.query.ocifStaking.currentEra();
 
-    for (const stakingCore of stakingCores) {
+    for (const stakingCore of initialCoresRef.current) {
       await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
 
         const info: {
@@ -398,7 +398,7 @@ const DaoList = (props: DaoListProps) => {
         }
       );
     }
-  }, [api, stakingCores, selectedAccount]);
+  }, [api, selectedAccount]);
 
   useEffect(() => {
     const setup = async () => {
