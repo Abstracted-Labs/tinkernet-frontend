@@ -420,11 +420,9 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [coreStakedBalance, altBalance, metadata, stakeForm, numericCoreStakedBalance]);
 
   useEffect(() => {
-    console.log('selectedCoreInfo initialCore', selectedCoreInfo, selectedCore);
     if (selectedCoreInfo && selectedCore && selectedCoreInfo?.name !== selectedCore.key.toString()) {
       setAltBalance(true);
 
-      console.log('selectedCoreInfo?.userStaked', selectedCoreInfo?.userStaked);
       if (selectedCoreInfo?.userStaked) {
         const stakedBalance = formatBalanceSafely(selectedCoreInfo?.userStaked?.toString());
         setCoreStakedBalance(stakedBalance);
@@ -434,7 +432,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
     setAltBalance(false);
     setCoreStakedBalance("0");
-  }, [selectedCoreInfo, selectedCore, metadata, availableBalance, altBalance]);
+  }, [selectedCoreInfo, selectedCore, metadata, availableBalance]);
 
   useEffect(() => {
     if (altBalance) {
