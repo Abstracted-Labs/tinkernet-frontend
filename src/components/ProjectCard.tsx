@@ -28,6 +28,7 @@ export interface ProjectCardProps {
     core: StakingCore;
     totalUserStaked: BigNumber;
     availableBalance: BigNumber;
+    allCores: StakingCore[];
   }) => void;
   handleViewDetails?: (mini: boolean) => void;
   descriptionRef: RefObject<HTMLDivElement>;
@@ -37,6 +38,7 @@ export interface ProjectCardProps {
   members: AnyJson[];
   mini: boolean;
   totalStakedInSystem: BigNumber;
+  allCores: StakingCore[];
 }
 
 const STAT_UNDERLINE = `border-b border-b-[#2B2C30]`;
@@ -57,7 +59,8 @@ const ProjectCard = (props: ProjectCardProps) => {
     selectedAccount,
     members,
     mini,
-    totalStakedInSystem
+    totalStakedInSystem,
+    allCores
   } = props;
   const api = useApi();
   const scrollPositionRef = useRef(0);
@@ -117,6 +120,7 @@ const ProjectCard = (props: ProjectCardProps) => {
       core,
       totalUserStaked: parsedTotalStaked,
       availableBalance: parsedAvailableBalance,
+      allCores
     });
   };
 
