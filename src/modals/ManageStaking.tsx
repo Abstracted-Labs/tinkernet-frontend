@@ -381,7 +381,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     }
 
     if ('totalUserStakedData' in metadata) {
-      console.log('metadata.totalUserStakedData', metadata.totalUserStakedData);
       setTotalUserStakedData(metadata.totalUserStakedData as TotalUserStakedData);
     }
   }, [metadata]);
