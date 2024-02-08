@@ -262,8 +262,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    console.log('parsedAmount.isGreaterThan(currentStake)', parsedAmount.isGreaterThan(currentStake), parsedAmount.toString(), currentStake.toString());
-
     if (parsedAmount.isGreaterThan(currentStake)) {
       unstakeForm.setError("amount", {
         type: "max",
