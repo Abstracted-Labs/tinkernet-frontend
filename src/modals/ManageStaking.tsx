@@ -187,7 +187,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     if (parsedAmount.isGreaterThan(maxValue)) {
       stakeForm.setError("amount", {
         type: "max",
-        message: "Amount must be less than or equal to available balance",
+        message: `Amount must be less than or equal to ${ altBalance ? "staked" : "available" } balance`,
       });
       return;
     }
