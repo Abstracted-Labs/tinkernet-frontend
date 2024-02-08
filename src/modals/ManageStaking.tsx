@@ -95,13 +95,12 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const showStakeMaxButton = useMemo(() => {
     let balance;
     if (altBalance) {
-      const numericValue = coreStakedBalance.replace(/[^\d.]/g, '');
-      balance = new BigNumber(numericValue);
+      balance = new BigNumber(numericCoreStakedBalance);
     } else {
-      balance = metadata ? new BigNumber(metadata.availableBalance as string).dividedBy(new BigNumber(10).pow(12)) : new BigNumber(0);
+      balance = availableBalance.dividedBy(new BigNumber(10).pow(12));
     }
-    return balance.gte(1);
-  }, [metadata, altBalance, coreStakedBalance]);
+    return balance.gt(0);
+  }, [altBalance, numericCoreStakedBalance, availableBalance]);
 
   const stakeError = useMemo(() => {
     return stakeForm.formState.errors.amount?.message;
@@ -299,14 +298,9 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   });
 
   const handleStakeMax = () => {
-    if (!metadata) throw new Error(NO_METADATA_ERROR);
-
-    const availableBalance = new BigNumber(metadata.availableBalance as string)
-      .dividedBy(new BigNumber(10).pow(12));
-
     const balance = altBalance
       ? new BigNumber(numericCoreStakedBalance)
-      : availableBalance;
+      : availableBalance.dividedBy(new BigNumber(10).pow(12));
 
     const balanceToStake = balance.gte(new BigNumber(1))
       ? balance.minus(new BigNumber(1)).toString()
