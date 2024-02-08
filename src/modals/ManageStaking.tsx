@@ -244,6 +244,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       throw new Error("Total user staked data is not available");
     }
 
+    const currentStake = new BigNumber(metadata.totalUserStaked as string).dividedBy(new BigNumber(10).pow(12));
+
     if (parsedAmount.isNaN()) {
       unstakeForm.setError("amount", {
         type: "valueAsNumber",
@@ -256,6 +258,16 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       unstakeForm.setError("amount", {
         type: "min",
         message: "Amount must be greater than 0",
+      });
+      return;
+    }
+
+    console.log('parsedAmount.isGreaterThan(currentStake)', parsedAmount.isGreaterThan(currentStake), parsedAmount.toString(), currentStake.toString());
+
+    if (parsedAmount.isGreaterThan(currentStake)) {
+      unstakeForm.setError("amount", {
+        type: "max",
+        message: "Amount must be less than or equal to staked balance",
       });
       return;
     }
