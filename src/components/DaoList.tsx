@@ -207,12 +207,11 @@ const DaoList = (props: DaoListProps) => {
   const handleManageStaking = async ({
     core,
     totalUserStaked,
-    availableBalance,
     allCores
   }: StakingMetadata) => {
     setOpenModal({
       name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalUserStaked, availableBalance, stakingCores, totalUserStakedData, allCores },
+      metadata: { ...core, totalUserStaked, stakingCores, totalUserStakedData, allCores },
     });
   };
 
