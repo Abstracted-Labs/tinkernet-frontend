@@ -511,17 +511,22 @@ const Staking = () => {
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount) return;
 
+    if (!rewardsUserClaimedQuery.data?.stakers?.length) {
+      setTotalClaimed(new BigNumber(0));
+      setTotalUnclaimed(new BigNumber(0));
+      return;
+    }
+
     const rewardsClaimed = new BigNumber(
       rewardsUserClaimedQuery.data.stakers[0].totalRewards
     );
+    setTotalClaimed(rewardsClaimed);
 
     const totalUnclaimed = new BigNumber(
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
-
-    setTotalClaimed((prev) => claimAllSuccess ? prev.plus(totalUnclaimed) : rewardsClaimed);
-    setTotalUnclaimed(claimAllSuccess ? new BigNumber(0) : totalUnclaimed);
-  }, [selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data, claimAllSuccess]);
+    setTotalUnclaimed(totalUnclaimed);
+  }, [rewardsUserClaimedQuery, selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data, claimAllSuccess]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">

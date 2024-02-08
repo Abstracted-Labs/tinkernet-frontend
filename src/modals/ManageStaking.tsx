@@ -187,7 +187,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     if (parsedAmount.isGreaterThan(maxValue)) {
       stakeForm.setError("amount", {
         type: "max",
-        message: "Amount must be less than or equal to available balance",
+        message: `Amount must be less than or equal to ${ altBalance ? "staked" : "available" } balance`,
       });
       return;
     }
@@ -244,6 +244,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       throw new Error("Total user staked data is not available");
     }
 
+    const currentStake = new BigNumber(metadata.totalUserStaked as string).dividedBy(new BigNumber(10).pow(12));
+
     if (parsedAmount.isNaN()) {
       unstakeForm.setError("amount", {
         type: "valueAsNumber",
@@ -256,6 +258,14 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       unstakeForm.setError("amount", {
         type: "min",
         message: "Amount must be greater than 0",
+      });
+      return;
+    }
+
+    if (parsedAmount.isGreaterThan(currentStake)) {
+      unstakeForm.setError("amount", {
+        type: "max",
+        message: "Amount must be less than or equal to staked balance",
       });
       return;
     }
@@ -382,7 +392,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    const isAltBalance = selectedCore?.key !== initialSelectedCore.current?.key;
+    const isAltBalance = selectedCore !== null && selectedCore?.key !== initialSelectedCore.current?.key;
 
     if (!isAltBalance) {
       setAltBalance(false);
