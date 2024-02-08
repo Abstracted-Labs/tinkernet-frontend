@@ -21,12 +21,24 @@ import { BG_GRADIENT } from "../utils/consts";
 import { formatBalanceSafely } from "../utils/formatBalanceSafely";
 import { useBalance } from "../providers/balance";
 
+
+interface TotaluserStakedDataRecord extends Record<number, number> { }
 export interface SelectedCoreInfo extends Metadata {
   id: number;
   userStaked: BigNumber | undefined;
   name: string;
   availableBalance: string | undefined;
+  totalUserStakedData: TotaluserStakedDataRecord;
+  allCores: StakingCore[];
 }
+
+export interface StakingMetadata {
+  core: StakingCore;
+  totalUserStaked: BigNumber;
+  allCores: StakingCore[];
+};
+
+const MIN_STAKE_AMOUNT = 10;
 
 const NO_METADATA_ERROR = "Metadata not available";
 
@@ -43,8 +55,7 @@ const schema = z.object({
 
 const ManageStaking = (props: { isOpen: boolean; }) => {
   const { isOpen } = props;
-  const { reloadAccountInfo } = useBalance();
-  const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
+  const { availableBalance, reloadAccountInfo } = useBalance();
   const [selectedCore, setSelectedCore] = useState<StakingCore | null>(null);
   const [totalUserStakedData, setTotalUserStakedData] = useState<TotalUserStakedData>({});
   const [altBalance, setAltBalance] = useState<boolean>(false);
@@ -56,6 +67,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const targetModal = openModals.find(modal => modal.name === modalName.MANAGE_STAKING);
   const metadata = targetModal ? targetModal.metadata : undefined;
   const initialSelectedCore = useRef<Metadata | undefined>(metadata);
+  const allTheCores = useRef<StakingCore[]>([]);
   const selectedAccount = useAccount((state) => state.selectedAccount);
   const stakeForm = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -68,7 +80,11 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const api = useApi();
   const watchedUnstakeAmount = unstakeForm.watch('amount');
   const watchedStakeAmount = stakeForm.watch('amount');
-  const initialCore = initialSelectedCore.current?.metadata as SelectedCoreInfo;
+
+  const numericCoreStakedBalance = useMemo(() => {
+    const cleanedValue = coreStakedBalance.replace(/[^\d.]/g, '');
+    return new BigNumber(cleanedValue);
+  }, [coreStakedBalance]);
 
   const selectedCoreInfo = useMemo(() => {
     return selectedCore
@@ -125,7 +141,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     if (!metadata) throw new Error(NO_METADATA_ERROR);
 
     let maxValue;
-    const minValue = new BigNumber(10);
+    const minValue = MIN_STAKE_AMOUNT;
     const parsedAmount = new BigNumber(amount);
 
     if (parsedAmount.isNaN()) {
@@ -137,10 +153,9 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     }
 
     if (altBalance) {
-      const numericValue = coreStakedBalance.replace(/[^\d.]/g, '');
-      maxValue = new BigNumber(numericValue);
+      maxValue = numericCoreStakedBalance;
     } else {
-      maxValue = new BigNumber(metadata.availableBalance as string)
+      maxValue = new BigNumber(availableBalance)
         .dividedBy(new BigNumber(10).pow(12));
     }
 
@@ -152,12 +167,22 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    if (parsedAmount.isLessThan(minValue)) {
-      stakeForm.setError("amount", {
-        type: "min",
-        message: "Amount must be greater than or equal to 10",
-      });
-      return;
+    const isMetadataValid = metadata && 'totalUserStakedData' in metadata;
+    const isCoreSelected = initialSelectedCore.current && initialSelectedCore.current.key;
+
+    if (isMetadataValid && isCoreSelected) {
+      const coreId = initialSelectedCore.current?.key as number;
+      const totalUserStakedData = metadata.totalUserStakedData as TotaluserStakedDataRecord;
+      const userStakedAmount = new BigNumber(totalUserStakedData[coreId]);
+      const zeroStake = userStakedAmount.isZero();
+      const minValueNotMet = parsedAmount.isLessThan(minValue);
+      const isInitialStakeTooLow = zeroStake && minValueNotMet;
+
+      if (isInitialStakeTooLow) {
+        const errorMessage = `Initial staking amount must be greater than or equal to ${ minValue.toString() }`;
+        stakeForm.setError("amount", { type: "min", message: errorMessage });
+        return;
+      }
     }
 
     if (parsedAmount.isGreaterThan(maxValue)) {
@@ -168,9 +193,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    const parsedStakeAmount = new BigNumber(amount).multipliedBy(
-      new BigNumber(10).pow(12)
-    );
+    const parsedStakeAmount = parsedAmount.multipliedBy(new BigNumber(10).pow(12));
 
     toast.loading("Staking...");
 
@@ -220,8 +243,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     let maxValue;
 
     if (metadata.totalUserStaked) {
-      const numericValue = String(metadata.totalUserStaked).replace(/[^\d.]/g, '');
-      maxValue = new BigNumber(numericValue);
+      maxValue = new BigNumber(numericCoreStakedBalance);
     } else {
       throw new Error("Total user staked data is not available");
     }
@@ -238,15 +260,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       unstakeForm.setError("amount", {
         type: "min",
         message: "Amount must be greater than 0",
-      });
-      return;
-    }
-
-    const minValue = new BigNumber(10);
-    if (parsedAmount.isLessThan(minValue)) {
-      unstakeForm.setError("amount", {
-        type: "min",
-        message: "Amount must be greater than or equal to 10",
       });
       return;
     }
@@ -290,8 +303,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
     const availableBalance = new BigNumber(metadata.availableBalance as string)
       .dividedBy(new BigNumber(10).pow(12));
-
-    const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
 
     const balance = altBalance
       ? new BigNumber(numericCoreStakedBalance)
@@ -347,7 +358,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
   const handleSelect = (selected: { name: string; } | null) => {
     if (selected) {
-      const selectCore = stakingCores.find(core => core.metadata.name === selected.name);
+      const selectCore = allTheCores.current.find(core => core.metadata.name === selected.name);
       if (selectCore) {
         setSelectedCore(selectCore);
       }
@@ -356,13 +367,20 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
   useEffect(() => {
     initialSelectedCore.current = metadata;
-  }, [metadata]);
+    const balance = formatBalanceSafely(availableBalance);
+    setCoreStakedBalance(balance);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    if (!metadata) return;
-    if ('stakingCores' in metadata) {
-      setStakingCores(metadata.stakingCores as StakingCore[]);
+    if (!metadata) {
+      return;
     }
+
+    if ('allCores' in metadata) {
+      allTheCores.current = metadata.allCores as StakingCore[];
+    }
+
     if ('totalUserStakedData' in metadata) {
       setTotalUserStakedData(metadata.totalUserStakedData as TotalUserStakedData);
     }
@@ -381,55 +399,41 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    if (!metadata) {
-      console.error("Metadata not available");
-      return;
-    }
+    const isAltBalance = selectedCore?.key !== initialSelectedCore.current?.key;
 
-    let balanceBN;
-    const oneVARCH = new BigNumber(1);
-
-    if (altBalance) {
-      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
-      balanceBN = new BigNumber(numericCoreStakedBalance);
+    if (!isAltBalance) {
+      setAltBalance(false);
+      const balance = formatBalanceSafely(availableBalance);
+      setCoreStakedBalance(balance);
     } else {
-      balanceBN = new BigNumber(metadata.availableBalance as string);
-    }
-
-    // Subtract one VARCH from the balance to cover fees or maintain a minimum balance
-    const stakeAmount = balanceBN.minus(oneVARCH);
-
-    // Update the stake amount in the form, converting it to a string
-    stakeForm.setValue('amount', stakeAmount.toString());
-  }, [coreStakedBalance, altBalance, metadata, stakeForm]);
-
-  useEffect(() => {
-    if (selectedCoreInfo && initialCore && selectedCoreInfo?.name !== initialCore?.name) {
       setAltBalance(true);
-
       if (selectedCoreInfo?.userStaked) {
         const stakedBalance = formatBalanceSafely(selectedCoreInfo?.userStaked?.toString());
         setCoreStakedBalance(stakedBalance);
       }
-      return;
     }
-
-    setAltBalance(false);
-    setCoreStakedBalance("0");
-  }, [selectedCoreInfo, initialCore, metadata]);
+  }, [selectedCoreInfo, selectedCore, availableBalance]);
 
   useEffect(() => {
-    if (altBalance) {
-      const currentAmount = parseFloat(stakeForm.getValues('amount'));
-      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
-      const maxBalance = parseFloat(numericCoreStakedBalance);
-      if (currentAmount > maxBalance) {
-        stakeForm.setValue('amount', maxBalance.toString().replace(/,/g, ''));
-      }
-    }
-  }, [altBalance, coreStakedBalance, stakeForm]);
+    let balanceBN;
+    const oneTNKR = new BigNumber(1);
 
-  // Watch for changes in stakeForm.amount
+    if (altBalance && numericCoreStakedBalance) {
+      balanceBN = new BigNumber(numericCoreStakedBalance);
+    } else {
+      balanceBN = availableBalance.dividedBy(new BigNumber(10).pow(12));
+    }
+
+    // Subtract one TNKR from the balance to cover fees or maintain a minimum balance
+    const stakeAmount = balanceBN.minus(oneTNKR);
+
+    // Ensure stakeAmount is not negative; if it is, set it to 0
+    const finalStakeAmount = stakeAmount.isNegative() ? new BigNumber(0) : stakeAmount;
+
+    // Update the stake amount in the form, converting it to a string
+    stakeForm.setValue('amount', finalStakeAmount.toString());
+  }, [coreStakedBalance, altBalance, stakeForm, numericCoreStakedBalance, availableBalance]);
+
   useEffect(() => {
     const value = stakeForm.getValues('amount');
     if (value && !/^[0-9]*\.?[0-9]*$/.test(value)) {
@@ -437,7 +441,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     }
   }, [stakeForm, watchedStakeAmount]);
 
-  // Watch for changes in unstakeForm.amount
   useEffect(() => {
     const value = unstakeForm.getValues('amount');
     if (value && !/^[0-9]*\.?[0-9]*$/.test(value)) {
@@ -450,38 +453,10 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     unstakeForm.clearErrors();
   }, [selectedCoreInfo, stakeForm, unstakeForm]);
 
-  useEffect(() => {
-    if (!metadata) {
-      console.error("Metadata not available");
-      return;
-    }
-
-    let balanceBN;
-    const oneVARCH = new BigNumber(1);
-
-    if (altBalance) {
-      const numericCoreStakedBalance = coreStakedBalance.replace(/[^\d.]/g, '');
-      balanceBN = new BigNumber(numericCoreStakedBalance);
-    } else {
-      balanceBN = new BigNumber(metadata.availableBalance as string).dividedBy(new BigNumber(10).pow(12));
-    }
-
-    // Subtract one VARCH from the balance to cover fees or maintain a minimum balance
-    const stakeAmount = balanceBN.minus(oneVARCH);
-
-    // Ensure stakeAmount is not negative; if it is, set it to 0
-    const finalStakeAmount = stakeAmount.isNegative() ? new BigNumber(0) : stakeAmount;
-
-    // Update the stake amount in the form, converting it to a string
-    stakeForm.setValue('amount', finalStakeAmount.toString());
-  }, [coreStakedBalance, altBalance, metadata, stakeForm]);
-
   const RestakingDropdown = memo(() => {
-    const list = stakingCores
+    const list = allTheCores.current
       .map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }) as SelectedCoreInfo)
-      .filter(core => core.userStaked && core.userStaked.gt(new BigNumber(0)));
-
-    if (!list || list.length === 0) return null;
+      .filter(core => core.userStaked && core.userStaked.gt(0));
 
     return <Dropdown initialValue={(initialSelectedCore.current?.metadata as SelectedCoreInfo)?.name as string} currentValue={selectedCoreInfo} list={list} onSelect={handleSelect} />;
   });
@@ -504,8 +479,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                 <div className="text-sm text-white text-center">
                   <div className="font-bold truncate">
                     {formatBalanceSafely(
-                      metadata?.availableBalance
-                        ? metadata.availableBalance.toString()
+                      availableBalance ?
+                        availableBalance.toString()
                         : "0")}
                   </div>
                   <div className="text-xxs/none">Available Balance</div>
@@ -581,10 +556,9 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                               className="block text-xxs font-medium text-white mb-1 flex flex-row justify-between gap-2 truncate"
                             >
                               <span>Stake Amount</span>
-                              {altBalance ?
-                                <span className="float-right truncate">
-                                  Balance: <span className="font-bold">{coreStakedBalance}</span>
-                                </span> : null}
+                              <span className="float-right truncate">
+                                Balance: <span className="font-bold">{coreStakedBalance}</span>
+                              </span>
                             </label>
                             <div className="relative flex flex-row items-center">
                               <div className="w-full">

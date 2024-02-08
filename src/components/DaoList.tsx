@@ -18,6 +18,7 @@ import FilterIcon from '../assets/filter-icon.svg';
 import { CHOOSE_ONE, FilterStates, OrderByOption } from '../modals/DaoListFilters';
 import { clearFiltersFromLocalStorage } from '../utils/filterStorage';
 import { useBalance } from '../providers/balance';
+import { StakingMetadata } from '../modals/ManageStaking';
 
 interface DaoListProps { mini: boolean; isOverview: boolean; totalStakedInSystem: BigNumber | undefined; }
 
@@ -206,15 +207,11 @@ const DaoList = (props: DaoListProps) => {
   const handleManageStaking = async ({
     core,
     totalUserStaked,
-    availableBalance,
-  }: {
-    core: StakingCore;
-    totalUserStaked: BigNumber;
-    availableBalance: BigNumber;
-  }) => {
+    allCores
+  }: StakingMetadata) => {
     setOpenModal({
       name: modalName.MANAGE_STAKING,
-      metadata: { ...core, totalUserStaked, availableBalance, stakingCores, totalUserStakedData },
+      metadata: { ...core, totalUserStaked, stakingCores, totalUserStakedData, allCores },
     });
   };
 
@@ -249,8 +246,8 @@ const DaoList = (props: DaoListProps) => {
 
     const cores = await loadProjectCores(api);
     if (cores) {
-      initialCoresRef.current = cores; // Store the initial list in the ref
-      setStakingCores(cores); // Set the displayed cores to the initial list
+      initialCoresRef.current = cores;
+      setStakingCores(cores);
     }
   }, [selectedAccount, api]);
 
@@ -261,14 +258,14 @@ const DaoList = (props: DaoListProps) => {
 
     setTotalUserStakedData(prevState => {
       const totalUserStakedResults: TotalUserStakedData = { ...prevState };
-      for (const core of stakingCores) {
+      for (const core of initialCoresRef.current) {
         const totalUserStaked = getTotalUserStaked(userStakedInfo, core);
         totalUserStakedResults[core.key] = totalUserStaked;
       }
 
       return totalUserStakedResults;
     });
-  }, [stakingCores, coreEraStakeInfo, userStakedInfo]);
+  }, [coreEraStakeInfo, userStakedInfo]);
 
   const loadStakingConstants = useCallback(async () => {
     const maxStakersPerCore = api.consts.ocifStaking.maxStakersPerCore.toPrimitive() as number;
@@ -344,7 +341,7 @@ const DaoList = (props: DaoListProps) => {
 
     const currentEra = await api.query.ocifStaking.currentEra();
 
-    for (const stakingCore of stakingCores) {
+    for (const stakingCore of initialCoresRef.current) {
       await api.query.ocifStaking.coreEraStake(stakingCore.key, currentEra, (inf: Codec) => {
 
         const info: {
@@ -372,7 +369,7 @@ const DaoList = (props: DaoListProps) => {
       });
     }
 
-    for (const stakingCore of stakingCores) {
+    for (const stakingCore of initialCoresRef.current) {
 
       await api.query.ocifStaking.generalStakerInfo(
         stakingCore.key,
@@ -400,7 +397,7 @@ const DaoList = (props: DaoListProps) => {
         }
       );
     }
-  }, [api, stakingCores, selectedAccount]);
+  }, [api, selectedAccount]);
 
   useEffect(() => {
     const setup = async () => {
@@ -524,6 +521,7 @@ const DaoList = (props: DaoListProps) => {
               descriptionRef={minified ? projectCardRef : descriptionRef}
               selectedAccount={selectedAccount}
               totalStakedInSystem={totalStakedInSystem || new BigNumber(0)}
+              allCores={initialCoresRef.current}
             />
           );
 
