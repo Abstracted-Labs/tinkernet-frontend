@@ -35,7 +35,6 @@ export interface SelectedCoreInfo extends Metadata {
 export interface StakingMetadata {
   core: StakingCore;
   totalUserStaked: BigNumber;
-  availableBalance: BigNumber;
   allCores: StakingCore[];
 };
 
@@ -398,81 +397,29 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    if (!metadata) {
-      console.error("Metadata not available");
-      return;
-    }
+    const isAltBalance = selectedCore?.key !== initialSelectedCore.current?.key;
 
-    let balanceBN;
-    const oneTNKR = new BigNumber(1);
-
-    if (altBalance) {
-      balanceBN = new BigNumber(numericCoreStakedBalance);
+    if (!isAltBalance) {
+      setAltBalance(false);
+      const balance = formatBalanceSafely(availableBalance);
+      setCoreStakedBalance(balance);
     } else {
-      balanceBN = new BigNumber(metadata.availableBalance as string);
-    }
-
-    // Subtract one TNKR from the balance to cover fees or maintain a minimum balance
-    const stakeAmount = balanceBN.minus(oneTNKR);
-
-    // Update the stake amount in the form, converting it to a string
-    stakeForm.setValue('amount', stakeAmount.toString());
-  }, [coreStakedBalance, altBalance, metadata, stakeForm, numericCoreStakedBalance]);
-
-  useEffect(() => {
-    if (selectedCoreInfo && selectedCore && selectedCoreInfo?.name !== selectedCore.key.toString()) {
       setAltBalance(true);
-
       if (selectedCoreInfo?.userStaked) {
         const stakedBalance = formatBalanceSafely(selectedCoreInfo?.userStaked?.toString());
         setCoreStakedBalance(stakedBalance);
       }
-      return;
     }
-
-    setAltBalance(false);
-    setCoreStakedBalance("0");
-  }, [selectedCoreInfo, selectedCore, metadata, availableBalance]);
-
-  useEffect(() => {
-    if (altBalance) {
-      const currentAmount = parseFloat(stakeForm.getValues('amount'));
-      const maxBalance = parseFloat(numericCoreStakedBalance.toString());
-      if (currentAmount > maxBalance) {
-        stakeForm.setValue('amount', maxBalance.toString().replace(/,/g, ''));
-      }
-    }
-  }, [altBalance, coreStakedBalance, stakeForm, numericCoreStakedBalance]);
-
-  // Watch for changes in stakeForm.amount
-  useEffect(() => {
-    const value = stakeForm.getValues('amount');
-    if (value && !/^[0-9]*\.?[0-9]*$/.test(value)) {
-      stakeForm.setValue('amount', value.replace(/[^0-9.]/g, ''));
-    }
-  }, [stakeForm, watchedStakeAmount]);
-
-  // Watch for changes in unstakeForm.amount
-  useEffect(() => {
-    const value = unstakeForm.getValues('amount');
-    if (value && !/^[0-9]*\.?[0-9]*$/.test(value)) {
-      unstakeForm.setValue('amount', value.replace(/[^0-9.]/g, ''));
-    }
-  }, [unstakeForm, watchedUnstakeAmount]);
-
-  useEffect(() => {
-    stakeForm.clearErrors();
-    unstakeForm.clearErrors();
-  }, [selectedCoreInfo, stakeForm, unstakeForm]);
+  }, [selectedCoreInfo, selectedCore, availableBalance]);
 
   useEffect(() => {
     let balanceBN;
     const oneTNKR = new BigNumber(1);
 
-    if (altBalance) {
+    if (altBalance && numericCoreStakedBalance) {
       balanceBN = new BigNumber(numericCoreStakedBalance);
     } else {
-      balanceBN = new BigNumber(availableBalance).dividedBy(new BigNumber(10).pow(12));
+      balanceBN = availableBalance.dividedBy(new BigNumber(10).pow(12));
     }
 
     // Subtract one TNKR from the balance to cover fees or maintain a minimum balance
@@ -484,6 +431,25 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     // Update the stake amount in the form, converting it to a string
     stakeForm.setValue('amount', finalStakeAmount.toString());
   }, [coreStakedBalance, altBalance, stakeForm, numericCoreStakedBalance, availableBalance]);
+
+  useEffect(() => {
+    const value = stakeForm.getValues('amount');
+    if (value && !/^[0-9]*\.?[0-9]*$/.test(value)) {
+      stakeForm.setValue('amount', value.replace(/[^0-9.]/g, ''));
+    }
+  }, [stakeForm, watchedStakeAmount]);
+
+  useEffect(() => {
+    const value = unstakeForm.getValues('amount');
+    if (value && !/^[0-9]*\.?[0-9]*$/.test(value)) {
+      unstakeForm.setValue('amount', value.replace(/[^0-9.]/g, ''));
+    }
+  }, [unstakeForm, watchedUnstakeAmount]);
+
+  useEffect(() => {
+    stakeForm.clearErrors();
+    unstakeForm.clearErrors();
+  }, [selectedCoreInfo, stakeForm, unstakeForm]);
 
   const RestakingDropdown = memo(() => {
     const list = allTheCores.current
@@ -588,10 +554,9 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
                               className="block text-xxs font-medium text-white mb-1 flex flex-row justify-between gap-2 truncate"
                             >
                               <span>Stake Amount</span>
-                              {altBalance ?
-                                <span className="float-right truncate">
-                                  Balance: <span className="font-bold">{coreStakedBalance}</span>
-                                </span> : null}
+                              <span className="float-right truncate">
+                                Balance: <span className="font-bold">{coreStakedBalance}</span>
+                              </span>
                             </label>
                             <div className="relative flex flex-row items-center">
                               <div className="w-full">
