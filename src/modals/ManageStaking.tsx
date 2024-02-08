@@ -367,6 +367,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
 
   useEffect(() => {
     initialSelectedCore.current = metadata;
+    const balance = formatBalanceSafely(availableBalance);
+    setCoreStakedBalance(balance);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -454,7 +456,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   const RestakingDropdown = memo(() => {
     const list = allTheCores.current
       .map(core => ({ id: core.key, userStaked: totalUserStakedData[core.key], name: core.metadata.name }) as SelectedCoreInfo)
-      .filter(core => core.userStaked && core.userStaked.gt(0));
+      .filter(core => core.userStaked && !core.userStaked.isZero());
 
     return <Dropdown initialValue={(initialSelectedCore.current?.metadata as SelectedCoreInfo)?.name as string} currentValue={selectedCoreInfo} list={list} onSelect={handleSelect} />;
   });
