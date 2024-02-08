@@ -393,7 +393,7 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
   }, [isOpen]);
 
   useEffect(() => {
-    const isAltBalance = selectedCore?.key !== initialSelectedCore.current?.key;
+    const isAltBalance = selectedCore !== null && selectedCore?.key !== initialSelectedCore.current?.key;
 
     if (!isAltBalance) {
       setAltBalance(false);
