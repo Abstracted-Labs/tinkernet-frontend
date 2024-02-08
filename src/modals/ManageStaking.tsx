@@ -239,11 +239,8 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
     if (!metadata) throw new Error(NO_METADATA_ERROR);
 
     const parsedAmount = new BigNumber(amount);
-    let maxValue;
 
-    if (metadata.totalUserStaked) {
-      maxValue = new BigNumber(numericCoreStakedBalance);
-    } else {
+    if (!metadata.totalUserStaked) {
       throw new Error("Total user staked data is not available");
     }
 
@@ -259,14 +256,6 @@ const ManageStaking = (props: { isOpen: boolean; }) => {
       unstakeForm.setError("amount", {
         type: "min",
         message: "Amount must be greater than 0",
-      });
-      return;
-    }
-
-    if (parsedAmount.isGreaterThan(maxValue)) {
-      unstakeForm.setError("amount", {
-        type: "max",
-        message: "Amount must be less than or equal to your total staked balance",
       });
       return;
     }
