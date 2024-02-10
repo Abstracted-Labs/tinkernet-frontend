@@ -184,8 +184,8 @@ const Staking = () => {
   const [userStakedInfoMap, setUserStakedInfoMap] = useState<Map<number, UserStakedInfoType>>(new Map());
 
   const disableClaiming = useMemo(() => {
-    return isWaiting || unclaimedEras.total === 0 && totalUnclaimed.toNumber() === 0;
-  }, [isWaiting, unclaimedEras, totalUnclaimed]);
+    return isWaiting || unclaimedEras.total === 0;
+  }, [isWaiting, unclaimedEras]);
 
   const [rewardsUserClaimedQuery, reexecuteQuery] = useQuery({
     query: TotalRewardsClaimedQuery,
@@ -443,9 +443,9 @@ const Staking = () => {
     reexecuteQuery({ requestPolicy: 'network-only' });
     setClaimAllSuccess(false);
   }, [claimAllSuccess, reexecuteQuery]);
-
+  console.log('disableClaiming', disableClaiming);
   const handleClaimRewards = useCallback(async () => {
-    if (!selectedAccount || !unclaimedEras || !currentStakingEra) return;
+    if (disableClaiming || !selectedAccount || !unclaimedEras || !currentStakingEra) return;
 
     await restakeClaim({
       api,
