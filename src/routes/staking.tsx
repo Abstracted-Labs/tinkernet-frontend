@@ -511,7 +511,7 @@ const Staking = () => {
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount) return;
 
-    if (!rewardsUserClaimedQuery.data?.stakers?.length) {
+    if (!rewardsUserClaimedQuery.data?.stakers?.length || claimAllSuccess) {
       setTotalClaimed(new BigNumber(0));
       setTotalUnclaimed(new BigNumber(0));
       return;
