@@ -511,7 +511,7 @@ const Staking = () => {
   useEffect(() => {
     if (rewardsUserClaimedQuery.fetching || !selectedAccount) return;
 
-    if (!rewardsUserClaimedQuery.data?.stakers?.length || claimAllSuccess) {
+    if (!rewardsUserClaimedQuery.data?.stakers?.length) {
       setTotalClaimed(new BigNumber(0));
       setTotalUnclaimed(new BigNumber(0));
       return;
@@ -526,7 +526,7 @@ const Staking = () => {
       rewardsUserClaimedQuery.data.stakers[0].totalUnclaimed
     );
     setTotalUnclaimed(totalUnclaimed);
-  }, [rewardsUserClaimedQuery, selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data, claimAllSuccess]);
+  }, [rewardsUserClaimedQuery, selectedAccount, rewardsUserClaimedQuery.fetching, rewardsUserClaimedQuery.data]);
 
   return (
     <div className="mx-auto w-full flex max-w-7xl flex-col justify-between p-4 sm:px-6 lg:px-8 mt-14 md:mt-0 gap-3">
