@@ -443,7 +443,7 @@ const Staking = () => {
     reexecuteQuery({ requestPolicy: 'network-only' });
     setClaimAllSuccess(false);
   }, [claimAllSuccess, reexecuteQuery]);
-  console.log('disableClaiming', disableClaiming);
+
   const handleClaimRewards = useCallback(async () => {
     if (disableClaiming || !selectedAccount || !unclaimedEras || !currentStakingEra) return;
 
