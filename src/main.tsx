@@ -19,6 +19,7 @@ import Layout from "./components/Layout";
 import Modals from "./modals";
 import Overview from "./routes/overview";
 import { BalanceProvider } from "./providers/balance";
+import Transfer from "./routes/xtransfer";
 
 const wsClient = createWSClient({
   url: "wss://squid.subsquid.io/ocif-squid/v/v4/graphql",
@@ -63,8 +64,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 
                 <Route path="claim" element={<Claim />} />
 
-                {/* Disabled temporarily */}
-                {/* <Route path="transfer" element={<Transfer />} /> */}
+                <Route path="transfer" element={<Transfer />} />
 
                 <Route path="staking" element={<Staking />} />
 
