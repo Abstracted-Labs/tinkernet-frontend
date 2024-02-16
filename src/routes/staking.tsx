@@ -486,14 +486,12 @@ const Staking = () => {
         if (typeof parsedAutoRestake === 'boolean') {
           setEnableAutoRestake(parsedAutoRestake);
         } else {
-          console.error("Invalid value in local storage for 'autoRestake'. Expected a boolean.");
+          setEnableAutoRestake(false);
         }
       } catch (error) {
-        console.error("Error parsing 'autoRestake' from local storage:", error);
-        // Optionally, set a default value or handle the error differently here
+        setEnableAutoRestake(false);
       }
     } else {
-      // Set a default value when there's no value in local storage
       setEnableAutoRestake(false);
     }
   }, []);
