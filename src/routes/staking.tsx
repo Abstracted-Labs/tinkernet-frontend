@@ -166,7 +166,7 @@ const Staking = () => {
   const [isLoading, setLoading] = useState(true);
   const [isWaiting, setWaiting] = useState(false);
   const [isDataLoaded, setDataLoaded] = useState(false);
-  const [enableAutoRestake, setEnableAutoRestake] = useState<boolean>(true);
+  const [enableAutoRestake, setEnableAutoRestake] = useState<boolean>(false);
   const [claimAllSuccess, setClaimAllSuccess] = useState(false);
   const [stakingCores, setStakingCores] = useState<StakingCore[]>([]);
   const [currentStakingEra, setCurrentStakingEra] = useState<number>(0);
@@ -481,15 +481,18 @@ const Staking = () => {
     // Load auto-restake value from local storage
     const autoRestake = localStorage.getItem("autoRestake");
     if (autoRestake) {
-      const parsedAutoRestake = JSON.parse(autoRestake);
-      if (typeof parsedAutoRestake === 'boolean') {
-        setEnableAutoRestake(parsedAutoRestake);
-      } else {
-        console.error("Invalid value in local storage for 'autoRestake'. Expected a boolean.");
+      try {
+        const parsedAutoRestake = JSON.parse(autoRestake);
+        if (typeof parsedAutoRestake === 'boolean') {
+          setEnableAutoRestake(parsedAutoRestake);
+        } else {
+          setEnableAutoRestake(false);
+        }
+      } catch (error) {
+        setEnableAutoRestake(false);
       }
     } else {
-      // Set a default value when there's no value in local storage
-      setEnableAutoRestake(true);
+      setEnableAutoRestake(false);
     }
   }, []);
 
