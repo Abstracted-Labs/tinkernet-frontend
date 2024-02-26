@@ -249,7 +249,12 @@ const Transfer = () => {
 
   const balanceTNKR100 = () => {
     const balance = balanceInTinkernet.multipliedBy(1).dividedBy(new BigNumber(10).pow(12));
-    setAmount(balance.toString());
+    if (balance.isGreaterThan(new BigNumber(1))) {
+      const max = balance.minus(new BigNumber(1)).toString();
+      setAmount(max);
+    } else {
+      return;
+    }
   };
 
   const balanceBSX25 = () => {
@@ -269,7 +274,12 @@ const Transfer = () => {
 
   const balanceBSX100 = () => {
     const balance = balanceInBasilisk.multipliedBy(1).dividedBy(new BigNumber(10).pow(12));
-    setAmount(balance.toString());
+    if (balance.isGreaterThan(new BigNumber(1))) {
+      const max = balance.minus(new BigNumber(1)).toString();
+      setAmount(max);
+    } else {
+      return;
+    }
   };
 
   const handleChangedDestination = (e: string) => {

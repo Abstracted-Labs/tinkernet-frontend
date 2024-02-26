@@ -56,7 +56,10 @@ const AccountSelector = (props: { isOpen: boolean; }) => {
       return;
     }
 
-    if (!extensions.includes(walletName)) {
+    if (walletName === WalletNameEnum.NOVAWALLET) {
+      const updatedExtensions = [...extensions, WalletNameEnum.NOVAWALLET, WalletNameEnum.PJS].filter((value, index, self) => self.indexOf(value) === index);
+      setExtensions(updatedExtensions);
+    } else if (!extensions.includes(walletName)) {
       setExtensions([...extensions, walletName]);
     } else {
       setExtensions(extensions.filter((extension) => extension !== walletName));
