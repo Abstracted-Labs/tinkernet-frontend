@@ -18,6 +18,9 @@ import { formatNumberShorthand } from '../utils/formatNumber';
 import Button from './Button';
 import { BG_GRADIENT } from '../utils/consts';
 import { StakingMetadata } from '../modals/ManageStaking';
+import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
+import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
+
 export interface ProjectCardProps {
   core: StakingCore;
   totalUserStaked: BigNumber | undefined;
@@ -65,6 +68,7 @@ const ProjectCard = (props: ProjectCardProps) => {
   // const [aggregateStaked, setAggregateStaked] = useState<BigNumber>(new BigNumber(0));
   const [minStakeReward, setMinStakeReward] = useState<BigNumber>(new BigNumber(0));
   const [totalUserStaked, setTotalUserStaked] = useState<BigNumber>(new BigNumber(0));
+  const [coreUnclaimedEras, setCoreUnclaimedEras] = useState<{ min: number, max: number }>({ min: 0, max: 0 });
 
   const handleReadMore = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -115,7 +119,83 @@ const ProjectCard = (props: ProjectCardProps) => {
     });
   };
 
-  const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+  useEffect(() => {
+    api.query.ocifStaking.coreEraStake.entries(core.key).then((coreEraStake) => {
+      const unclaimedEras = coreEraStake
+        .filter(([_, era]) => (era.toHuman() as { rewardClaimed: boolean }).rewardClaimed == false)
+        .map(([key, _]) => key.args[1].toHuman() as number);
+
+      const min = Math.min(...unclaimedEras);
+
+      // Max is current era, so we subtract 1.
+      const max = Math.max(...unclaimedEras) - 1;
+
+      setCoreUnclaimedEras({ min, max });
+    });
+  }, [api, core, coreUnclaimedEras]);
+
+  const claimCoreRewards = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+
+    const { min, max } = coreUnclaimedEras;
+
+    console.log("min: ", min, "max: ", max);
+
+    if (!selectedAccount || (max - min <= 0)) return;
+
+    const batch = [];
+
+    for (let era = min; era <= max; era++) {
+      batch.push(api.tx.ocifStaking.coreClaimRewards(core.key, era));
+    }
+
+    try {
+
+      await web3Enable("Tinkernet");
+
+      const injector = await web3FromAddress(selectedAccount.address);
+
+      await api.tx.utility.batch(batch).signAndSend(
+        selectedAccount.address,
+        { signer: injector.signer },
+        getSignAndSendCallbackWithPromise({
+          onExecuted: () => {
+            toast.dismiss();
+            toast.loading("Waiting for confirmation...");
+          },
+          onSuccess: () => {
+            toast.dismiss();
+            toast.success("Claimed successfully");
+          },
+          onDropped: () => {
+            toast.dismiss();
+            toast.error("Error claiming DAO rewards.");
+          },
+          onError: (error) => {
+            toast.dismiss();
+            toast.error("Error claiming DAO rewards.");
+            console.error(error);
+          },
+          onInterrupt: (error) => {
+            toast.dismiss();
+            toast.error("Error claiming DAO rewards.");
+            console.error(error);
+          },
+          onInvalid: () => {
+            toast.dismiss();
+            toast.error("Error claiming DAO rewards.");
+          },
+        }, api)
+      );
+
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Error claiming DAO rewards.");
+      console.error(error);
+    }
+};
+
+const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     e.stopPropagation();
     e.preventDefault();
 
@@ -372,12 +452,24 @@ const ProjectCard = (props: ProjectCardProps) => {
           {statsSection}
         </div>
 
-        {selectedAccount ? <Button variant='primary' mini={true} onClick={handleClick}
-          disabled={
-            (coreInfo?.numberOfStakers || 0) >=
-            (chainProperties?.maxStakersPerCore || 0) &&
-            !totalUserStaked
-          }>{!mini ? 'Manage Staking' : 'View Details'}</Button> : null}
+        <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 items-stretch md:items-center justify-start z-1">
+          {selectedAccount ?
+           <Button variant='primary' mini={true} onClick={handleClick}
+                   disabled={
+                   (coreInfo?.numberOfStakers || 0) >=
+                     (chainProperties?.maxStakersPerCore || 0) &&
+                   !totalUserStaked
+                   }>{!mini ? 'Manage Staking' : 'View Details'}</Button> : null
+          }
+
+          {(!mini && members.includes(selectedAccount?.address)) ? <Button variant='primary'
+            mini={true}
+            disabled={core.key == 0 || (coreUnclaimedEras.max - coreUnclaimedEras.min) <= 0}
+            onClick={claimCoreRewards}
+            >Claim DAO Rewards</Button> : null
+          }
+        </div>
+
       </div>
     </div>
   );
