@@ -3,7 +3,7 @@ import { ApiOptions } from "@polkadot/api/types";
 import { createWithEqualityFn } from "zustand/traditional";
 
 const host = {
-  REMOTE: "wss://tinkernet-rpc.dwellir.com",
+  // REMOTE: "wss://tinkernet-rpc.dwellir.com",
   // LOCAL: "ws://127.0.0.1:9944",
   LOCAL: 'ws://localhost:8000'
 } as const;
@@ -18,8 +18,8 @@ type RPCState = {
 };
 
 const useRPC = createWithEqualityFn<RPCState>()((set, get) => ({
-  host: host.REMOTE,
-  // host: host.LOCAL,
+  // host: host.REMOTE,
+  host: host.LOCAL,
   setHost: (host: Host) => set(() => ({ host })),
   error: null,
   createApi: async (options) => {
@@ -42,7 +42,7 @@ const useRPC = createWithEqualityFn<RPCState>()((set, get) => ({
 
       console.error(error);
 
-      throw new Error(`Failed to connect to ${ host }`);
+      throw new Error(`Failed to connect to ${host}`);
     }
   },
 }));

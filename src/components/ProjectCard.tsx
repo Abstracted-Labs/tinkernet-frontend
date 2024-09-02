@@ -2,7 +2,7 @@ import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { BigNumber } from 'bignumber.js';
 import { LockClosedIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import { StakingCore, CoreEraStakeInfoType, ChainPropertiesType, CoreIndexedRewardsType } from '../routes/staking';
+import { StakingDao, DaoEraStakeInfoType, ChainPropertiesType, DaoIndexedRewardsType } from '../routes/staking';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
 import TotalStakersIcon from '../assets/total-stakers-icon.svg';
 import TotalStakedIcon from '../assets/total-staked-icon.svg';
@@ -22,31 +22,31 @@ import { web3Enable, web3FromAddress } from "@polkadot/extension-dapp";
 import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 
 export interface ProjectCardProps {
-  core: StakingCore;
+  dao: StakingDao;
   totalUserStaked: BigNumber | undefined;
-  coreInfo: Partial<CoreEraStakeInfoType> | undefined;
-  coreRewards: Partial<CoreIndexedRewardsType> | undefined;
+  daoInfo: Partial<DaoEraStakeInfoType> | undefined;
+  coreRewards: Partial<DaoIndexedRewardsType> | undefined;
   chainProperties: ChainPropertiesType | undefined;
   availableBalance: BigNumber | undefined;
   handleManageStaking: (args: StakingMetadata) => void;
   handleViewDetails?: (mini: boolean) => void;
   descriptionRef: RefObject<HTMLDivElement>;
-  toggleExpanded: (core: StakingCore) => void;
-  toggleViewMembers: (core: StakingCore, members: AnyJson[]) => void;
+  toggleExpanded: (dao: StakingDao) => void;
+  toggleViewMembers: (dao: StakingDao, members: AnyJson[]) => void;
   selectedAccount: InjectedAccountWithMeta | null;
   members: AnyJson[];
   mini: boolean;
   totalStakedInSystem: BigNumber;
-  allCores: StakingCore[];
+  allDaos: StakingDao[];
 }
 
 const STAT_UNDERLINE = `border-b border-b-[#2B2C30]`;
 
 const ProjectCard = (props: ProjectCardProps) => {
   const {
-    core,
+    dao: core,
     totalUserStaked: totalStaked,
-    coreInfo,
+    daoInfo,
     coreRewards,
     chainProperties,
     // availableBalance,
@@ -59,7 +59,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     members,
     mini,
     totalStakedInSystem,
-    allCores
+    allDaos
   } = props;
   const api = useApi();
   const scrollPositionRef = useRef(0);
@@ -90,17 +90,17 @@ const ProjectCard = (props: ProjectCardProps) => {
   // }, [api]);
 
   const loadStakeRewardMinimum = useCallback(() => {
-    const minStakeReward = api.consts.ocifStaking.stakeThresholdForActiveCore.toPrimitive() as string;
+    const minStakeReward = api.consts.ocifStaking.stakeThresholdForActiveDao.toPrimitive() as string;
     setMinStakeReward(new BigNumber(minStakeReward));
   }, [api]);
 
   const calcMinSupportMet = useCallback(() => {
-    if (minStakeReward.isLessThan(coreInfo?.totalStaked || new BigNumber(0))) {
+    if (minStakeReward.isLessThan(daoInfo?.totalStaked || new BigNumber(0))) {
       setMinSupportMet(true);
     } else {
       setMinSupportMet(false);
     }
-  }, [minStakeReward, coreInfo]);
+  }, [minStakeReward, daoInfo]);
 
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
@@ -113,9 +113,9 @@ const ProjectCard = (props: ProjectCardProps) => {
     }
 
     handleManageStaking({
-      core,
+      dao: core,
       totalUserStaked: parsedTotalStaked,
-      allCores
+      allDaos
     });
   };
 
@@ -146,7 +146,7 @@ const ProjectCard = (props: ProjectCardProps) => {
     const batch = [];
 
     for (let era = min; era <= max; era++) {
-      batch.push(api.tx.ocifStaking.coreClaimRewards(core.key, era));
+      batch.push(api.tx.ocifStaking.daoClaimRewards(core.key, era));
     }
 
     try {
@@ -193,15 +193,15 @@ const ProjectCard = (props: ProjectCardProps) => {
       toast.error("Error claiming DAO rewards.");
       console.error(error);
     }
-};
+  };
 
-const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+  const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     e.stopPropagation();
     e.preventDefault();
 
     if (mini) return;
 
-    const elements = document.querySelectorAll(`.${ statClass }`);
+    const elements = document.querySelectorAll(`.${statClass}`);
     elements.forEach(element => {
       const htmlElement = element as HTMLElement;
       if (isHovering) {
@@ -222,7 +222,7 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
   useEffect(() => {
     calcMinSupportMet();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [minStakeReward, coreInfo?.totalStaked]);
+  }, [minStakeReward, daoInfo?.totalStaked]);
 
   useEffect(() => {
     if (totalStaked !== undefined) {
@@ -234,7 +234,7 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
 
     {/* Total Stakers */}
     {!mini ? <div
-      className={`p-2 stats-1 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      className={`p-2 stats-1 flex justify-between items-center ${STAT_UNDERLINE}`}
       onMouseEnter={(e) => handleStatsHover(true, 'stats-1', e)}
       onMouseLeave={(e) => handleStatsHover(false, 'stats-1', e)}
       onTouchStart={(e) => handleStatsHover(true, 'stats-1', e)}
@@ -249,8 +249,8 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
         </div>
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] flex flex-row items-center gap-1">
-        {(coreInfo?.numberOfStakers || 0) >=
-          (chainProperties?.maxStakersPerCore || 0) ? (
+        {(daoInfo?.numberOfStakers || 0) >=
+          (chainProperties?.maxStakersPerDao || 0) ? (
           <LockClosedIcon
             className="h-3 w-3 cursor-pointer text-white"
             onClick={() => {
@@ -260,13 +260,13 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
             }}
           />
         ) : null}
-        <span>{coreInfo?.numberOfStakers}</span>
+        <span>{daoInfo?.numberOfStakers}</span>
       </div>
     </div> : null}
 
     {/* Total Staked */}
     {!mini ? <div
-      className={`p-2 stats-2 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      className={`p-2 stats-2 flex justify-between items-center ${STAT_UNDERLINE}`}
       onMouseEnter={(e) => handleStatsHover(true, 'stats-2', e)}
       onMouseLeave={(e) => handleStatsHover(false, 'stats-2', e)}
       onTouchStart={(e) => handleStatsHover(true, 'stats-2', e)}
@@ -281,15 +281,15 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
         </div>
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-        {coreInfo?.totalStaked
-          ? `${ formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) } TNKR`
+        {daoInfo?.totalStaked
+          ? `${formatNumberShorthand(parseFloat(daoInfo?.totalStaked.toString()) / Math.pow(10, 12))} TNKR`
           : '--'}
       </div>
     </div> : null}
 
     {/* My Stake */}
     <div
-      className={`p-2 stats-3 flex justify-between items-center ${ !mini ? STAT_UNDERLINE : '' }`}
+      className={`p-2 stats-3 flex justify-between items-center ${!mini ? STAT_UNDERLINE : ''}`}
       onMouseEnter={(e) => handleStatsHover(true, 'stats-3', e)}
       onMouseLeave={(e) => handleStatsHover(false, 'stats-3', e)}
       onTouchStart={(e) => handleStatsHover(true, 'stats-3', e)}
@@ -305,14 +305,14 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
         {totalUserStaked
-          ? `${ formatNumberShorthand(parseFloat(totalUserStaked.toString()) / Math.pow(10, 12)) } TNKR`
+          ? `${formatNumberShorthand(parseFloat(totalUserStaked.toString()) / Math.pow(10, 12))} TNKR`
           : '--'}
       </div>
     </div>
 
     {/* Total Rewards */}
     {!mini ? <div
-      className={`p-2 stats-4 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      className={`p-2 stats-4 flex justify-between items-center ${STAT_UNDERLINE}`}
       onMouseEnter={(e) => handleStatsHover(true, 'stats-4', e)}
       onMouseLeave={(e) => handleStatsHover(false, 'stats-4', e)}
       onTouchStart={(e) => handleStatsHover(true, 'stats-4', e)}
@@ -328,14 +328,14 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
         {coreRewards?.totalRewards
-          ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalRewards.toString()) / Math.pow(10, 12)) } TNKR`
+          ? `${formatNumberShorthand(parseFloat(coreRewards?.totalRewards.toString()) / Math.pow(10, 12))} TNKR`
           : '--'}
       </div>
     </div> : null}
 
     {/* Unclaimed Rewards */}
     {!mini ? <div
-      className={`p-2 stats-5 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      className={`p-2 stats-5 flex justify-between items-center ${STAT_UNDERLINE}`}
       onMouseEnter={(e) => handleStatsHover(true, 'stats-5', e)}
       onMouseLeave={(e) => handleStatsHover(false, 'stats-5', e)}
       onTouchStart={(e) => handleStatsHover(true, 'stats-5', e)}
@@ -351,14 +351,14 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
         {coreRewards?.totalUnclaimed
-          ? `${ formatNumberShorthand(parseFloat(coreRewards?.totalUnclaimed.toString()) / Math.pow(10, 12)) } TNKR`
+          ? `${formatNumberShorthand(parseFloat(coreRewards?.totalUnclaimed.toString()) / Math.pow(10, 12))} TNKR`
           : '--'}
       </div>
     </div> : null}
 
     {/* Support Share */}
     {!mini ? <div
-      className={`p-2 stats-6 flex justify-between items-center ${ STAT_UNDERLINE }`}
+      className={`p-2 stats-6 flex justify-between items-center ${STAT_UNDERLINE}`}
       onMouseEnter={(e) => handleStatsHover(true, 'stats-6', e)}
       onMouseLeave={(e) => handleStatsHover(false, 'stats-6', e)}
       onTouchStart={(e) => handleStatsHover(true, 'stats-6', e)}
@@ -373,8 +373,8 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
         </div>
       </div>
       <div className="font-normal text-white text-[12px] text-right tracking-[0] leading-[normal] truncate">
-        {coreInfo?.totalStaked && new BigNumber(totalStakedInSystem).isGreaterThan(new BigNumber(0))
-          ? `${ new BigNumber(coreInfo?.totalStaked).times(100).div(new BigNumber(totalStakedInSystem)).toFixed(2) }%`
+        {daoInfo?.totalStaked && new BigNumber(totalStakedInSystem).isGreaterThan(new BigNumber(0))
+          ? `${new BigNumber(daoInfo?.totalStaked).times(100).div(new BigNumber(totalStakedInSystem)).toFixed(2)}%`
           : '0%'}
       </div>
     </div> : null}
@@ -396,9 +396,9 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
         </div>
       </div>
       <div className="text-white font-normal text-[12px] text-right tracking-[0] leading-[normal] truncate">
-        <span className={`${ minSupportMet ? 'text-green-400' : 'text-red-400' }`}>
-          {coreInfo?.totalStaked && minStakeReward
-            ? `${ minSupportMet ? '25K' : formatNumberShorthand(parseFloat(coreInfo?.totalStaked.toString()) / Math.pow(10, 12)) }/${ formatNumberShorthand(parseFloat(minStakeReward.toString()) / Math.pow(10, 12)) }`
+        <span className={`${minSupportMet ? 'text-green-400' : 'text-red-400'}`}>
+          {daoInfo?.totalStaked && minStakeReward
+            ? `${minSupportMet ? '25K' : formatNumberShorthand(parseFloat(daoInfo?.totalStaked.toString()) / Math.pow(10, 12))}/${formatNumberShorthand(parseFloat(minStakeReward.toString()) / Math.pow(10, 12))}`
             : '--'}
         </span> TNKR
       </div>
@@ -408,7 +408,7 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
   return (
     <div
       key={core.account}
-      className={`flex flex-col justify-between w-full rounded-xl space-y-4 border border-[1px] border-neutral-700 ${ BG_GRADIENT }`}>
+      className={`flex flex-col justify-between w-full rounded-xl space-y-4 border border-[1px] border-neutral-700 ${BG_GRADIENT}`}>
       <div className={`relative p-8 flex flex-col gap-6 justify-start h-auto`}>
 
         {/* Avatar, Name, Members */}
@@ -427,7 +427,7 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleReadMore}>
-          <div className={`absolute inset-0 flex justify-center items-center font-normal text-tinkerYellow text-[12px] tracking-[0] leading-[normal] ${ isHovered ? 'opacity-100' : 'md:opacity-0 opacity-100' } transition duration-100 z-10 pointer-events-none`}>
+          <div className={`absolute inset-0 flex justify-center items-center font-normal text-tinkerYellow text-[12px] tracking-[0] leading-[normal] ${isHovered ? 'opacity-100' : 'md:opacity-0 opacity-100'} transition duration-100 z-10 pointer-events-none`}>
             Show More
           </div>
           <p className={`font-normal text-white text-[14px] tracking-[0] leading-[18px] line-clamp-4 gradient-bottom hover:text-opacity-20 text-opacity-20 md:text-opacity-100`}>
@@ -436,7 +436,7 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
         </div> : null}
 
         <div
-          className={`relative stats-section grid grid-cols-1 gap-2 ${ mini ? '' : 'h-28' } overflow-y-scroll tinker-scrollbar scrollbar-thumb-amber-300 scrollbar pr-3`}
+          className={`relative stats-section grid grid-cols-1 gap-2 ${mini ? '' : 'h-28'} overflow-y-scroll tinker-scrollbar scrollbar-thumb-amber-300 scrollbar pr-3`}
           onScroll={(e) => {
             // Update the stored scroll position
             scrollPositionRef.current = (e.target as HTMLElement).scrollTop;
@@ -454,19 +454,19 @@ const handleStatsHover = useCallback((isHovering: boolean, statClass: string, e:
 
         <div className="flex flex-col md:flex-row w-full md:w-auto gap-2 items-stretch md:items-center justify-start z-1">
           {selectedAccount ?
-           <Button variant='primary' mini={true} onClick={handleClick}
-                   disabled={
-                   (coreInfo?.numberOfStakers || 0) >=
-                     (chainProperties?.maxStakersPerCore || 0) &&
-                   !totalUserStaked
-                   }>{!mini ? 'Manage Staking' : 'View Details'}</Button> : null
+            <Button variant='primary' mini={true} onClick={handleClick}
+              disabled={
+                (daoInfo?.numberOfStakers || 0) >=
+                (chainProperties?.maxStakersPerDao || 0) &&
+                !totalUserStaked
+              }>{!mini ? 'Manage Staking' : 'View Details'}</Button> : null
           }
 
           {(!mini && members.includes(selectedAccount?.address)) ? <Button variant='primary'
             mini={true}
             disabled={core.key == 0 || (coreUnclaimedEras.max - coreUnclaimedEras.min) <= 0}
             onClick={claimCoreRewards}
-            >Claim DAO Rewards</Button> : null
+          >Claim DAO Rewards</Button> : null
           }
         </div>
 

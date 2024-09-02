@@ -16,7 +16,7 @@ import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallba
 
 const schema = z
   .object({
-    core: z.string(),
+    dao: z.string(),
     name: z.string().max(20),
     description: z.string().max(300),
     image: z.string().url().max(100),
@@ -46,7 +46,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
   };
 
   const handleRegister = registerProjectForm.handleSubmit(
-    async ({ core, name, description, image }) => {
+    async ({ dao: core, name, description, image }) => {
       if (!selectedAccount) return;
 
       if (!api) return;
@@ -87,7 +87,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
 
       const injector = await web3FromAddress(selectedAccount.address);
 
-      const calls = [api.tx.ocifStaking.registerCore(name, description, image)];
+      const calls = [api.tx.ocifStaking.registerDao(name, description, image)];
 
       try {
         await api.tx.inv4
@@ -128,7 +128,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
       } catch (error) {
         toast.dismiss();
 
-        toast.error(`${ error }`);
+        toast.error(`${error}`);
       }
     }
   );
@@ -165,7 +165,7 @@ const RegisterProject = ({ isOpen }: { isOpen: boolean; }) => {
         </button>
         <Dialog.Panel>
           <>
-            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] bg-tinkerGrey rounded-xl space-y-4 p-8 border border-[1px] border-neutral-700 ${ BG_GRADIENT }`}>
+            <div className={`fixed left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col justify-between w-[350px] h-[472px] bg-tinkerGrey rounded-xl space-y-4 p-8 border border-[1px] border-neutral-700 ${BG_GRADIENT}`}>
               {/* <div className="flex flex-row gap-4">
                 <div className="relative w-full flex flex-col gap-4 overflow-hidden rounded-md border border-gray-50 bg-neutral-900 p-6 sm:flex-row">
                   <div className="flex w-full flex-col gap-4">

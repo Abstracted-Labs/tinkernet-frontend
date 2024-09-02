@@ -12,7 +12,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import useApi from "../hooks/useApi";
 import Button from "../components/Button";
 import { calculateVestingSchedule, calculateVestingData, fetchSystemData } from "../utils/vestingServices";
-import { loadProjectCores } from "../utils/stakingServices";
+import { loadProjectDaos } from "../utils/stakingServices";
 import { getSignAndSendCallbackWithPromise } from "../utils/getSignAndSendCallback";
 import { CoreEraType } from "./staking";
 
@@ -97,13 +97,13 @@ const Claim = () => {
   const loadStakedTNKR = useCallback(async (selectedAccount: InjectedAccountWithMeta | null) => {
     try {
       const currentEra = (await api.query.ocifStaking.currentEra()).toPrimitive() as number;
-      const stakingCores = await loadProjectCores(api);
+      const stakingDaos = await loadProjectDaos(api);
 
-      if (selectedAccount && stakingCores) {
-        const userStakeInfo: { coreId: number; era: number; staked: BigNumber; }[] = [];
-        let unclaimedCores = { cores: [] as CoreEraType[], total: 0 };
+      if (selectedAccount && stakingDaos) {
+        const userStakeInfo: { daoId: number; era: number; staked: BigNumber; }[] = [];
+        let unclaimedCores = { daos: [] as CoreEraType[], total: 0 };
 
-        for (const core of stakingCores) {
+        for (const core of stakingDaos) {
           const stakerInfo = await api.query.ocifStaking.generalStakerInfo(core.key, selectedAccount.address);
           const info = stakerInfo.toPrimitive() as StakesInfo;
 
@@ -111,19 +111,19 @@ const Claim = () => {
             const earliestUnclaimedEra = parseInt(info.stakes[0].era);
 
             if (earliestUnclaimedEra < currentEra) {
-              const updatedCores = unclaimedCores.cores.filter((value) => value.coreId !== core.key);
-              updatedCores.push({ coreId: core.key, earliestEra: earliestUnclaimedEra });
+              const updatedCores = unclaimedCores.daos.filter((value) => value.daoId !== core.key);
+              updatedCores.push({ daoId: core.key, earliestEra: earliestUnclaimedEra });
 
               const total = Math.max(unclaimedCores.total, currentEra - earliestUnclaimedEra);
 
-              unclaimedCores = { cores: updatedCores, total };
+              unclaimedCores = { daos: updatedCores, total };
             }
 
             const latestStake = info.stakes.at(-1);
 
             if (latestStake) {
               userStakeInfo.push({
-                coreId: core.key,
+                daoId: core.key,
                 era: parseInt(latestStake.era),
                 staked: new BigNumber(latestStake.staked),
               });
@@ -138,7 +138,7 @@ const Claim = () => {
         setTotalStakedTNKR(formattedStaked.toString());
       }
     } catch (error) {
-      toast.error(`${ error }`);
+      toast.error(`${error}`);
     }
   }, [api]);
 
@@ -224,7 +224,7 @@ const Claim = () => {
       toast.dismiss();
     } catch (error) {
       toast.dismiss();
-      toast.error(`${ error }`);
+      toast.error(`${error}`);
       console.error(error);
     }
   };

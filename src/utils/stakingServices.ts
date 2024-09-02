@@ -1,11 +1,11 @@
 import { ApiPromise } from "@polkadot/api";
-import { CorePrimitiveType, StakingCore } from "../routes/staking";
+import { DaoPrimitiveType, StakingDao } from "../routes/staking";
 import { StakedDaoType } from "../routes/overview";
 
-export const loadStakedDaos = async (stakingCores: StakingCore[], selectedAccount: string, api: ApiPromise) => {
-  if (!stakingCores || stakingCores.length === 0 || !selectedAccount) return [];
+export const loadStakedDaos = async (stakingDaos: StakingDao[], selectedAccount: string, api: ApiPromise) => {
+  if (!stakingDaos || stakingDaos.length === 0 || !selectedAccount) return [];
 
-  const daos: StakedDaoType[] = await Promise.all(stakingCores.map(async (core) => {
+  const daos: StakedDaoType[] = await Promise.all(stakingDaos.map(async (core) => {
     const members = await api.query.inv4.coreMembers.entries(core.key);
     const mems = members.map(([key]) => key.args.map((arg) => arg.toHuman())[1]);
     return { ...core, members: mems };
@@ -14,11 +14,11 @@ export const loadStakedDaos = async (stakingCores: StakingCore[], selectedAccoun
   return daos;
 };
 
-export async function loadProjectCores(
+export async function loadProjectDaos(
   api: ApiPromise,
-): Promise<Array<{ key: number; } & CorePrimitiveType> | undefined> {
+): Promise<Array<{ key: number; } & DaoPrimitiveType> | undefined> {
   try {
-    const stakingCores = (
+    const stakingDaos = (
       await api.query.ocifStaking.registeredCore.entries()
     ).map(
       ([
@@ -27,7 +27,7 @@ export async function loadProjectCores(
         },
         core,
       ]) => {
-        const c = core.toPrimitive() as CorePrimitiveType;
+        const c = core.toPrimitive() as DaoPrimitiveType;
 
         const primitiveKey = key.toPrimitive() as number;
 
@@ -38,7 +38,7 @@ export async function loadProjectCores(
       }
     );
 
-    return stakingCores;
+    return stakingDaos;
   } catch (error) {
     console.log(error);
   }
