@@ -42,7 +42,7 @@ const useRPC = createWithEqualityFn<RPCState>()((set, get) => ({
 
       console.error(error);
 
-      throw new Error(`Failed to connect to ${ host }`);
+      throw new Error(`Failed to connect to ${host}`);
     }
   },
 }));

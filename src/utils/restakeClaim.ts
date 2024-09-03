@@ -47,12 +47,12 @@ export const restakeClaim = async ({
     await web3Enable("Tinkernet");
 
     const injector = await web3FromAddress(selectedAccount.address);
-    const uniqueCores = [...new Map(unclaimedEras.cores.map((x) => [x['coreId'], x])).values()];
+    const uniqueCores = [...new Map(unclaimedEras.daos.map((x) => [x['daoId'], x])).values()];
     const batch: unknown[] = [];
 
     // Filter uniqueCores to include only those with non-zero stake
     const coresWithStake = uniqueCores.filter(core => {
-      const userStakeInfo = userStakedInfoMap.get(core.coreId);
+      const userStakeInfo = userStakedInfoMap.get(core.daoId);
       const hasStake = userStakeInfo && userStakeInfo.staked.isGreaterThan(0);
       return hasStake;
     });
@@ -61,7 +61,7 @@ export const restakeClaim = async ({
     uniqueCores.forEach(core => {
       if (!core?.earliestEra) return;
       for (let i = core.earliestEra; i < currentStakingEra; i++) {
-        batch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+        batch.push(api.tx.ocifStaking.stakerClaimRewards(core.daoId));
       }
     });
 
@@ -80,7 +80,7 @@ export const restakeClaim = async ({
         const restakeUnclaimedAmount = handleRestakingLogic(undefined, coresWithStake.length);
         if (restakeUnclaimedAmount && restakeUnclaimedAmount.isGreaterThan(0)) {
           const restakeAmountInteger = restakeUnclaimedAmount.integerValue().toString();
-          batch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
+          batch.push(api.tx.ocifStaking.stake(core.daoId, restakeAmountInteger));
         }
       });
     }
@@ -91,11 +91,11 @@ export const restakeClaim = async ({
     const batchTxFees: Balance = info.partialFee;
     const rebuildBatch: unknown[] = [];
 
-    // Rebuild the batch with only the cores where the user has a non-zero stake
+    // Rebuild the batch with only the daos where the user has a non-zero stake
     uniqueCores.forEach(core => {
       if (!core?.earliestEra) return;
       for (let i = core.earliestEra; i < currentStakingEra; i++) {
-        rebuildBatch.push(api.tx.ocifStaking.stakerClaimRewards(core.coreId));
+        rebuildBatch.push(api.tx.ocifStaking.stakerClaimRewards(core.daoId));
       }
     });
 
@@ -109,12 +109,12 @@ export const restakeClaim = async ({
           const adjustedRestakeAmount = restakeUnclaimedAmount.minus(new BigNumber(batchTxFees.toString()));
           if (adjustedRestakeAmount.isGreaterThan(0)) { // Check if there's a non-zero amount to stake
             const restakeAmountInteger = adjustedRestakeAmount.integerValue().toString();
-            rebuildBatch.push(api.tx.ocifStaking.stake(core.coreId, restakeAmountInteger));
+            rebuildBatch.push(api.tx.ocifStaking.stake(core.daoId, restakeAmountInteger));
           } else {
-            console.log(`Skipping core ID: ${ core.coreId } due to zero adjusted restake amount.`);
+            console.log(`Skipping core ID: ${core.daoId} due to zero adjusted restake amount.`);
           }
         } else {
-          console.log(`Skipping core ID: ${ core.coreId } due to insufficient unclaimed rewards to cover transaction fees.`);
+          console.log(`Skipping core ID: ${core.daoId} due to insufficient unclaimed rewards to cover transaction fees.`);
         }
       });
     }
@@ -171,7 +171,7 @@ export const restakeClaim = async ({
     );
   } catch (error) {
     toast.dismiss();
-    toast.error(`${ error }`);
+    toast.error(`${error}`);
     console.error(error);
     setWaiting(false);
   }
